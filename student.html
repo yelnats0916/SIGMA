@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Interface Computer College - Student</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="css/student.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        icc: '#15803d',
+                        'icc-light': '#dcfce7',
+                        'icc-dark': '#14532d',
+                        'icc-yellow': '#FFD000',
+                        'admin-bg': '#f8fafc',
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+</head>
+
+<body class="bg-admin-bg min-h-screen flex flex-col overflow-x-hidden sidebar-collapsed">
+
+    <header id="student-header" class="shrink-0 z-[250] fixed top-0 left-0 right-0 flex flex-col bg-white">
+        <!-- ═══ TOP NAVIGATION BAR ════════════════════════════════════ -->
+        <nav class="top-nav justify-between shrink-0">
+            <div class="flex items-center gap-3">
+                <span id="global-sy-display" class="text-white uppercase tracking-[0.2em] text-[10px] font-medium">
+                    Initializing...</span>
+            </div>
+            <div class="flex items-center gap-2 pr-4">
+                <i class="fa-solid fa-globe text-[10px] text-white/50"></i>
+                <span class="text-white text-[10px] font-medium">English (en)</span>
+            </div>
+        </nav>
+
+        <div class="admin-topbar__inner">
+            <div class="admin-topbar__brand">
+                <button id="sidebarToggleBtn" type="button" aria-label="Toggle sidebar"
+                    class="w-[38px] h-[38px] rounded-full hover:bg-slate-100 focus:outline-none flex items-center justify-center no-underline transition-colors">
+                    <i class="fa-solid fa-bars text-[17px] text-black"></i>
+                </button>
+                <div id="logo-container">
+                    <button id="nav-logo-btn" title="Go to Dashboard"
+                        onclick="document.getElementById('nav-home').click();">
+                        <img src="image/ICC logo.jpg" alt="ICC Logo">
+                    </button>
+                </div>
+                <div class="admin-topbar__brand-copy">
+                    <p id="nav-context-text" class="admin-topbar__brand-label text-black">Interface Computer
+                        College</p>
+                </div>
+            </div>
+
+            <div class="absolute left-1/2 -translate-x-1/2 w-full max-w-sm md:block z-[101]">
+                <div
+                    class="header-search-shell relative flex items-center group bg-white border border-slate-300 rounded-full focus-within:border-[#FFD000] focus-within:bg-white hover:bg-white focus-within:ring-0 focus-within:outline-none focus-within:shadow-none transition-all overflow-hidden">
+                    <button type="button" id="mobileSearchBackBtn" class="mobile-search-back-btn hidden">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <span
+                        class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 search-icon-container">
+                        <i class="fa-solid fa-magnifying-glass text-slate-900 text-sm"></i>
+                    </span>
+                    <input id="searchBar" type="text" placeholder="Search"
+                        class="block w-full h-[38px] pl-5 pr-4 bg-transparent border-0 text-[13px] placeholder-gray-400 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:shadow-none transition-all group-focus-within:pl-10 font-medium text-slate-700">
+                    <button id="globalSearchBtn"
+                        class="header-search-enter w-[72px] h-[38px] flex items-center justify-center border-l border-slate-200 bg-slate-100 hover:bg-slate-200 transition-all text-black flex-shrink-0">
+                        <i class="fa-solid fa-arrow-turn-down text-[10px] transform rotate-[-90deg] scale-y-[-1]"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-grow pl-8">
+                <h1 id="main-content-header" class="text-xl font-black text-slate-900 tracking-tight uppercase"></h1>
+            </div>
+
+            <div class="flex items-center gap-2 pr-4">
+                <div class="relative">
+                    <button id="calendar-toggle"
+                        class="header-icon-btn relative w-[38px] h-[38px] rounded-full bg-slate-100 hover:bg-slate-200 focus:outline-none group flex items-center justify-center transition-colors no-underline">
+                        <div class="relative flex items-center justify-center pointer-events-none">
+                            <i class="fa-solid fa-calendar text-[22px] text-black transition-colors"></i>
+                            <span id="calendar-date-number"
+                                class="absolute pt-[5px] text-[9px] font-black text-white leading-none group-[.active]:text-black transition-colors">28</span>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="relative">
+                    <button id="noti-toggle"
+                        class="header-icon-btn relative w-[38px] h-[38px] rounded-full bg-slate-100 hover:bg-slate-200 focus:outline-none group flex items-center justify-center transition-colors no-underline">
+                        <i class="fa-solid fa-bell text-[21px] text-black transition-colors"></i>
+                        <span id="noti-badge"
+                            class="absolute top-2 right-2 w-2 h-2 bg-[#FFD000] rounded-full border-2 border-white pointer-events-none"></span>
+                    </button>
+                </div>
+
+                <div class="relative">
+                    <button id="profileDropdownBtn"
+                        class="header-profile-btn relative w-[38px] h-[38px] rounded-full hover:bg-slate-100 focus:outline-none group flex items-center justify-center text-black text-base font-bold bg-slate-200 no-underline transition-colors">
+                        <div class="absolute inset-0 rounded-full overflow-hidden flex items-center justify-center">
+                            <img id="header-avatar-img" src="" alt="Avatar"
+                                class="absolute inset-0 w-full h-full object-cover hidden">
+                            <i id="header-avatar-placeholder" class="fa-solid fa-user text-sm opacity-50"></i>
+                        </div>
+                        <div
+                            class="absolute bottom-[-2px] right-[-2px] w-4.5 h-4.5 bg-white rounded-full border border-slate-200 shadow-sm flex items-center justify-center z-10">
+                            <i
+                                class="header-profile-btn__chevron fa-solid fa-chevron-down text-[10px] font-bold text-black transition-colors"></i>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panels (outside inner flex but inside fixed header) -->
+        <div id="noti-dropdown"
+            class="header-panel hidden fixed right-0 top-[82px] h-[calc(100vh-82px)] w-[400px] bg-white shadow-[-20px_0_40px_rgba(0,0,0,0.08)] border-l border-slate-200 flex flex-col z-[300] rounded-l-[24px] overflow-hidden">
+            <div
+                class="px-6 py-4 border-b border-gray-50 bg-gray-50/50 flex-shrink-0 flex items-center justify-between">
+                <span class="text-base font-bold text-gray-900 font-['Inter']">Notifications</span>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scrollbar">
+                <div class="px-6 py-4">
+                    <div
+                        class="notif-item px-4 py-4 hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-100 rounded-xl mb-2 transition-all">
+                        <div class="flex gap-4 items-start">
+                            <div
+                                class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-black text-sm shadow-sm border border-slate-200/60">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[13px] font-bold text-gray-800 leading-tight font-['Inter']">Security:
+                                    Welcome back!</p>
+                                <p class="text-[12px] text-gray-500 mt-1 font-['Inter']">Your account is secure and
+                                    ready for your studies.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="profileDropdownMenu"
+            class="header-panel hidden fixed right-0 top-[82px] h-[calc(100vh-82px)] w-[400px] bg-white shadow-[-20px_0_40px_rgba(0,0,0,0.08)] border-l border-slate-200 flex flex-col z-[300] rounded-l-[24px] overflow-hidden">
+            <div class="flex-1 overflow-y-auto custom-scrollbar">
+                <div class="flex flex-col">
+                    <!-- User Profile (Clickable) -->
+                    <a href="#" onclick="window.showMyProfile(event)"
+                        class="block px-8 py-6 hover:bg-gray-100 transition-all no-underline group border-b-2 border-slate-200">
+                        <div class="flex items-center gap-4">
+                            <div
+                                class="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-black text-lg font-black shadow-sm border-2 border-slate-300 overflow-hidden relative">
+                                <img id="sidebar-avatar-img" src="" alt="Avatar"
+                                    class="absolute inset-0 w-full h-full object-cover hidden">
+                                <i id="sidebar-avatar-placeholder" class="fa-solid fa-user text-lg opacity-50"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-800 leading-tight">
+                                    <span id="header-dropdown-firstName">Firstname</span>
+                                    <span id="header-dropdown-lastName">Lastname</span>
+                                </h3>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Achievements Link -->
+                    <a href="#" onclick="switchTab('nav-achievements'); hideHeaderOverlays();"
+                        class="flex items-center gap-4 px-8 py-5 text-slate-700 hover:bg-gray-100 transition-all group no-underline border-b border-slate-100">
+                        <div class="w-10 h-10 flex items-center justify-center text-black">
+                            <i class="fa-solid fa-trophy text-[13px]"></i>
+                        </div>
+                        <span class="text-[13px] font-semibold text-slate-800">Achievements</span>
+                    </a>
+
+                    <!-- Settings (Integrated into list) -->
+                    <a href="#" onclick="switchTab('nav-settings'); hideHeaderOverlays();"
+                        class="flex items-center gap-4 px-8 py-5 text-slate-700 hover:bg-gray-100 transition-all group no-underline">
+                        <div class="w-10 h-10 flex items-center justify-center text-black">
+                            <i class="fa-solid fa-gear text-[13px]"></i>
+                        </div>
+                        <span class="text-[13px] font-semibold text-slate-800">Settings</span>
+                    </a>
+                    <!-- Logout (Integrated into list) -->
+                    <a href="index.html" onclick="sessionStorage.clear();"
+                        class="flex items-center gap-4 px-8 py-5 text-slate-700 hover:bg-gray-100 transition-all group no-underline">
+                        <div class="w-10 h-10 flex items-center justify-center text-black">
+                            <i class="fa-solid fa-right-from-bracket text-[13px]"></i>
+                        </div>
+                        <span class="text-[13px] font-semibold text-slate-800">Logout</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ═══ SIDEBAR ═══════════════════════════════════════════════ -->
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+        <nav class="py-4 flex flex-col">
+            <a href="#" id="nav-home" class="nav-link active no-underline group">
+                <div class="sidebar-rail-icon">
+                    <i class="fa-solid fa-house"></i>
+                    <span class="rail-label">Home</span>
+                </div>
+                <span class="full-label">Home</span>
+            </a>
+
+            <a href="#" id="nav-classrooms" class="nav-link no-underline group">
+                <div class="sidebar-rail-icon">
+                    <i class="fa-solid fa-door-open"></i>
+                    <span class="rail-label">Sections</span>
+                </div>
+                <span class="full-label">Sections</span>
+            </a>
+
+            <div class="nav-group" data-sidebar-group="subjects">
+                <a href="#" id="nav-courses" class="nav-link nav-link--group no-underline group" data-nav-link="courses"
+                    data-toggle="submenu">
+                    <div class="sidebar-rail-icon">
+                        <i class="fa-solid fa-book-bookmark"></i>
+                        <span class="rail-label">Subjects</span>
+                    </div>
+                    <span class="full-label">Subjects</span>
+                    <i class="fa-solid fa-chevron-right sidebar-group-chevron"></i>
+                </a>
+                <div id="subjects-submenu" class="sidebar-submenu hidden">
+                    <a href="#" id="nav-subjects-core" class="nav-sublink no-underline" data-program-key="core-subjects">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>Core Subjects</span>
+                    </a>
+                    <a href="#" id="nav-subjects-applied" class="nav-sublink no-underline" data-program-key="applied-subjects">
+                        <i class="fa-solid fa-book-open"></i>
+                        <span>Applied Subjects</span>
+                    </a>
+                    <a href="#" id="nav-subjects-specialized" class="nav-sublink no-underline" data-program-key="specialized-subjects">
+                        <i class="fa-solid fa-briefcase"></i>
+                        <span>Specialized Subjects</span>
+                    </a>
+                </div>
+            </div>
+
+            <a href="#" id="nav-assignments" class="nav-link no-underline group">
+                <div class="sidebar-rail-icon">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <span class="rail-label">Assessments</span>
+                </div>
+                <span class="full-label">Assessments</span>
+            </a>
+
+            <a href="#" id="nav-grades" class="nav-link no-underline group">
+                <div class="sidebar-rail-icon">
+                    <i class="fa-solid fa-chart-bar"></i>
+                    <span class="rail-label">Grades</span>
+                </div>
+                <span class="full-label">Grades</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- SUB-SIDEBAR -->
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebar-overlay"
+        class="fixed left-0 right-0 bottom-0 bg-black/40 z-[200] hidden transition-opacity duration-300 lg:hidden"
+        style="top: var(--shell-offset)"></div>
+
+    <aside id="sub-sidebar" class="fixed z-[900] bg-white border-r border-gray-100 flex-col hidden">
+        <div id="sub-sidebar-header"
+            class="px-4 py-4 border-b border-gray-100 bg-white flex items-center min-h-[60px] hidden">
+            <h3 id="sub-sidebar-title" class="font-black text-gray-900 text-[15px] leading-tight truncate w-full">
+                Subjects</h3>
+        </div>
+        <div id="sub-sidebar-content" class="flex-1 overflow-y-auto p-2 space-y-1"></div>
+    </aside>
+
+    <!-- LAYOUT WRAPPER -->
+    <div id="layout-wrapper" class="flex-1 flex flex-col min-w-0">
+        <main id="main-content" class="flex-1 relative">
+            <div id="content-sections" class="w-full h-full">
+
+                <!-- ══ HOME ════════════════════════════════════════ -->
+                <section id="section-home" class="dynamic-section">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 p-4 pt-4 items-start">
+                        <!-- 1. Left Section (3/12) - Match admin panel sizing -->
+                        <div class="lg:col-span-3 mt-2 sticky top-[106px] h-fit">
+                            <div id="sigma-panels-container"
+                                class="space-y-4 max-h-[calc(100vh-106px)] overflow-y-auto custom-scrollbar pr-2">
+                                <!-- SIGMA Panel 1: Descriptive (Progress) -->
+                                <div data-id="sigma-descriptive-yellow"
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
+                                    <div class="bg-[#FFD000] px-5 py-4 flex items-center">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-bolt text-black text-[12px]"></i>
+                                            <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
+                                        </div>
+                                    </div>
+                                    <div class="p-5">
+                                        <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
+                                            <i class="fa-solid fa-book-open mr-2 text-[#FFD000] text-[16px]"></i>
+                                            You have completed 12 assignments this month. Your overall progress
+                                            across all subjects is currently at 85%, showing steady improvement.
+                                        </p>
+                                    </div>
+                                    <div class="mt-auto h-[2px] w-full bg-[#FFD000]"></div>
+                                </div>
+
+                                <!-- SIGMA Panel 2: Predictive (Excellence) -->
+                                <div data-id="sigma-predictive-black"
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
+                                    <div class="bg-[#000000] px-5 py-4 flex items-center">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-bolt text-[#FFD000] text-[12px]"></i>
+                                            <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
+                                        </div>
+                                    </div>
+                                    <div class="p-5">
+                                        <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
+                                            <i class="fa-solid fa-award mr-2 text-black text-[16px]"></i>
+                                            You are on track for an Academic Excellence award this semester.
+                                            Maintaining your current study pace predicts a 1.25 GPA by year-end.
+                                        </p>
+                                    </div>
+                                    <div class="mt-auto h-[2px] w-full bg-black"></div>
+                                </div>
+
+                                <!-- SIGMA Panel 3: Prescriptive (Review) -->
+                                <div data-id="sigma-prescriptive-green"
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
+                                    <div class="bg-[#15803d] px-5 py-4 flex items-center">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-bolt text-white text-[12px]"></i>
+                                            <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
+                                        </div>
+                                    </div>
+                                    <div class="p-5">
+                                        <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
+                                            <i class="fa-solid fa-clipboard-list mr-2 text-[#15803d] text-[16px]"></i>
+                                            Focus on 'Logic Gates' in Computer Programming. AI suggests reviewing
+                                            this topic to improve your score in the next assessment.
+                                        </p>
+                                    </div>
+                                    <div class="mt-auto h-[2px] w-full bg-[#15803d]"></div>
+                                </div>
+
+                                <!-- SIGMA Panel 4: Descriptive (Attendance) -->
+                                <div data-id="sigma-descriptive-attendance"
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
+                                    <div class="bg-[#FFD000] px-5 py-4 flex items-center">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-bolt text-black text-[12px]"></i>
+                                            <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
+                                        </div>
+                                    </div>
+                                    <div class="p-5">
+                                        <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
+                                            <i class="fa-solid fa-calendar-check mr-2 text-[#FFD000] text-[16px]"></i>
+                                            Your attendance record is 98% this semester. You have participated in
+                                            all synchronous sessions for your core subjects.
+                                        </p>
+                                    </div>
+                                    <div class="mt-auto h-[2px] w-full bg-[#FFD000]"></div>
+                                </div>
+
+                                <!-- SIGMA Panel 5: Predictive (Deadlines) -->
+                                <div data-id="sigma-predictive-ai"
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
+                                    <div class="bg-[#000000] px-5 py-4 flex items-center">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-bolt text-[#FFD000] text-[12px]"></i>
+                                            <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
+                                        </div>
+                                    </div>
+                                    <div class="p-5">
+                                        <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
+                                            <i class="fa-solid fa-bolt mr-2 text-black text-[16px]"></i>
+                                            Upcoming deadlines in 'Web Development' are approaching. Based on your
+                                            habits, you have a 95% likelihood of on-time submission.
+                                        </p>
+                                    </div>
+                                    <div class="mt-auto h-[2px] w-full bg-black"></div>
+                                </div>
+
+                                <!-- SIGMA Panel 6: Prescriptive (Study Group) -->
+                                <div data-id="sigma-prescriptive-curriculum"
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
+                                    <div class="bg-[#15803d] px-5 py-4 flex items-center">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-bolt text-white text-[12px]"></i>
+                                            <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
+                                        </div>
+                                    </div>
+                                    <div class="p-5">
+                                        <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
+                                            <i
+                                                class="fa-solid fa-wand-magic-sparkles mr-2 text-[#15803d] text-[16px]"></i>
+                                            Join the 'Advanced Mathematics' peer study group. Collaborative learning
+                                            sessions are scheduled for Friday at 3:00 PM.
+                                        </p>
+                                    </div>
+                                    <div class="mt-auto h-[2px] w-full bg-[#15803d]"></div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- 2. Middle Section (6/12) -->
+                        <div class="lg:col-span-6 space-y-8 mt-2 main-dashboard-column">
+
+                            <!-- Welcome Panel -->
+                            <div
+                                class="welcome-panel relative h-[220px] rounded-[22px] overflow-hidden shadow-lg border border-slate-200 flex items-center px-12 group">
+                                <img id="welcome-panel-student-img" src="image/Welcome.jpg" alt="Welcome to ICC"
+                                    class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                                <div class="absolute inset-0 bg-gradient-to-r from-icc/90 via-icc/40 to-transparent">
+                                </div>
+                                <div class="relative z-10">
+                                    <h4 class="text-[#FFD000] font-black text-2xl mb-3">
+                                        Welcome back, <span id="welcome-user-firstName">Student</span>!</h4>
+                                    <h2 class="text-white text-4xl font-black leading-tight drop-shadow-md uppercase">
+                                        INTERFACE COMPUTER COLLEGE</h2>
+                                </div>
+
+                            </div>
+
+                            <!-- Announcement Tabs -->
+                            <div
+                                class="bg-white border border-slate-200 shadow-sm rounded-full p-2 flex items-center gap-2 mb-6">
+                                <button id="announcement-tab-all"
+                                    class="px-8 py-3 rounded-full text-[11px] font-black uppercase tracking-widest bg-[#15803d] text-white transition-all shadow-sm">
+                                    Announcements
+                                </button>
+                                <button id="announcement-tab-important"
+                                    class="px-8 py-3 rounded-full text-[11px] font-black uppercase tracking-widest text-slate-900 hover:bg-slate-50 transition-all">
+                                    Important
+                                </button>
+                            </div>
+
+                            <!-- Feed Area -->
+                            <div id="admin-announcements-feed" class="space-y-6">
+                                <!-- Injected by JS -->
+                            </div>
+                        </div>
+
+                        <!-- 3. Right Section (3/12) -->
+                        <div class="lg:col-span-3 space-y-8 mt-2 home-right-stack">
+                            <div class="home-subject-rail" id="home-subject-rail">
+                                <div
+                                    class="home-subject-rail__head flex flex-row items-center justify-between pb-3 border-b border-slate-200">
+                                    <button type="button"
+                                        class="home-subject-rail__title home-subject-rail__title-btn font-black"
+                                        data-home-subjects-nav="landing">Subjects</button>
+                                    <div class="home-subject-rail__tools">
+                                        <button type="button" id="home-subject-search-toggle"
+                                            class="home-subject-rail__icon-btn" aria-label="Search subjects"
+                                            title="Search subjects">
+                                            <i class="fa-solid fa-magnifying-glass"></i>
+                                        </button>
+                                        <div class="home-subject-rail__settings-wrap">
+                                            <button type="button" id="home-subject-settings-toggle"
+                                                class="home-subject-rail__icon-btn" aria-label="Subjects settings"
+                                                title="Subjects settings">
+                                                <i class="fa-solid fa-sliders"></i>
+                                            </button>
+                                            <div id="home-subject-settings-menu"
+                                                class="home-subject-settings-menu hidden">
+                                                <p class="home-subject-settings-menu__label">View Options</p>
+                                                <label class="home-subject-settings-menu__option">
+                                                    <input type="checkbox" id="home-subject-hide-completed-toggle">
+                                                    <span>Hide completed subjects</span>
+                                                </label>
+                                                <p
+                                                    class="home-subject-settings-menu__label home-subject-settings-menu__label--spaced">
+                                                    Show
+                                                </p>
+                                                <label class="home-subject-settings-menu__option">
+                                                    <input type="radio" name="home-subject-filter" value="all" checked>
+                                                    <span>All subjects</span>
+                                                </label>
+                                                <label class="home-subject-settings-menu__option">
+                                                    <input type="radio" name="home-subject-filter" value="core">
+                                                    <span>Core subjects</span>
+                                                </label>
+                                                <label class="home-subject-settings-menu__option">
+                                                    <input type="radio" name="home-subject-filter" value="applied">
+                                                    <span>Applied subjects</span>
+                                                </label>
+                                                <label class="home-subject-settings-menu__option">
+                                                    <input type="radio" name="home-subject-filter" value="specialized">
+                                                    <span>Specialized subjects</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="home-subject-search-box" class="home-subject-rail__search hidden">
+                                    <input id="home-subject-search-input" type="text"
+                                        class="home-subject-rail__search-input" placeholder="Search subjects..."
+                                        autocomplete="off">
+                                </div>
+
+                                <div class="home-subject-rail__section">
+                                    <p class="home-subject-rail__section-title">Enrolled Subjects</p>
+                                    <div id="home-enrolled-subject-list" class="home-subject-rail__list"></div>
+                                </div>
+
+                                <div id="home-completed-subject-block" class="home-subject-rail__section">
+                                    <p class="home-subject-rail__section-title">Completed Subjects</p>
+                                    <div id="home-completed-subject-list" class="home-subject-rail__list"></div>
+                                </div>
+                            </div> <!-- End home-subject-rail -->
+                        </div> <!-- End lg:col-span-3 -->
+                    </div> <!-- End grid -->
+                </section>
+
+                <!-- ══ SUBJECTS ════════════════════════════════════ -->
+                <!-- ══ SUBJECTS ════════════════════════════════════ -->
+                <section id="section-courses" class="dynamic-section hidden p-0">
+                    <!-- Content will be added here later -->
+                </section>
+
+                <!-- ══ ASSESSMENTS ═════════════════════════════════ -->
+                <section id="section-assignments" class="dynamic-section hidden">
+                    <div class="mx-auto max-w-[1024px] w-full">
+                        <div class="bg-white min-h-[calc(100vh-var(--shell-offset))] p-0 relative flex flex-col">
+                            <div id="assessments-layout" class="px-10 py-8"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ══ GRADES ══════════════════════════════════════ -->
+                <section id="section-grades" class="dynamic-section hidden">
+                    <div class="mx-auto max-w-[1024px] w-full">
+                        <div class="bg-white min-h-[calc(100vh-var(--shell-offset))] p-0 relative flex flex-col">
+                            <div id="grades-layout" class="px-10 py-8"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ══ ATTENDANCE ══════════════════════════════════ -->
+                <section id="section-attendance" class="dynamic-section hidden">
+                    <div class="mx-auto max-w-[1024px] w-full">
+                        <div class="bg-white min-h-[calc(100vh-var(--shell-offset))] p-0 relative flex flex-col">
+                            <!-- Title Section -->
+                            <div class="px-10 py-8">
+                                <h2 class="text-3xl font-bold text-gray-800">Attendance</h2>
+                                <p class="text-sm text-gray-500 mt-1">Your attendance records and weekly schedule</p>
+                            </div>
+
+                            <!-- Content Section -->
+                            <div class="px-10 pb-10">
+                                <div id="student-attendance-live-card"
+                                    class="mb-6 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                                    <div class="flex items-start justify-between gap-6">
+                                        <div>
+                                            <p id="student-attendance-live-label"
+                                                class="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                Today's
+                                                Status
+                                            </p>
+                                            <p id="student-attendance-live-value"
+                                                class="text-3xl font-black text-gray-800 mt-2">
+                                                Pending</p>
+                                            <p id="student-attendance-live-meta" class="text-sm text-gray-500 mt-2">
+                                                Waiting for
+                                                teacher attendance confirmation.</p>
+                                        </div>
+                                        <div id="student-attendance-live-badge"
+                                            class="px-4 py-2 rounded-xl bg-gray-100 text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                                            Pending
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                                        <div class="flex items-center gap-4">
+                                            <div
+                                                class="w-12 h-12 rounded-xl bg-green-50 text-green-500 flex items-center justify-center">
+                                                <i class="fa-solid fa-user-check text-xl"></i>
+                                            </div>
+                                            <div>
+                                                <p
+                                                    class="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                    Present
+                                                </p>
+                                                <p class="text-2xl font-black text-gray-800">42 Days</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                                        <div class="flex items-center gap-4">
+                                            <div
+                                                class="w-12 h-12 rounded-xl bg-red-50 text-red-500 flex items-center justify-center">
+                                                <i class="fa-solid fa-user-xmark text-xl"></i>
+                                            </div>
+                                            <div>
+                                                <p
+                                                    class="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                    Absent</p>
+                                                <p class="text-2xl font-black text-gray-800">2 Days</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                                        <div class="flex items-center gap-4">
+                                            <div
+                                                class="w-12 h-12 rounded-xl bg-yellow-50 text-yellow-500 flex items-center justify-center">
+                                                <i class="fa-solid fa-user-clock text-xl"></i>
+                                            </div>
+                                            <div>
+                                                <p
+                                                    class="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                    Late</p>
+                                                <p class="text-2xl font-black text-gray-800">1 Day</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                                    <div class="p-6 border-b border-gray-50 flex items-center justify-between">
+                                        <h3 class="text-sm font-bold text-gray-800 uppercase tracking-widest">Recent
+                                            Activity</h3>
+                                        <button
+                                            class="text-[10px] font-black text-icc uppercase tracking-widest hover:underline">View
+                                            Calendar</button>
+                                    </div>
+                                    <div class="divide-y divide-gray-50">
+                                        <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                                <div>
+                                                    <p class="text-sm font-bold text-gray-800">Computer Programming 1
+                                                    </p>
+                                                    <p class="text-[10px] text-gray-400 font-medium">March 24, 2026 •
+                                                        8:00 AM</p>
+                                                </div>
+                                            </div>
+                                            <span
+                                                class="px-2 py-1 bg-green-50 text-green-600 text-[9px] font-black rounded uppercase">Present</span>
+                                        </div>
+                                        <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                                <div>
+                                                    <p class="text-sm font-bold text-gray-800">Web Development 1</p>
+                                                    <p class="text-[10px] text-gray-400 font-medium">March 24, 2026 •
+                                                        9:45 AM</p>
+                                                </div>
+                                            </div>
+                                            <span
+                                                class="px-2 py-1 bg-green-50 text-green-600 text-[9px] font-black rounded uppercase">Present</span>
+                                        </div>
+                                        <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                                <div>
+                                                    <p class="text-sm font-bold text-gray-800">Oral Communication</p>
+                                                    <p class="text-[10px] text-gray-400 font-medium">March 23, 2026 •
+                                                        1:30 PM</p>
+                                                </div>
+                                            </div>
+                                            <span
+                                                class="px-2 py-1 bg-yellow-50 text-yellow-600 text-[9px] font-black rounded uppercase">Late</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </section>
+
+
+                <!-- ══ CLASSROOMS ══════════════════════════════════ -->
+                <section id="section-classrooms" class="dynamic-section hidden">
+                    <div class="mx-auto max-w-[1024px] w-full">
+                        <div
+                            class="bg-white border-x border-slate-200 min-h-[calc(100vh-var(--shell-offset))] p-0 relative flex flex-col">
+                            <!-- Page Title -->
+                            <div class="px-10 pt-6 pb-2">
+                                <h1 class="text-2xl font-bold text-black tracking-tight">Classrooms</h1>
+                            </div>
+
+                            <!-- Classroom cards grid -->
+                            <div class="px-6 md:px-10 pb-10">
+                                <div id="classrooms-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <!-- Dynamic cards from student.js -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ══ CLASSROOM DETAIL ════════════════════════════════ -->
+                <section id="section-classroom-detail" class="dynamic-section hidden">
+                    <div class="mx-auto max-w-[1024px] w-full">
+                        <div
+                            class="bg-white border-x border-slate-200 min-h-[calc(100vh-var(--shell-offset))] p-0 relative flex flex-col">
+                            <div id="classroom-detail-content"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ══ TOPIC DETAIL (no built-in left sidebar — uses #sub-sidebar) ══ -->
+                <section id="section-topic-detail" class="dynamic-section hidden">
+                    <!-- buildTopicPage() fills this with just the main content + right panel.
+                             The left sidebar is #sub-sidebar, swapped to topic mode instantly. -->
+                </section>
+
+                <!-- ══ SUBJECT PROGRAM PAGE ════════════════════════ -->
+                <section id="section-curriculum-page" class="dynamic-section hidden">
+                    <div id="curriculum-page-shell"></div>
+                </section>
+
+                <!-- ══ TOPIC CONTENT (videos, handouts, assessments) ══ -->
+                <section id="section-topic-content" class="dynamic-section hidden">
+                    <!-- buildTopicContentPage() fills this dynamically -->
+                </section>
+
+
+                <!-- USER PROFILE VIEW (Read-Only) -->
+                <section id="user-profile-view" class="dynamic-section hidden">
+                    <div class="w-full bg-white border-b border-slate-200">
+                        <div class="mx-auto max-w-[1024px] w-full">
+                            <div class="bg-white border-x border-slate-200 p-0 shadow-sm relative flex flex-col">
+                                <div class="relative min-h-[220px] md:min-h-[310px]">
+                                    <div class="absolute inset-0 overflow-hidden rounded-b-[44px] bg-[#15803d]">
+                                        <div
+                                            class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.18),_transparent_38%),radial-gradient(circle_at_bottom_right,_rgba(255,255,255,0.14),_transparent_34%)]">
+                                        </div>
+                                        <div
+                                            class="absolute inset-0 opacity-20 bg-[repeating-linear-gradient(90deg,transparent_0,transparent_22px,rgba(250,204,21,0.4)_22px,rgba(250,204,21,0.4)_23px)]">
+                                        </div>
+                                        <div class="absolute bottom-0 left-1/3 right-0 h-px bg-white/10"></div>
+                                    </div>
+                                    <div
+                                        class="relative px-6 md:px-10 pt-10 pb-0 min-h-[220px] md:min-h-[310px] flex items-end">
+                                        <div class="relative z-10 flex flex-row items-center gap-3 md:gap-8 w-full">
+                                            <button type="button" id="user-profile-picture-trigger"
+                                                onclick="window.toggleUserProfilePictureOverlay(true)"
+                                                class="w-32 h-32 md:w-48 md:h-48 rounded-full bg-slate-200 flex items-center justify-center focus:outline-none shrink-0 mb-[-64px] md:mb-[-74px] border border-slate-300 shadow-sm transition-transform hover:scale-[1.05] duration-200"
+                                                title="Change profile picture">
+                                                <div
+                                                    class="w-28 h-28 md:w-44 md:h-44 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden relative">
+                                                    <img id="user-avatar-img" src="" alt="User Avatar"
+                                                        class="absolute inset-0 w-full h-full object-cover hidden">
+                                                    <i id="user-avatar-placeholder"
+                                                        class="fa-solid fa-user text-5xl md:text-7xl text-black opacity-50"></i>
+                                                </div>
+                                            </button>
+                                            <div class="flex-1 md:pb-5">
+                                                <div class="flex flex-col items-start gap-1">
+                                                    <h2
+                                                        class="text-[1rem] md:text-[2.6rem] font-semibold text-white tracking-tight leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                                                        <span id="view-user-firstName-banner">Firstname</span>
+                                                        <span id="view-user-lastName-banner">Lastname</span>
+                                                    </h2>
+                                                    <div class="flex items-center gap-2">
+                                                        <span id="view-user-role" style="display:none"
+                                                            class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[9px] md:text-xs font-black uppercase tracking-widest text-white">Role</span>
+                                                        <span id="view-user-id"
+                                                            class="text-[9px] md:text-sm font-normal uppercase tracking-widest text-white">ID:
+                                                            #000000</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="pt-24">
+                                    <div class="border-t border-slate-200"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mx-auto max-w-[1024px] w-full">
+                        <div
+                            class="bg-white border-x border-b border-slate-200 min-h-screen p-0 shadow-sm relative flex flex-col">
+                            <div class="pt-4 md:pt-2 pb-10 space-y-1">
+                                <div
+                                    class="px-6 md:px-10 grid grid-cols-1 md:grid-cols-[320px_1fr] gap-4 md:gap-8 items-center">
+                                    <div class="hidden md:flex items-center justify-center shrink-0">
+                                        <h3
+                                            class="text-[11px] md:text-base font-semibold text-slate-400 tracking-normal font-['Inter']">
+                                            About</h3>
+                                    </div>
+                                    <div class="flex justify-between w-full md:w-auto md:justify-start md:gap-2">
+                                        <p id="profile-tab-bio"
+                                            class="px-2 md:px-4 border-b-2 border-[#15803d] text-[11px] md:text-base font-bold text-[#FFD000] tracking-normal font-['Inter'] cursor-pointer transition-colors hover:bg-slate-100 rounded-t-lg whitespace-nowrap"
+                                            onclick="window.switchUserProfileTab('bio')">
+                                            Bio</p>
+                                        <p id="profile-tab-achievements"
+                                            class="px-2 md:px-4 border-b-2 border-transparent text-[11px] md:text-base font-normal text-slate-400 tracking-normal font-['Inter'] cursor-pointer transition-colors hover:bg-slate-100 rounded-t-lg whitespace-nowrap"
+                                            onclick="window.switchUserProfileTab('achievements')">
+                                            Achievements</p>
+                                        <p id="profile-tab-subjects"
+                                            class="px-2 md:px-4 border-b-2 border-transparent text-[11px] md:text-base font-normal text-slate-400 tracking-normal font-['Inter'] cursor-pointer transition-colors hover:bg-slate-100 rounded-t-lg whitespace-nowrap"
+                                            onclick="window.switchUserProfileTab('subjects')">
+                                            Subjects</p>
+                                        <p id="profile-tab-sections"
+                                            class="px-2 md:px-4 border-b-2 border-transparent text-[11px] md:text-base font-normal text-slate-400 tracking-normal font-['Inter'] cursor-pointer transition-colors hover:bg-slate-100 rounded-t-lg whitespace-nowrap"
+                                            onclick="window.switchUserProfileTab('sections')">
+                                            Sections</p>
+                                    </div>
+                                    <!-- Profile Settings Dropdown (Hidden for Students) -->
+                                    <div class="relative hidden">
+                                        <button type="button" id="profile-settings-btn"
+                                            onclick="window.toggleProfileSettingsMenu(event)"
+                                            class="w-10 h-10 hover:bg-slate-100 rounded-full flex items-center justify-center text-black transition-all group"
+                                            title="Account Settings">
+                                            <i
+                                                class="fa-solid fa-gear text-base group-hover:rotate-90 transition-transform duration-500"></i>
+                                        </button>
+                                        <div id="profile-settings-menu"
+                                            class="hidden absolute right-0 mt-3 w-64 bg-white border border-slate-200 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-[110] p-4 overflow-hidden">
+                                            <div class="space-y-1">
+                                                <button
+                                                    onclick="window.viewUserProfile(window.currentViewingUserId); window.toggleProfileSettingsMenu(null, true)"
+                                                    class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 rounded-2xl transition-all group">
+                                                    <i class="fa-solid fa-circle-user text-black text-sm"></i>
+                                                    <span
+                                                        class="text-[11px] font-bold text-black uppercase tracking-widest">View
+                                                        Profile</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="border-t border-slate-200"></div>
+
+                                <div
+                                    class="px-6 md:px-10 pt-6 grid grid-cols-1 md:grid-cols-[320px_1fr] gap-4 md:gap-8">
+                                    <aside
+                                        class="hidden md:block rounded-2xl md:rounded-[28px] border border-slate-200 bg-white p-3 md:p-7 space-y-4 md:space-y-7">
+                                        <div class="space-y-5">
+                                            <div class="space-y-1">
+                                                <div class="flex items-center justify-between">
+                                                    <p
+                                                        class="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400 font-['Inter']">
+                                                        Email</p>
+                                                </div>
+                                                <p id="view-user-email"
+                                                    class="text-sm font-medium text-black font-['Inter'] break-words">
+                                                    example@gmail.com</p>
+                                            </div>
+                                        </div>
+                                    </aside>
+
+                                    <section
+                                        class="rounded-2xl md:rounded-[28px] border border-slate-200 bg-white p-3 md:p-7 min-h-[300px] md:min-h-[360px]">
+                                        <div id="user-profile-tab-panel" class="space-y-4 md:space-y-6">
+                                            <!-- Additional user content -->
+                                        </div>
+                                    </section>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- USER PROFILE PICTURE CHOOSER OVERLAY -->
+                <div id="user-profile-picture-overlay"
+                    class="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-[1500] hidden flex items-center justify-center p-4">
+                    <div
+                        class="bg-white rounded-[32px] border border-slate-200 shadow-2xl w-full max-w-3xl p-8 space-y-8">
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="space-y-1">
+                                <p class="text-[10px] font-bold uppercase tracking-[0.25em] text-black/40">Profile
+                                    Picture</p>
+                                <h3 class="text-2xl font-bold text-black">Choose profile picture</h3>
+                            </div>
+                            <button type="button" onclick="window.toggleUserProfilePictureOverlay(false)"
+                                class="w-11 h-11 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-black transition-colors"
+                                title="Close picture chooser">
+                                <i class="fa-solid fa-xmark text-lg"></i>
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <input type="file" id="user-profile-picture-input" accept="image/*" class="hidden"
+                                onchange="window.handleUserProfilePictureUpload(event)">
+                            <button type="button"
+                                onclick="document.getElementById('user-profile-picture-input').click()"
+                                class="px-6 py-3 bg-[#15803d] text-white text-[10px] font-bold uppercase tracking-[0.25em] rounded-xl hover:bg-[#166534] transition-colors">
+                                Upload Photo
+                            </button>
+                        </div>
+
+                        <div class="border-t border-gray-100 pt-6 space-y-4">
+                            <p class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">Uploads</p>
+                            <div id="user-profile-picture-uploads"
+                                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 min-h-[120px]">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ═══ SIGMA AI ══════════════════════════════════════════════ -->
+    <!-- Calendar Dropdown -->
+    <div id="calendar-dropdown"
+        class="header-panel hidden fixed right-0 top-[var(--shell-offset)] h-[calc(100vh-var(--shell-offset))] w-[400px] bg-white shadow-[-20px_0_40px_rgba(0,0,0,0.08)] border-l border-slate-200 flex flex-col z-[300] rounded-l-[24px] overflow-y-auto custom-scrollbar font-['Inter']">
+        <!-- Header: Removed border-b -->
+        <div class="px-8 py-6 bg-gray-50/50 flex-shrink-0">
+            <div class="flex items-center justify-between mb-8">
+                <h3 id="calendarDropdownMonthYear"
+                    class="text-[15px] font-black text-black leading-none uppercase tracking-widest">April 2026</h3>
+                <div class="flex gap-1">
+                    <button id="calendarDropdownPrevMonthBtn"
+                        class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 hover:bg-slate-200 flex items-center justify-center text-black transition-all">
+                        <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                    </button>
+                    <button id="calendarDropdownNextMonthBtn"
+                        class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 hover:bg-slate-200 flex items-center justify-center text-black transition-all">
+                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="grid grid-cols-7 gap-1 text-center border-t border-slate-100 pt-4 mb-2">
+                <div class="text-[10px] font-normal text-black uppercase tracking-tighter">Sun</div>
+                <div class="text-[10px] font-normal text-black uppercase tracking-tighter">Mon</div>
+                <div class="text-[10px] font-normal text-black uppercase tracking-tighter">Tue</div>
+                <div class="text-[10px] font-normal text-black uppercase tracking-tighter">Wed</div>
+                <div class="text-[10px] font-normal text-black uppercase tracking-tighter">Thu</div>
+                <div class="text-[10px] font-normal text-black uppercase tracking-tighter">Fri</div>
+                <div class="text-[10px] font-normal text-black uppercase tracking-tighter">Sat</div>
+            </div>
+            <div id="calendarDropdownDaysGrid" class="grid grid-cols-7 gap-1 text-center">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- View Calendar Link -->
+            <div class="mt-8 mb-4 flex justify-center">
+                <a href="#"
+                    class="view-calendar-anchor font-['Inter',_sans-serif] text-black text-[11px] font-black uppercase tracking-[0.2em] cursor-pointer no-underline outline-none"
+                    style="font-family: 'Inter', sans-serif !important; pointer-events: auto !important;">
+                    View Calendar →
+                </a>
+            </div>
+        </div>
+
+        <div class="calendar-dropdown-summary flex-1 px-8 py-5 space-y-5 bg-white border-t border-gray-100">
+            <div>
+                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Next Class</h4>
+                <div id="calendarDropdownUpcomingClassList" class="space-y-3"></div>
+            </div>
+            <div>
+                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Due Submissions</h4>
+                <div id="calendarDropdownAssessmentList" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <!-- Bottom Division Line -->
+        <div class="border-t border-gray-100 w-full mt-auto"></div>
+    </div>
+
+    <div id="sigmaAiPanel">
+        <div
+            class="px-4 py-3 bg-white text-gray-900 flex items-center justify-between flex-shrink-0 border-b border-gray-100">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-icc-yellow rounded-lg flex items-center justify-center shadow-lg">
+                    <i class="fa-solid fa-bolt text-black text-sm"></i>
+                </div>
+                <span class="text-xs font-black uppercase tracking-[0.25em]">SIGMA</span>
+            </div>
+            <button id="sigmaAiCloseBtn"
+                class="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all">
+                <i class="fa-solid fa-xmark text-gray-700 text-xs"></i>
+            </button>
+        </div>
+        <div id="sigmaAiMessages" class="flex-1 p-5 overflow-y-auto space-y-4 bg-gray-50/50"></div>
+        <div class="p-4 bg-white border-t border-gray-100 flex-shrink-0">
+            <div id="sigmaAiComposer" class="sigma-ai-composer">
+                <button id="sigmaAiAttachBtn" type="button" class="sigma-ai-attach-btn" aria-label="Add attachment">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+                <div id="sigmaAiAttachMenu" class="sigma-ai-attach-menu hidden">
+                    <button type="button" class="sigma-ai-attach-option" data-attach-target="sigmaAiFileInput">
+                        <i class="fa-solid fa-file-arrow-up"></i>
+                        <span>Add files</span>
+                    </button>
+                    <button type="button" class="sigma-ai-attach-option" data-attach-target="sigmaAiPhotoInput">
+                        <i class="fa-regular fa-image"></i>
+                        <span>Photo</span>
+                    </button>
+                </div>
+                <input type="file" id="sigmaAiFileInput" class="hidden" multiple
+                    accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,.txt,.rtf,.odt,.ods,.odp">
+                <input type="file" id="sigmaAiPhotoInput" class="hidden"
+                    accept="image/png,image/jpeg,image/webp,image/gif,image/bmp">
+                <div class="sigma-ai-composer__field">
+                    <input type="text" id="sigmaAiInput" placeholder="Ask..." class="sigma-ai-composer__input">
+                </div>
+                <button id="sigmaAiSendBtn" type="button" class="sigma-ai-send-btn" aria-label="Send message">
+                    <i class="fa-solid fa-arrow-up sigma-ai-send-icon"></i>
+                    <span class="sigma-ai-send-spinner" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sigmaAiNotch" title="Toggle SIGMA">
+        <i class="fa-solid fa-bolt text-sm"></i>
+        <span class="text-[9px] font-black uppercase tracking-widest [writing-mode:vertical-lr] mt-2">SIGMA</span>
+    </div>
+
+    <!-- Mobile Bottom App Bar -->
+    <div id="mobile-bottom-appbar" class="mobile-bottom-appbar">
+        <button type="button" id="mobile-appbar-profile" class="mobile-bottom-appbar__btn" aria-label="Profile">
+            <i class="fa-solid fa-user"></i>
+        </button>
+        <button type="button" id="mobile-appbar-calendar" class="mobile-bottom-appbar__btn" aria-label="Calendar">
+            <i class="fa-solid fa-calendar-days"></i>
+        </button>
+        <button type="button" id="mobile-appbar-sigma"
+            class="mobile-bottom-appbar__btn mobile-bottom-appbar__btn--sigma" aria-label="SIGMA panels">
+            <i class="fa-solid fa-bolt"></i>
+        </button>
+        <button type="button" id="mobile-appbar-notifications" class="mobile-bottom-appbar__btn"
+            aria-label="Notifications">
+            <i class="fa-solid fa-bell"></i>
+        </button>
+    </div>
+
+    <div id="mobile-sigma-sheet-backdrop" class="mobile-sigma-sheet-backdrop"></div>
+    <div id="mobile-sigma-sheet" class="mobile-sigma-sheet">
+        <div class="mobile-sigma-sheet__grab"></div>
+        <div class="mobile-sigma-sheet__head">
+            <span class="mobile-sigma-sheet__title">Pocket Cards</span>
+            <button type="button" id="mobile-sigma-sheet-close" class="mobile-sigma-sheet__close" aria-label="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="mobile-sigma-cards custom-scrollbar" id="mobile-sigma-cards"></div>
+    </div>
+
+    <!-- Notification Pull-up -->
+    <div id="mobile-noti-panel" class="mobile-pull-up-panel">
+        <div class="mobile-pull-up-header">
+            <span class="mobile-pull-up-title">Notifications</span>
+            <button type="button" class="mobile-pull-up-close" onclick="closeMobilePanel('mobile-noti-panel')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="mobile-pull-up-content">
+            <div class="space-y-4">
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p class="text-xs font-black text-icc uppercase tracking-widest mb-1">New Assignment</p>
+                    <p class="text-sm font-bold text-slate-800">Computer Programming 1: Logic Gates Quiz</p>
+                    <p class="text-[11px] text-slate-500 mt-1">Teacher Alex Reyes posted a new quiz. Due on May 5.</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p class="text-xs font-black text-blue-600 uppercase tracking-widest mb-1">System Update</p>
+                    <p class="text-sm font-bold text-slate-800">Welcome to 2nd Quarter!</p>
+                    <p class="text-[11px] text-slate-500 mt-1">The second quarter academic cycle has officially started.
+                    </p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p class="text-xs font-black text-yellow-600 uppercase tracking-widest mb-1">Attendance</p>
+                    <p class="text-sm font-bold text-slate-800">Attendance Confirmed</p>
+                    <p class="text-[11px] text-slate-500 mt-1">Your attendance for Web Development 1 has been marked as
+                        Present.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Pull-up -->
+    <div id="mobile-calendar-panel" class="mobile-pull-up-panel">
+        <div class="mobile-pull-up-header">
+            <span class="mobile-pull-up-title">Calendar & Schedule</span>
+            <button type="button" class="mobile-pull-up-close" onclick="closeMobilePanel('mobile-calendar-panel')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="mobile-pull-up-content">
+            <div id="mobile-calendar-container" class="mb-6">
+                <!-- Inline calendar will be rendered here -->
+            </div>
+            <div class="mt-4 text-center">
+                <button class="text-icc font-black uppercase tracking-widest text-xs">View Calendar →</button>
+            </div>
+
+            <div class="mt-8 space-y-6">
+                <div>
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Next Class</h4>
+                    <div class="p-4 bg-icc/5 rounded-2xl border border-icc/10">
+                        <p class="text-sm font-bold text-slate-800">Web Development 1</p>
+                        <p class="text-[11px] text-icc font-black mt-1">TODAY • 1:30 PM - 3:00 PM</p>
+                        <p class="text-[10px] text-slate-500 mt-1">Room Lab 2 • Ms. Sarah Lim</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Due Submissions
+                    </h4>
+                    <div class="p-4 bg-red-50 rounded-2xl border border-red-100">
+                        <p class="text-sm font-bold text-slate-800">Logic Gates Exercise</p>
+                        <p class="text-[11px] text-red-600 font-black mt-1">DUE TODAY • 11:59 PM</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Upcoming
+                        Submissions</h4>
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <p class="text-sm font-bold text-slate-800">E-Portfolio Draft</p>
+                        <p class="text-[11px] text-slate-500 font-black mt-1">DUE MAY 10 • 11:59 PM</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/student.js"></script>
+</body>
+
+</html>

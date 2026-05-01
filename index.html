@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- =============================================================
+     HEAD: Meta, Fonts, CSS, Tailwind Config
+     ============================================================= -->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sigma ELMS - Interface Computer College</title>
+
+    <!-- FONTS: Google Inter + Font Awesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CSS: Custom Stylesheet -->
+    <link rel="stylesheet" href="css/index.css">
+
+    <!-- TAILWIND: CDN + ICC Custom Color Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        icc: '#15803d',
+                        'icc-light': '#dcfce7',
+                        'icc-dark': '#14532d',
+                        'icc-yellow': '#FFD000',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="flex flex-col bg-gray-50 overflow-x-hidden min-h-screen">
+
+    <!-- =============================================================
+         NAVIGATION: Fixed top navbar with ICC branding
+         ============================================================= -->
+    <header id="mainNav"
+        class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-8 bg-white border-b-2 border-icc lg:shadow-sm h-[82px]">
+        <div class="flex items-center gap-3 no-underline h-full">
+            <a href="#" id="backToLoginLogo" class="flex items-center no-underline">
+                <img src="image/ICC logo.jpg" alt="ICC Logo"
+                    class="w-[48px] h-[48px] md:w-[56px] md:h-[56px] object-contain">
+            </a>
+            <div id="navContextBox" class="flex items-center gap-2 ml-1 md:ml-3">
+                <i id="navIcon" class="fa-solid fa-circle-info text-2xl text-gray-400 hidden pointer-events-none"></i>
+                <div class="flex flex-col">
+                    <h1 id="navTitle" class="text-xl font-bold text-black leading-tight">Interface Computer College</h1>
+                    <span id="navSubtitle" class="text-xs text-black font-medium">Caloocan Senior High School ELMS</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center h-full">
+            <button id="helpCenterNavMenuBtn" type="button" aria-expanded="false" aria-label="Open help categories"
+                class="hidden xl:hidden self-stretch px-5 bg-white text-gray-700 items-center justify-center transition-colors cursor-pointer outline-none shadow-none border-none hover:bg-gray-50">
+                <i class="fa-solid fa-bars text-xl pointer-events-none"></i>
+            </button>
+
+            <!-- HELP CENTER BUTTON (Desktop XL Only) -->
+            <button id="entryHelpCenterBtn"
+                class="hidden xl:flex group self-stretch px-4 md:px-8 bg-white text-black font-bold items-center gap-3 transition-colors cursor-pointer outline-none shadow-none no-underline border-none">
+                <i
+                    class="fa-solid fa-circle-info text-2xl md:text-3xl text-gray-300 group-hover:text-icc-yellow transition-colors pointer-events-none"></i>
+                <span class="text-base md:text-xl font-bold">Help Center</span>
+            </button>
+        </div>
+
+    </header>
+
+    <!-- =============================================================
+         MAIN: Page Content Area
+         ============================================================= -->
+    <main class="flex-1 mt-20 flex flex-col bg-white">
+
+        <!-- MAIN CONTENT AREA: Slider + Login Panel -->
+        <div id="landingMain"
+            class="w-full flex-1 m-0 p-0 flex flex-col lg:flex-row transition-all duration-400 min-h-[calc(100vh_-_82px)] lg:h-[calc(100vh_-_82px)] overflow-y-auto lg:overflow-hidden">
+
+            <!-- IMAGE SLIDER: Auto-rotating campus photos (Large Desktop only) -->
+            <div class="w-full lg:w-[65%] relative overflow-hidden lg:block hidden h-[calc(100vh_-_82px)]">
+                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 flex gap-3" id="dotsContainer"></div>
+                <div class="w-full h-full relative left-0 overflow-hidden" id="slider">
+                    <!-- Slides injected by JS -->
+                </div>
+            </div>
+
+            <!-- LOGIN PANEL: Full-width on Tablet/Small Laptop, Side-by-side on XL Monitors -->
+            <div
+                class="login-panel w-full lg:w-[35%] flex flex-col justify-center items-center px-6 md:px-10 py-8 lg:py-10 bg-white border-none lg:border-l min-h-full lg:h-full">
+                <div class="login-form-stack">
+
+                    <!-- LOGIN LOGO -->
+                    <div class="login-form-logo-wrap flex flex-col items-center mb-8 lg:mb-12">
+                        <img src="image/ICC logo.jpg" alt="ICC Logo" class="login-form-logo object-contain">
+                    </div>
+
+                    <!-- LOGIN FORM -->
+                    <form id="landingLoginForm" class="login-form-shell w-full mx-auto">
+                        <div class="mb-5 lg:mb-6">
+                            <div class="floating-input-group">
+                                <input type="text" id="schoolId" name="schoolId" placeholder=" "
+                                    class="floating-input w-full px-4 py-3 bg-white border border-gray-400 rounded-lg focus:outline-none focus:border-black transition-all text-base lg:text-sm text-gray-900">
+                                <label for="schoolId" class="floating-input-label">Email or ID</label>
+                            </div>
+                            <div id="schoolIdError" class="hidden text-red-600 text-sm mt-1 normal-case font-medium">
+                            </div>
+                        </div>
+                        <div class="mb-6 lg:mb-8">
+                            <div class="floating-input-group relative">
+                                <input type="password" id="password" name="password" placeholder=" "
+                                    class="floating-input w-full px-4 py-3 bg-white border border-gray-400 rounded-lg focus:outline-none focus:border-black transition-all text-base lg:text-sm text-gray-900 pr-12">
+                                <label for="password" class="floating-input-label">Password</label>
+                                <button type="button"
+                                    class="password-toggle-btn absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none bg-transparent border-none p-0 cursor-pointer opacity-0 pointer-events-none"
+                                    data-target="password">
+                                    <i class="fa-solid fa-eye-slash text-lg"></i>
+                                </button>
+                            </div>
+                            <div id="passwordError" class="hidden text-red-600 text-sm mt-1 normal-case font-medium">
+                            </div>
+                        </div>
+                        <div id="loginErrorMessage"
+                            class="hidden mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs font-bold text-center uppercase tracking-widest">
+                            ID or password is wrong.
+                        </div>
+                        <div id="loginTimeoutMessage"
+                            class="hidden mb-4 p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 text-xs font-bold text-center uppercase tracking-widest">
+                            <span id="timeoutMessageLabel">Wait for 60 seconds.</span>
+                            <span id="timeoutReleaseTs" class="hidden"></span>
+                        </div>
+
+                        <button type="submit" id="loginSubmitBtn"
+                            class="sign-in-btn w-full py-3 text-white font-bold rounded-lg transition-all duration-300 text-base lg:text-sm flex items-center justify-center gap-3">
+                            <span class="btn-text">Log In</span>
+                            <i class="fa-solid fa-circle-notch fa-spin hidden"></i>
+                        </button>
+
+                        <div class="xl:hidden mt-3 text-center">
+                            <button id="entryHelpCenterBtnSmall" type="button"
+                                class="inline-flex items-center gap-2 text-sm font-bold text-black hover:text-icc transition-colors bg-transparent border-none cursor-pointer group no-underline">
+                                <i
+                                    class="fa-solid fa-circle-info text-base text-gray-300 group-hover:text-black transition-colors pointer-events-none"></i>
+                                <span>Help Center</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+
+
+            </div>
+        </div>
+
+        <!-- FOOTER: Social links and copyright -->
+        <footer class="bg-icc-dark text-white flex flex-col lg:flex-row w-full mt-auto">
+            <!-- Left Side (Full width on mobile, 65% on desktop) -->
+            <div
+                class="w-full lg:w-[65%] flex flex-col items-start justify-end py-3 px-8 border-b lg:border-b-0 border-white/10">
+                <div class="flex flex-wrap justify-start gap-3 mb-1 text-gray-400 text-sm font-light">
+                    <a href="https://home1.interface.edu.ph/index.php/home/about-interface" id="footerAboutLink"
+                        class="hover:text-icc-yellow transition-colors">About</a>
+                    <span class="text-white/30 px-1 opacity-50">|</span>
+                    <a href="https://home1.interface.edu.ph/index.php/contact-us"
+                        class="hover:text-icc-yellow transition-colors">Contact Us</a>
+                    <span class="text-white/30 px-1 opacity-50">|</span>
+                    <a href="https://home1.interface.edu.ph/index.php/home/college-privacy-policy"
+                        class="hover:text-icc-yellow transition-colors">Privacy Policy</a>
+                    <span class="text-white/30 px-1 opacity-50 lg:hidden text-[10px] self-center">|</span>
+                    <div class="flex gap-2 lg:hidden">
+                        <a href="https://www.facebook.com/pages/Interface-Computer-College-Caloocan/102080169834167/" target="_blank"
+                            class="hover:text-icc-yellow transition-colors">Facebook</a>
+                        <span class="text-white/30 opacity-50">|</span>
+                        <a href="https://www.instagram.com/interfacemanila/" target="_blank"
+                            class="hover:text-icc-yellow transition-colors">Instagram</a>
+                    </div>
+                </div>
+                <div class="text-center text-[10px] text-gray-400 uppercase tracking-widest mt-1">
+                    &copy; 2024 Interface Computer College ELMS. All Rights Reserved.
+                </div>
+            </div>
+
+            <!-- Right Side (Social Icons with Expanding Hover Reveal - Desktop) -->
+            <div class="hidden lg:flex w-full lg:w-[35%] flex-col items-end justify-end lg:pr-12 py-3 px-8">
+                <div class="flex items-center gap-4">
+                    <a href="https://www.facebook.com/pages/Interface-Computer-College-Caloocan/102080169834167/" target="_blank"
+                        class="group flex items-center justify-start w-9 hover:w-32 h-9 rounded-full bg-white/10 text-white hover:bg-icc-yellow hover:text-icc-dark transition-all duration-500 overflow-hidden px-[10px] whitespace-nowrap">
+                        <i class="fa-brands fa-facebook-f min-w-[16px] text-center"></i>
+                        <span
+                            class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3 text-sm font-bold">Facebook</span>
+                    </a>
+                    <a href="https://www.instagram.com/interfacemanila/" target="_blank"
+                        class="group flex items-center justify-start w-9 hover:w-32 h-9 rounded-full bg-white/10 text-white hover:bg-icc-yellow hover:text-icc-dark transition-all duration-500 overflow-hidden px-[10px] whitespace-nowrap">
+                        <i class="fa-brands fa-instagram min-w-[16px] text-center"></i>
+                        <span
+                            class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3 text-sm font-bold">Instagram</span>
+                    </a>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <!-- MOBILE SIDEBAR & OVERLAY -->
+    <div id="helpMobileSidebarOverlay"
+        class="fixed inset-0 bg-black/50 z-[250] hidden opacity-0 transition-opacity duration-300"></div>
+    <aside id="helpMobileSidebar"
+        class="fixed inset-y-0 right-0 w-[310px] max-w-[84vw] bg-white border-l border-gray-100 shadow-2xl z-[300] hidden transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Help Categories</p>
+            <button id="helpMobileSidebarClose" type="button" aria-label="Close help categories"
+                class="w-10 h-10 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <nav id="helpCategoriesMobile" class="p-4 flex flex-col gap-2"></nav>
+    </aside>
+
+    <!-- =============================================================
+         MODALS: Popup dialogs (overlays)
+         ============================================================= -->
+
+    <!-- INTEGRATED HELP CENTER VIEW -->
+    <div id="helpCenterView"
+        class="hidden fixed inset-0 z-40 bg-white pt-[82px] overflow-hidden flex flex-col xl:flex-row transition-all duration-500 opacity-0 translate-y-10">
+        <!-- Sidebar -->
+        <aside
+            class="hidden xl:block w-[400px] bg-white border-r border-gray-100 p-8 h-full overflow-y-auto pl-[8%] pr-10">
+            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Help Categories</h2>
+            <nav id="helpCategoriesDesktop" class="flex flex-col gap-2"></nav>
+        </aside>
+
+        <!-- Content Area -->
+        <section id="helpCenterContentScroll" class="flex-1 h-full overflow-y-auto bg-gray-100">
+            <div class="w-full max-w-4xl p-8 xl:p-16 mx-auto">
+                <h2 id="faq-help" class="text-4xl font-bold text-black mb-10">FAQ</h2>
+                <div class="space-y-8">
+                    <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-4">What is my ID and Email?</h3>
+                        <p class="text-gray-600 leading-relaxed text-lg">Your official ID and Email are provided upon
+                            enrollment. If you need to retrieve these credentials, please visit the Registrar's Office
+                            with a valid ID.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-4">What is the default password?</h3>
+                        <p class="text-gray-600 leading-relaxed text-lg">Default passwords are typically your
+                            <strong>Surname</strong> followed by your <strong>registration id given in elms by the
+                                admin</strong>. If you are still unsure of your password details, please contact the
+                            Registrar's Office or your designated ELMS administrator.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-4">How do I reset a forgotten password?</h3>
+                        <p class="text-gray-600 leading-relaxed text-lg">For security reasons, password resets are
+                            handled in person. Please visit the Admin Office to request a manual reset of your account
+                            credentials.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-4">Why is my account inactive?</h3>
+                        <p class="text-gray-600 leading-relaxed text-lg">Accounts may be set to inactive if there are
+                            pending enrollment issues or if the account hasn't been used for two consecutive semesters.
+                        </p>
+                    </div>
+                </div>
+
+                <div id="contact-support" class="mt-16">
+                    <h2 class="text-4xl font-bold text-black mb-10">Contact Support</h2>
+                    <div class="grid gap-6 md:grid-cols-2">
+                        <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">When should I contact support?</h3>
+                            <p class="text-gray-600 leading-relaxed text-lg">Reach out if you still cannot sign in,
+                                your account details do not match, your password reset does not work, or you need help
+                                confirming enrollment-related access.</p>
+                        </div>
+                        <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">Where can I ask for help?</h3>
+                            <p class="text-gray-600 leading-relaxed text-lg">You may visit the ICT Department during
+                                school hours, or open the official contact page for registrar and school support
+                                concerns.</p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="mt-6 p-8 bg-icc text-white rounded-3xl flex items-center justify-between shadow-xl gap-6">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2">Need direct assistance?</h3>
+                            <p class="text-white/80 text-lg leading-relaxed">Click <a
+                                    href="https://home1.interface.edu.ph/index.php/contact-us" target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="font-bold underline decoration-white/60 underline-offset-4 hover:text-icc-yellow transition-colors">here</a>
+                                to open the official Contact Support page.</p>
+                        </div>
+                        <i class="fa-solid fa-headset text-5xl opacity-20"></i>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- RECAPTCHA VIEW (Full Page Shift) -->
+    <div id="recaptchaView"
+        class="hidden fixed inset-0 z-[90] bg-white flex flex-col items-center justify-start pt-24 lg:pt-32 transition-all duration-500 opacity-0 translate-y-10">
+        <div class="max-w-md w-full px-8 text-center space-y-6">
+            <div class="flex items-center justify-center gap-3">
+                <div class="w-14 h-14 rounded-2xl bg-icc-yellow flex items-center justify-center shadow-sm">
+                    <i class="fa-solid fa-bolt text-black text-xl"></i>
+                </div>
+                <span class="text-2xl font-black uppercase tracking-[0.28em] text-slate-900">Sigma</span>
+            </div>
+
+            <div
+                class="bg-gray-50 p-10 rounded-none border-2 border-gray-100 shadow-sm flex flex-col items-center gap-6">
+                <div id="recaptchaBoxContainer"
+                    class="login-captcha-box login-captcha-box--full hover:border-icc transition-colors w-full">
+                    <input type="checkbox" id="fullPageCaptchaCheck" class="login-captcha-check">
+                    <span class="min-w-0 flex-1 text-left">
+                        <span class="block text-xl font-semibold text-gray-700">I'm not a robot</span>
+                    </span>
+                    <span class="recaptcha-wiremark">
+                        <span class="recaptcha-wiremark__icon">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </span>
+                        <span class="recaptcha-wiremark__text">reCAPTCHA</span>
+                        <span class="recaptcha-wiremark__meta">Privacy - Terms</span>
+                    </span>
+                </div>
+                <div id="recaptchaLoadingState"
+                    class="hidden flex flex-col items-center justify-center gap-3 py-6 min-h-[84px]">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl text-icc"></i>
+                    <span class="text-sm font-bold uppercase tracking-[0.22em] text-gray-400">Checking...</span>
+                </div>
+                <div id="recaptchaError" class="hidden text-red-600 text-sm font-bold uppercase tracking-widest mt-2">
+                    Invalid navigation or session expired.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIN PANEL MODAL -->
+    <div id="loginModal"
+        class="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white p-12 w-[92%] max-w-[500px] rounded-3xl shadow-2xl relative translate-y-20 opacity-0 transition-all duration-500"
+            id="loginBox">
+            <button class="absolute top-6 right-6 text-3xl text-gray-400 hover:text-gray-900 focus:outline-none"
+                id="closeLoginBtn">&times;</button>
+            <div class="text-center mb-10">
+                <img src="image/ICC logo.jpg" alt="ICC Logo" class="w-24 h-24 mx-auto mb-6 object-contain">
+                <h2 class="text-3xl font-black text-icc-dark uppercase tracking-tight">Login Portal</h2>
+                <p class="text-gray-500 mt-2 font-medium">Access your student dashboard</p>
+            </div>
+            <form id="modalLoginForm" class="space-y-6">
+                <div>
+                    <div class="floating-input-group floating-input-group--modal">
+                        <input type="text" id="modalSchoolId" placeholder=" "
+                            class="floating-input floating-input--modal w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 text-base transition-all outline-none">
+                        <label for="modalSchoolId" class="floating-input-label floating-input-label--modal">Email or
+                            ID</label>
+                    </div>
+                    <div id="modalSchoolIdError" class="hidden text-red-600 text-sm mt-2 normal-case font-medium ml-1">
+                    </div>
+                </div>
+                <div>
+                    <div class="floating-input-group floating-input-group--modal relative">
+                        <input type="password" id="modalPassword" placeholder=" "
+                            class="floating-input floating-input--modal w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 text-base transition-all outline-none pr-14">
+                        <label for="modalPassword"
+                            class="floating-input-label floating-input-label--modal">Password</label>
+                        <button type="button"
+                            class="password-toggle-btn absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none bg-transparent border-none p-0 cursor-pointer opacity-0 pointer-events-none"
+                            data-target="modalPassword">
+                            <i class="fa-solid fa-eye-slash text-lg"></i>
+                        </button>
+                    </div>
+                    <div id="modalPasswordError" class="hidden text-red-600 text-sm mt-2 normal-case font-medium ml-1">
+                    </div>
+                </div>
+                <div id="modalLoginErrorMessage"
+                    class="hidden p-3 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold text-center uppercase tracking-widest">
+                    ID or password is wrong.
+                </div>
+                <div id="modalLoginTimeoutMessage"
+                    class="hidden p-3 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 text-xs font-bold text-center uppercase tracking-widest">
+                    <span id="modalTimeoutMessageLabel">Wait for 60 seconds.</span>
+                    <span id="modalTimeoutReleaseTs" class="hidden"></span>
+                </div>
+                <button type="submit" id="modalLoginSubmitBtn"
+                    class="w-full bg-icc-yellow text-white font-black py-4 rounded-2xl text-lg shadow-lg shadow-icc-yellow/20 hover:bg-[#ffe047] hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest mt-4 flex items-center justify-center gap-3">
+                    <span class="btn-text">Sign In</span>
+                    <i class="fa-solid fa-circle-notch fa-spin hidden"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- REMOVED: HELP CENTER MODAL (Now integrated as a view) -->
+
+    <!-- =============================================================
+         SCRIPTS: Main JavaScript
+         ============================================================= -->
+    <script src="js/index.js?v=4.1"></script>
+
+</body>
+
+</html>
