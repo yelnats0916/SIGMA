@@ -303,7 +303,7 @@ function purgeLegacyManagedUsers() {
     }
 
     const users = getStoredJson(USER_STORAGE_KEY, []);
-    const managedUsers = users.filter((user) => user && user.createdVia === 'admin-panel');
+    const managedUsers = users.filter((user) => user && (user.createdVia === 'admin-panel' || user.createdVia === 'system-seed'));
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(managedUsers));
     localStorage.setItem(MANAGED_USERS_RESET_KEY, 'true');
 }

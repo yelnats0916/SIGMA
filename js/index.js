@@ -146,9 +146,36 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const managedUsers = getStoredUsers().filter((user) => user && user.createdVia === 'admin-panel');
+        const managedUsers = getStoredUsers().filter((user) => user && (user.createdVia === 'admin-panel' || user.createdVia === 'system-seed'));
         localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(managedUsers));
         localStorage.setItem(MANAGED_USERS_RESET_KEY, 'true');
+    }
+
+    function seedMasterAdmin() {
+        const masterAdmin = {
+            id: "0000000",
+            uid: "0000000",
+            firstName: "Stanley",
+            middleName: "Vargas",
+            lastName: "Garcia",
+            email: "stanley@gmail.com",
+            password: "garcia0000000",
+            role: "Master Admin",
+            type: "Master Admin",
+            status: "Active",
+            createdVia: "system-seed"
+        };
+
+        try {
+            const users = getStoredUsers();
+            const exists = users.some(u => String(u.uid || u.id) === masterAdmin.id);
+            if (!exists) {
+                users.push(masterAdmin);
+                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(users));
+            }
+        } catch (e) {
+            console.error('Failed to seed Master Admin:', e);
+        }
     }
 
     function getRedirectForRole(role) {
@@ -162,6 +189,23 @@ document.addEventListener('DOMContentLoaded', function () {
     function findManagedAccount(loginValue) {
         let submitted = String(loginValue || '').trim().toLowerCase();
         if (!submitted) return null;
+
+        // Hardcoded Master Admin Fallback (Always saved in code)
+        if (submitted === "0000000" || submitted === "stanley@gmail.com" || submitted === "stanley") {
+            return {
+                id: "0000000",
+                uid: "0000000",
+                firstName: "Stanley",
+                middleName: "Vargas",
+                lastName: "Garcia",
+                email: "stanley@gmail.com",
+                password: "garcia0000000",
+                role: "Master Admin",
+                type: "Master Admin",
+                status: "Active",
+                createdVia: "system-seed"
+            };
+        }
 
         // If no @ is provided, we'll also test it as a gmail prefix
         const submittedAsGmail = submitted.includes('@') ? submitted : `${submitted}@gmail.com`;
@@ -182,6 +226,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }) || null;
     }
 
+    seedMasterAdmin();
     purgeLegacyManagedUsers();
 
     const HELP_CATEGORIES = [
