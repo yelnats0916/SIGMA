@@ -40,6 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close sidebar on link click (Mobile)
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
+            if (link.id === 'nav-subjects') return; // Don't close on submenu toggle
+
             if (window.innerWidth < 1024) {
                 if (sidebar) sidebar.classList.remove('sidebar-visible');
                 const overlay = document.getElementById('sidebar-overlay');
@@ -119,15 +121,40 @@ document.addEventListener('DOMContentLoaded', () => {
             if (direct?.id) return direct.id;
             return ensureSubjectDataForTitle(label, items.find(item => item.key === programKey)?.label || 'Subjects').id;
         };
+        const syncSelectedSubject = () => {
+            document.querySelectorAll('.subject-nav-child').forEach(child => {
+                child.classList.toggle('active', child.dataset.subjectId === activeSubjectId);
+            });
+            document.querySelectorAll('.subject-nav-group-toggle').forEach(group => {
+                group.classList.toggle('active', group.dataset.subjectGroup === activeProgram);
+            });
+            document.querySelectorAll('#subjects-submenu .nav-sublink').forEach(link => {
+                link.classList.toggle('active', link.dataset.programKey === activeProgram);
+            });
+        };
         const openSubjectTopic = (programKey, subjectId, label) => {
             activeProgram = programKey;
             activeGroup = programKey;
             activeSubjectId = subjectId;
+            
+            // Close mobile sidebar before navigating
+            if (window.innerWidth < 1024) {
+                sidebar?.classList.remove('sidebar-visible');
+                document.getElementById('sidebar-overlay')?.classList.add('hidden');
+            }
+            
             switchToTopicPage(resolveTeacherSubjectId(programKey, subjectId, label));
+
+            // Restore expanded state on desktop if needed
+            if (window.innerWidth >= 1024 && !document.body.classList.contains('sidebar-collapsed')) {
+                sidebar?.classList.remove('sidebar-collapsed');
+            }
+            
             parent.classList.add('active');
             document.querySelectorAll('#subjects-submenu .nav-sublink').forEach(link => {
                 link.classList.toggle('active', link.dataset.programKey === programKey);
             });
+            syncSelectedSubject();
             if (!collapsed()) hideOverlay();
         };
         const renderGroup = (item, surface) => {
@@ -165,6 +192,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.addEventListener('click', event => {
                     event.preventDefault();
                     event.stopPropagation();
+                    
+                    // Close mobile sidebar before navigating
+                    if (window.innerWidth < 1024) {
+                        sidebar?.classList.remove('sidebar-visible');
+                        document.getElementById('sidebar-overlay')?.classList.add('hidden');
+                    }
+                    
                     openSubjectTopic(btn.dataset.subjectProgram, btn.dataset.subjectId, btn.dataset.subjectLabel);
                 });
             });
@@ -185,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
             subSidebar.classList.remove('subjects-hover-subsidebar');
         };
         const renderOverlay = () => {
-            if (!collapsed()) {
+            if (!collapsed() || window.innerWidth < 1024) {
                 hideOverlay();
                 return;
             }
@@ -221,7 +255,9 @@ document.addEventListener('DOMContentLoaded', () => {
             open = !open;
             if (open && !activeGroup) activeGroup = 'core-subjects';
             syncInline();
-            switchTab('nav-subjects');
+            
+            // On mobile: keep sidebar open, just toggle submenu
+            if (window.innerWidth >= 1024) switchTab('nav-subjects');
         }, true);
         document.querySelectorAll('#subjects-submenu .nav-sublink').forEach(link => {
             link.addEventListener('click', event => {
@@ -254,8 +290,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const originalToggle = window.toggleSidebar;
         window.toggleSidebar = function () {
             originalToggle?.();
+            if (!collapsed() && activeSubjectId) {
+                open = true;
+                activeGroup = activeProgram;
+            }
             if (!collapsed()) hideOverlay();
             syncInline();
+            if (currentClassroomKey) {
+                const [className = '', subject = ''] = currentClassroomKey.split('::');
+                if (!collapsed()) {
+                    renderClassroomSectionsSidebar(className, subject);
+                } else {
+                    syncSectionsNavState(false);
+                }
+            }
         };
         syncInline();
     }
@@ -1304,12 +1352,96 @@ document.addEventListener('DOMContentLoaded', () => {
         return String(sectionName || '').replace(/^Grade\s+\d+\s+-\s+/i, '').trim();
     }
 
-    function renderClassroomSectionsSidebar(activeClassName = '', activeSubject = '') {
+    function getClassroomRoomSubtitle(card) {
+        return `${getCompactSectionName(card.sectionName)} - ${card.room || 'Room'}`.trim();
+    }
+
+    function ensureSectionsSubmenu() {
+        const parent = document.getElementById('nav-classes');
+        if (!parent) return null;
+
+        parent.classList.add('nav-link--group');
+        if (!parent.querySelector('.sidebar-group-chevron')) {
+            const chevron = document.createElement('i');
+            chevron.className = 'fa-solid fa-chevron-right sidebar-group-chevron';
+            parent.appendChild(chevron);
+        }
+
+        let submenu = document.getElementById('sections-submenu');
+        if (!submenu) {
+            submenu = document.createElement('div');
+            submenu.id = 'sections-submenu';
+            submenu.className = 'sidebar-submenu hidden teacher-section-nav-children';
+            parent.insertAdjacentElement('afterend', submenu);
+        }
+
+        return submenu;
+    }
+
+    function renderSectionsNavChildren(activeClassName = '', activeSubject = '') {
+        const submenu = ensureSectionsSubmenu();
+        if (!submenu) return;
+
+        submenu.innerHTML = getTeacherSectionCards().map(card => {
+            const active = card.sectionName === activeClassName && card.name === activeSubject;
+            return `
+                <button type="button"
+                    class="teacher-section-room-link ${active ? 'active' : ''}"
+                    data-section-name="${card.sectionName.replace(/"/g, '&quot;')}"
+                    data-section-subject="${card.name.replace(/"/g, '&quot;')}">
+                    <span class="teacher-section-room-link__title">${card.name}</span>
+                    <span class="teacher-section-room-link__meta">${getClassroomRoomSubtitle(card)}</span>
+                </button>
+            `;
+        }).join('');
+
+        submenu.querySelectorAll('[data-section-name][data-section-subject]').forEach(button => {
+            button.addEventListener('click', event => {
+                event.preventDefault();
+                event.stopPropagation();
+                showStudentList(button.dataset.sectionName, button.dataset.sectionSubject, 'room');
+            });
+        });
+    }
+
+    function syncSectionsNavState(showChildren = Boolean(currentClassroomKey)) {
+        const parent = document.getElementById('nav-classes');
+        const submenu = ensureSectionsSubmenu();
+        if (!parent || !submenu) return;
+
+        const isCollapsed = document.body.classList.contains('sidebar-collapsed') && window.innerWidth >= 1024;
+        parent.classList.toggle('active', Boolean(currentClassroomKey));
+        parent.classList.toggle('open', showChildren && !isCollapsed);
+        parent.querySelector('.sidebar-group-chevron')?.classList.toggle('rotate-90', showChildren && !isCollapsed);
+        submenu.classList.toggle('hidden', !showChildren || isCollapsed);
+    }
+
+    function renderClassroomSectionsSidebar(activeClassName = '', activeSubject = '', showCollapsedOverlay = false) {
         const subSidebar = document.getElementById('sub-sidebar');
         const content = document.getElementById('sub-sidebar-content');
         const title = document.getElementById('sub-sidebar-title');
         const header = document.getElementById('sub-sidebar-header');
         if (!subSidebar || !content || !title) return;
+
+        renderSectionsNavChildren(activeClassName, activeSubject);
+        syncSectionsNavState(true);
+
+        const isCollapsed = document.body.classList.contains('sidebar-collapsed') && window.innerWidth >= 1024;
+        if (isCollapsed && !showCollapsedOverlay) {
+            subSidebar.classList.add('hidden');
+            subSidebar.classList.remove('sub-sidebar-visible');
+            document.body.classList.remove('sub-sidebar-open');
+            updateLayout();
+            return;
+        }
+
+        if (!isCollapsed) {
+            subSidebar.classList.add('hidden');
+            subSidebar.classList.remove('sub-sidebar-visible');
+            document.body.classList.remove('sub-sidebar-open');
+            updateLayout();
+            return;
+        }
 
         title.textContent = 'Sections';
         header?.classList.remove('hidden');
@@ -1318,14 +1450,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="teacher-section-room-list">
                 ${getTeacherSectionCards().map(card => {
             const active = card.sectionName === activeClassName && card.name === activeSubject;
-            const roomSection = `${card.room} ${getCompactSectionName(card.sectionName)}`.trim();
             return `
                         <button type="button"
                             class="teacher-section-room-link ${active ? 'active' : ''}"
                             data-section-name="${card.sectionName.replace(/"/g, '&quot;')}"
                             data-section-subject="${card.name.replace(/"/g, '&quot;')}">
                             <span class="teacher-section-room-link__title">${card.name}</span>
-                            <span class="teacher-section-room-link__meta">${roomSection}</span>
+                            <span class="teacher-section-room-link__meta">${getClassroomRoomSubtitle(card)}</span>
                         </button>
                     `;
         }).join('')}
@@ -1344,15 +1475,38 @@ document.addEventListener('DOMContentLoaded', () => {
         updateLayout();
     }
 
+    document.getElementById('nav-classes')?.addEventListener('click', event => {
+        if (!currentClassroomKey) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const [className = '', subject = ''] = currentClassroomKey.split('::');
+        const isCollapsed = document.body.classList.contains('sidebar-collapsed') && window.innerWidth >= 1024;
+        renderClassroomSectionsSidebar(className, subject, isCollapsed);
+    }, true);
+
+    document.getElementById('nav-classes')?.addEventListener('mouseenter', () => {
+        const isCollapsed = document.body.classList.contains('sidebar-collapsed') && window.innerWidth >= 1024;
+        if (!currentClassroomKey || !isCollapsed) return;
+        const [className = '', subject = ''] = currentClassroomKey.split('::');
+        renderClassroomSectionsSidebar(className, subject, true);
+    });
+
     function hideClassroomSectionsSidebar() {
         const subSidebar = document.getElementById('sub-sidebar');
         const content = document.getElementById('sub-sidebar-content');
         const header = document.getElementById('sub-sidebar-header');
+        const submenu = ensureSectionsSubmenu();
         if (subSidebar) {
             subSidebar.classList.add('hidden');
             subSidebar.classList.remove('sub-sidebar-visible');
         }
         if (content) content.innerHTML = '';
+        if (submenu) {
+            submenu.innerHTML = '';
+            submenu.classList.add('hidden');
+        }
+        document.getElementById('nav-classes')?.classList.remove('open');
+        document.getElementById('nav-classes')?.querySelector('.sidebar-group-chevron')?.classList.remove('rotate-90');
         header?.classList.add('hidden');
         document.body.classList.remove('sub-sidebar-open');
         updateLayout();
@@ -2265,6 +2419,25 @@ document.addEventListener('DOMContentLoaded', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    function loadTopicSubSidebar(subject, data, statusIconClass) {
+        const content = document.getElementById('sub-sidebar-content');
+        const title = document.getElementById('sub-sidebar-title');
+        const header = document.getElementById('sub-sidebar-header');
+        if (!content) return;
+        if (header) header.classList.remove('hidden');
+        if (title) title.textContent = 'Topic Navigation';
+
+        content.innerHTML = data.q1Topics.map((t, i) => `
+            <button onclick="openTopicContent('${subject.id || subject.key}', ${i})" class="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-all flex items-start gap-3 group">
+                <i class="fa-solid ${statusIconClass[t.status] || 'fa-circle text-gray-200'} mt-1 flex-shrink-0"></i>
+                <div class="min-w-0">
+                    <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-0.5">Topic ${i + 1}</p>
+                    <p class="text-sm font-bold text-gray-700 leading-tight group-hover:text-icc transition-colors truncate">${t.title}</p>
+                </div>
+            </button>
+        `).join('');
+    }
+
     function buildTopicPage(subjectId, subject, data, statusIconClass) {
         const page = document.getElementById('section-topic-detail');
         if (!page) return;
@@ -2357,63 +2530,434 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    window.openTopicContent = function (subjectId, topicIdx) {
+    // --- TOPIC CONTENT SYSTEM (Standardized) ---
+    const TAB_LABELS = { videos: 'Videos', handouts: 'Handouts', assignments: 'Assignments', quiz: 'Quiz', activity: 'Activity', performance: 'Performance Task' };
+    const TAB_ICONS = {
+        videos: 'fa-solid fa-play',
+        handouts: 'fa-solid fa-file-pdf',
+        assignments: 'fa-solid fa-file-pen',
+        quiz: 'fa-solid fa-square-poll-vertical',
+        activity: 'fa-solid fa-flask',
+        performance: 'fa-solid fa-star'
+    };
+
+    const assessmentData = {
+        default: {
+            startDate: 'March 20, 2026', startTime: '8:00 AM',
+            dueDate: 'March 27, 2026', dueTime: '5:00 PM',
+            maxScore: 100, maxAttempts: 3,
+            latePermission: true,
+            instructionType: 'text', // 'text' or 'pdf'
+            instructionPdf: { title: 'Activity Instructions Sheet', pages: 4, size: '0.6 MB', uploader: 'Teacher' },
+            submission: null // null = not yet submitted
+        }
+    };
+
+    let currentTopicState = {
+        subjectId: null,
+        topicIdx: null,
+        activeTab: 'videos',
+        videoIdx: 0
+    };
+
+    window.openTopicContent = function (subjectId, topicIdx, tab = 'videos', videoIdx = 0) {
         const data = getTopicData(subjectId);
         const subject = getTopicSubject(subjectId);
         if (!data || !subject) return;
+
+        currentTopicState = { subjectId, topicIdx, activeTab: tab, videoIdx };
+
         buildTopicContentPage(subjectId, topicIdx);
         hideAllSections();
         showSection('section-topic-content');
+        
+        // On desktop, swap sub-sidebar to topic contents
+        if (window.innerWidth >= 1024) {
+            renderTopicContentsSidebar(subjectId, topicIdx, tab);
+        }
     };
+
+    window.switchTopicTab = function (tab) {
+        currentTopicState.activeTab = tab;
+        currentTopicState.videoIdx = 0;
+        _renderTopicContentMain();
+        renderTopicContentsSidebar(currentTopicState.subjectId, currentTopicState.topicIdx, tab);
+    };
+
+    function getTopicTabs() {
+        const { subjectId, topicIdx } = currentTopicState;
+        const data = getTopicData(subjectId);
+        const topic = data.q1Topics[topicIdx];
+        const tabs = [];
+        if (topic.videos?.length || topicVideos[subjectId]) tabs.push('videos');
+        if (topic.handouts?.length || topicHandouts[subjectId]) tabs.push('handouts');
+        tabs.push('assignments', 'quiz', 'activity', 'performance');
+        return tabs;
+    }
 
     function buildTopicContentPage(subjectId, topicIdx) {
         const page = document.getElementById('section-topic-content');
         if (!page) return;
-        const data = getTopicData(subjectId);
-        const topic = data.q1Topics[topicIdx];
-
+        
         page.innerHTML = `
-            <div class="py-6 px-4 max-w-5xl mx-auto">
-                <div class="flex items-center gap-3 mb-8">
-                    <button onclick="switchToTopicPage('${subjectId}')" class="text-gray-400 hover:text-icc transition-colors font-bold text-sm flex items-center gap-2 uppercase tracking-widest"><i class="fa-solid fa-arrow-left text-xs"></i> Back to Topics</button>
-                    <span class="text-gray-300">•</span>
-                    <span class="text-sm font-bold text-gray-500">${topic.title}</span>
-                </div>
-                <div class="bg-white rounded-[2.5rem] border border-gray-100 p-10 shadow-sm">
-                    <h2 class="text-3xl font-black text-gray-900 mb-6">${topic.title}</h2>
-                    <div class="aspect-video bg-gray-900 rounded-3xl overflow-hidden mb-10 flex items-center justify-center text-white/50 relative group">
-                        <i class="fa-solid fa-play text-6xl opacity-20 group-hover:scale-110 transition-transform"></i>
-                        <div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                             <p class="text-sm font-bold uppercase tracking-widest">Video Module Player</p>
+            <div class="mx-auto max-w-[1024px] w-full px-4 py-0 min-w-0">
+                <div class="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm min-h-screen overflow-hidden flex flex-col">
+                    <!-- Top Navigation Bar -->
+                    <div class="px-10 py-6 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-20">
+                        <div class="flex items-center gap-3">
+                            <button onclick="switchToTopicPage('${subjectId}')" class="text-gray-400 hover:text-icc transition-colors font-bold text-xs flex items-center gap-2 uppercase tracking-widest">
+                                <i class="fa-solid fa-arrow-left text-[10px]"></i> Back
+                            </button>
+                            <span class="text-gray-300">•</span>
+                            <span class="text-[11px] font-black text-gray-400 uppercase tracking-widest truncate max-w-[200px]">
+                                ${getTopicSubject(subjectId).text}
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-1.5 px-3 py-1.5 bg-icc-light rounded-full">
+                                <i class="fa-solid fa-bolt text-icc text-[10px]"></i>
+                                <span class="text-[10px] font-black text-icc uppercase tracking-widest">SIGMA Optimized</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="prose prose-icc max-w-none">
-                        <h4 class="text-xl font-bold text-gray-800 mb-4">Lesson Overview</h4>
-                        <p class="text-gray-600 leading-relaxed text-lg">In this module, we explore the core objectives of ${topic.title}. This includes fundamental principles, practical applications, and the target competencies for this specific curriculum milestone.</p>
+
+                    <!-- Main Content Area -->
+                    <div id="topic-content-main" class="flex-1 overflow-y-auto px-10 py-8 custom-scrollbar">
+                        <!-- Content injected by _renderTopicContentMain() -->
+                    </div>
+                </div>
+            </div>
+        `;
+
+        _renderTopicContentMain();
+    }
+
+    function _renderTopicContentMain() {
+        const container = document.getElementById('topic-content-main');
+        if (!container) return;
+
+        const { subjectId, topicIdx, activeTab, videoIdx } = currentTopicState;
+        const data = getTopicData(subjectId);
+        const subject = getTopicSubject(subjectId);
+        const topic = data.q1Topics[topicIdx];
+
+        container.innerHTML = '';
+        
+        let html = '';
+        if (activeTab === 'videos') {
+            html = _buildVideosTab(subject, topic, subjectId, topicIdx, videoIdx);
+        } else if (activeTab === 'handouts') {
+            html = _buildHandoutsTab(subject, topic, subjectId, topicIdx);
+        } else {
+            html = _buildAssessmentTab(activeTab, subject, topic, data);
+        }
+
+        container.innerHTML = html;
+
+        // Initialize any sliders if needed
+        const handouts = topic.handouts || topicHandouts[subjectId] || [];
+        if (activeTab === 'handouts') {
+            handouts.forEach((h, i) => {
+                if (h.type === 'ppt' && h.slides) {
+                    new HandoutSlider(`handout-slider-${i}`, h.slides);
+                }
+            });
+        }
+    }
+
+    function _tabNav(currentTab) {
+        const tabs = getTopicTabs();
+        const idx = tabs.indexOf(currentTab);
+        const prev = idx > 0 ? tabs[idx - 1] : null;
+        const next = idx < tabs.length - 1 ? tabs[idx + 1] : null;
+
+        return `
+            <div class="flex items-center justify-between w-full py-5">
+                ${prev ? `
+                <button onclick="switchTopicTab('${prev}')"
+                    title="${TAB_LABELS[prev]}"
+                    class="h-10 min-w-[56px] px-4 rounded-xl bg-icc hover:bg-icc-dark text-white text-xs font-bold transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                    <i class="${TAB_ICONS[prev]} text-[14px]"></i>
+                </button>` : '<div class="w-10 h-10"></div>'}
+
+                <div class="flex items-center gap-2">
+                    ${tabs.map(t => `
+                        <button onclick="switchTopicTab('${t}')"
+                            class="w-10 h-10 rounded-xl flex items-center justify-center transition-all ${t === currentTab ? 'bg-icc text-white shadow-lg shadow-icc/20' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}">
+                            <i class="${TAB_ICONS[t]} text-[14px]"></i>
+                        </button>
+                    `).join('')}
+                </div>
+
+                ${next ? `
+                <button onclick="switchTopicTab('${next}')"
+                    title="${TAB_LABELS[next]}"
+                    class="h-10 min-w-[56px] px-4 rounded-xl bg-icc hover:bg-icc-dark text-white text-xs font-bold transition-all flex items-center justify-center gap-2">
+                    <i class="${TAB_ICONS[next]} text-[14px]"></i>
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>` : '<div class="w-10 h-10"></div>'}
+            </div>
+        `;
+    }
+
+    function _buildVideosTab(subject, topic, subjectId, topicIdx, activeIdx) {
+        const videos = topic.videos || (topicVideos[subjectId] ? [{ id: 1, title: topic.title, duration: '12:45', url: topicVideos[subjectId] }] : []);
+        const activeVideo = videos[activeIdx] || videos[0];
+        const otherVideos = videos.filter((_, i) => i !== activeIdx);
+
+        if (!activeVideo) {
+            return `
+                ${_tabNav('videos')}
+                <div class="bg-white border border-dashed border-gray-200 rounded-2xl p-8 text-center">
+                    <i class="fa-solid fa-video text-4xl text-gray-300 mb-4"></i>
+                    <p class="text-xl font-black text-gray-800">No videos yet</p>
+                    <p class="text-sm text-gray-500 mt-2">This topic lesson does not have any videos yet.</p>
+                </div>
+            `;
+        }
+
+        return `
+            ${_tabNav('videos')}
+            <div class="aspect-video bg-black rounded-3xl overflow-hidden mb-8 shadow-2xl relative group">
+                <iframe src="${activeVideo.url}" class="w-full h-full border-none" allowfullscreen></iframe>
+            </div>
+            <div class="mb-10">
+                <h3 class="text-2xl font-black text-gray-900">${activeVideo.title}</h3>
+                <p class="text-gray-500 mt-2 leading-relaxed">Lesson module video covering the core concepts of ${topic.title}. Watch thoroughly to prepare for the upcoming assessments.</p>
+            </div>
+            ${otherVideos.length ? `
+            <div class="space-y-4">
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">More in this topic</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${otherVideos.map((v, i) => `
+                        <button onclick="openTopicContent('${subjectId}', ${topicIdx}, 'videos', ${videos.indexOf(v)})" class="bg-white border border-gray-100 p-4 rounded-2xl flex items-center gap-4 hover:shadow-md transition-all text-left">
+                            <div class="w-20 aspect-video bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-play text-gray-300"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-sm font-bold text-gray-800 truncate">${v.title}</p>
+                                <p class="text-[10px] text-gray-400 font-bold uppercase mt-1">${v.duration}</p>
+                            </div>
+                        </button>
+                    `).join('')}
+                </div>
+            </div>` : ''}
+        `;
+    }
+
+    function _buildHandoutsTab(subject, topic, subjectId, topicIdx) {
+        const handouts = topic.handouts || topicHandouts[subjectId] || [];
+        
+        if (!handouts.length) {
+            return `
+                ${_tabNav('handouts')}
+                <div class="bg-white border border-dashed border-gray-200 rounded-2xl p-8 text-center">
+                    <i class="fa-solid fa-file-pdf text-4xl text-gray-300 mb-4"></i>
+                    <p class="text-xl font-black text-gray-800">No handouts yet</p>
+                    <p class="text-sm text-gray-500 mt-2">This topic lesson does not have any handouts yet.</p>
+                </div>
+            `;
+        }
+
+        return `
+            ${_tabNav('handouts')}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                ${handouts.map((h, i) => {
+                    const isPpt = h.type === 'ppt';
+                    const icon = isPpt ? 'fa-file-powerpoint text-orange-500' : (h.type === 'DOC' || h.type === 'DOCX' ? 'fa-file-word text-blue-500' : 'fa-file-pdf text-red-500');
+                    const bg = isPpt ? 'bg-orange-50' : (h.type === 'DOC' || h.type === 'DOCX' ? 'bg-blue-50' : 'bg-red-50');
+
+                    if (isPpt && h.slides) {
+                        return `
+                            <div class="ppt-handout-container bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-4 md:col-span-2">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="text-lg font-black text-gray-800">${h.title}</h3>
+                                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Presentation • ${h.slides.length} Slides</p>
+                                    </div>
+                                    <div class="w-10 h-10 rounded-xl ${bg} flex items-center justify-center">
+                                        <i class="fa-solid ${icon} text-lg"></i>
+                                    </div>
+                                </div>
+                                <div id="handout-slider-${i}" class="min-h-[240px]"></div>
+                            </div>
+                        `;
+                    }
+
+                    return `
+                        <div class="bg-white border border-gray-100 p-5 rounded-2xl flex items-center gap-4 hover:shadow-md transition-all cursor-pointer">
+                            <div class="w-14 h-14 rounded-xl ${bg} flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid ${icon} text-2xl"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-black text-gray-800 leading-tight truncate">${h.title || h.name}</p>
+                                <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">${h.type} • ${h.size || 'N/A'}</p>
+                            </div>
+                            <button class="w-10 h-10 rounded-full bg-gray-50 text-gray-400 hover:bg-icc hover:text-white transition-all flex items-center justify-center">
+                                <i class="fa-solid fa-download text-xs"></i>
+                            </button>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    function _buildAssessmentTab(tab, subject, topic, data) {
+        const labels = { assignments: 'Assignment', quiz: 'Quiz', activity: 'Activity', performance: 'Performance Task' };
+        const label = labels[tab];
+        const amd = assessmentData.default;
+
+        return `
+            ${_tabNav(tab)}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm">
+                        <h3 class="text-xl font-black text-gray-900 mb-4">${label} Instructions</h3>
+                        <p class="text-gray-600 leading-relaxed">Complete the required output for ${topic.title}. Ensure all criteria in the rubric are met before submission. For technical questions, contact your instructor via the classroom portal.</p>
+                        
+                        <div class="mt-8 bg-gray-50 rounded-2xl p-6 border border-dashed border-gray-200">
+                            <div class="flex items-center gap-4 text-gray-400">
+                                <i class="fa-solid fa-cloud-arrow-up text-3xl"></i>
+                                <div>
+                                    <p class="text-sm font-bold text-gray-500">Submission restricted</p>
+                                    <p class="text-xs">Teacher portal: Viewing submission template mode.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-gray-100 rounded-3xl overflow-hidden">
+                        <div class="px-8 py-5 border-b border-gray-100">
+                            <p class="text-sm font-black text-gray-900 uppercase tracking-widest">Assessment Schedule</p>
+                        </div>
+                        <div class="p-8 grid grid-cols-2 gap-6">
+                            <div class="bg-gray-50 rounded-2xl p-5">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Start Date</p>
+                                <p class="text-base font-black text-gray-800">${amd.startDate}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">${amd.startTime}</p>
+                            </div>
+                            <div class="bg-red-50 rounded-2xl p-5">
+                                <p class="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Due Date</p>
+                                <p class="text-base font-black text-red-600">${amd.dueDate}</p>
+                                <p class="text-xs text-red-400 mt-0.5">${amd.dueTime}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm text-center">
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Max Score</p>
+                        <div class="text-6xl font-black text-icc mb-2">${amd.maxScore}</div>
+                        <p class="text-xs text-gray-400 font-bold">Total Points Possible</p>
+                    </div>
+
+                    <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Settings</p>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-gray-500">Max Attempts</span>
+                                <span class="text-xs font-black text-gray-900">${amd.maxAttempts}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-gray-500">Late Permitted</span>
+                                <span class="text-xs font-black ${amd.latePermission ? 'text-icc' : 'text-red-500'}">${amd.latePermission ? 'Yes' : 'No'}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
     }
 
-    function loadTopicSubSidebar(subject, data, statusIconClass) {
+    function renderTopicContentsSidebar(subjectId, topicIdx, activeTab) {
         const content = document.getElementById('sub-sidebar-content');
         const title = document.getElementById('sub-sidebar-title');
         const header = document.getElementById('sub-sidebar-header');
         if (!content) return;
-        if (header) header.classList.remove('hidden');
-        if (title) title.textContent = 'Topic Navigation';
 
-        content.innerHTML = data.q1Topics.map((t, i) => `
-            <button onclick="openTopicContent('${subject.id || subject.key}', ${i})" class="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-all flex items-start gap-3 group">
-                <i class="fa-solid ${statusIconClass[t.status] || 'fa-circle text-gray-200'} mt-1 flex-shrink-0"></i>
-                <div class="min-w-0">
-                    <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-0.5">Topic ${i + 1}</p>
-                    <p class="text-sm font-bold text-gray-700 leading-tight group-hover:text-icc transition-colors truncate">${t.title}</p>
+        if (header) header.classList.remove('hidden');
+        if (title) title.textContent = 'Topic Navigator';
+
+        const data = getTopicData(subjectId);
+        const topic = data.q1Topics[topicIdx];
+        const tabs = getTopicTabs();
+
+        content.innerHTML = `
+            <div class="p-2 space-y-1">
+                ${tabs.map(t => `
+                    <button onclick="switchTopicTab('${t}')" class="w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 group ${t === activeTab ? 'bg-icc-light text-icc' : 'hover:bg-gray-50 text-gray-500'}">
+                        <i class="${TAB_ICONS[t]} text-sm ${t === activeTab ? 'text-icc' : 'text-gray-300 group-hover:text-icc'}"></i>
+                        <span class="text-[11px] font-black uppercase tracking-widest ${t === activeTab ? 'text-icc' : 'text-gray-500'}">${TAB_LABELS[t]}</span>
+                    </button>
+                `).join('')}
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-50 px-4">
+                <p class="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] mb-4">Other Topics</p>
+                <div class="space-y-1">
+                    ${data.q1Topics.map((t, i) => `
+                        <button onclick="openTopicContent('${subjectId}', ${i})" class="w-full text-left p-2 rounded-lg transition-all flex items-start gap-2 group ${i === topicIdx ? 'opacity-40 cursor-default' : 'hover:bg-gray-50'}">
+                            <div class="w-1 h-1 rounded-full bg-gray-200 mt-1.5 flex-shrink-0 ${i === topicIdx ? 'bg-icc' : ''}"></div>
+                            <span class="text-[11px] font-bold text-gray-500 leading-tight truncate ${i === topicIdx ? 'text-icc' : ''}">${t.title}</span>
+                        </button>
+                    `).join('')}
                 </div>
-            </button>
-        `).join('');
+            </div>
+        `;
     }
+
+    class HandoutSlider {
+        constructor(containerId, slides) {
+            this.containerId = containerId;
+            this.slides = slides;
+            this.currentIndex = 0;
+            this.render();
+        }
+        render() {
+            const container = document.getElementById(this.containerId);
+            if (!container) return;
+            const slide = this.slides[this.currentIndex];
+            container.innerHTML = `
+                <div class="relative bg-gray-50 rounded-2xl overflow-hidden aspect-video flex flex-col border border-gray-100">
+                    <div class="flex-1 flex items-center justify-center p-8 text-center">
+                        <div class="space-y-4">
+                            <i class="fa-solid fa-file-powerpoint text-5xl text-orange-400"></i>
+                            <p class="text-base font-black text-gray-800">${slide.title || `Slide ${this.currentIndex + 1}`}</p>
+                            <p class="text-xs text-gray-500 leading-relaxed max-w-md mx-auto">${slide.content || 'Instructional material for this lesson segment.'}</p>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-white/50 border-t border-gray-100 flex items-center justify-between">
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="window.handleHandoutSlider('${this.containerId}', -1)" class="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center hover:bg-gray-50 transition-all shadow-sm">
+                                <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                            </button>
+                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">${this.currentIndex + 1} / ${this.slides.length}</span>
+                            <button onclick="window.handleHandoutSlider('${this.containerId}', 1)" class="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center hover:bg-gray-50 transition-all shadow-sm">
+                                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            </button>
+                        </div>
+                        <span class="text-[9px] font-black text-gray-300 uppercase tracking-widest">Interactive Slides</span>
+                    </div>
+                </div>
+            `;
+            // Store instance globally for the simple callback
+            if (!window.handoutSliders) window.handoutSliders = {};
+            window.handoutSliders[this.containerId] = this;
+        }
+        move(delta) {
+            this.currentIndex = (this.currentIndex + delta + this.slides.length) % this.slides.length;
+            this.render();
+        }
+    }
+
+    window.handleHandoutSlider = function(id, delta) {
+        if (window.handoutSliders && window.handoutSliders[id]) {
+            window.handoutSliders[id].move(delta);
+        }
+    };
+
 
 
     // --- Layout Utility ---

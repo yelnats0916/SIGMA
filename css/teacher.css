@@ -850,7 +850,7 @@ body.sidebar-collapsed .nav-link {
     display: flex;
     flex-direction: column;
     padding: 4px 0 8px;
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--icc-green);
 }
 
 .sidebar-submenu.hidden {
@@ -863,7 +863,7 @@ body.sidebar-collapsed .nav-link {
     gap: 12px;
     min-height: 40px;
     padding: 0 18px 0 82px;
-    color: rgba(255, 255, 255, 0.8) !important;
+    color: #ffffff !important;
     font-size: 12px;
     font-weight: 500;
     text-decoration: none !important;
@@ -876,8 +876,14 @@ body.sidebar-collapsed .nav-link {
 }
 
 .nav-sublink.active {
-    color: #FFD000 !important;
+    color: #ffffff !important;
     font-weight: 700;
+}
+
+#sidebar .sidebar-submenu .nav-sublink.active,
+#sidebar .sidebar-submenu .nav-sublink.active i,
+#sidebar .sidebar-submenu .nav-sublink.active span {
+    color: #ffffff !important;
 }
 
 .sidebar-group-chevron {
@@ -908,6 +914,39 @@ body.sidebar-collapsed .nav-link {
     font-size: 0.9rem !important;
     font-weight: 600 !important;
     letter-spacing: 0 !important;
+    color: #ffffff !important;
+}
+
+.subject-nav-group-toggle.active,
+.subject-nav-group-toggle.active:hover {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    color: #ffffff !important;
+    transform: none !important;
+}
+
+.subject-nav-group-toggle.active i:first-child,
+.subject-nav-group-toggle.active .subject-nav-chevron,
+.subject-nav-group.open .subject-nav-group-toggle i:first-child,
+.subject-nav-group.open .subject-nav-chevron {
+    color: #FFD000 !important;
+}
+
+.subject-nav-group-toggle.active span {
+    color: #ffffff !important;
+}
+
+#sidebar .subject-nav-group-toggle.active .fa-solid:not(.fa-user),
+#sidebar .subject-nav-group.open .subject-nav-group-toggle .fa-solid:not(.fa-user) {
+    color: #FFD000 !important;
+}
+
+#sub-sidebar .subject-nav-group-toggle.active i:first-child,
+#sub-sidebar .subject-nav-group-toggle.active .subject-nav-chevron,
+#sub-sidebar .subject-nav-group.open .subject-nav-group-toggle i:first-child,
+#sub-sidebar .subject-nav-group.open .subject-nav-chevron {
+    color: #FFD000 !important;
 }
 
 .subject-nav-group-toggle .subject-nav-chevron {
@@ -934,9 +973,9 @@ body.sidebar-collapsed .nav-link {
 .subject-nav-child {
     min-height: 34px;
     border: 0;
-    border-radius: 8px;
+    border-radius: 0;
     background: transparent;
-    color: rgba(255, 255, 255, 0.78);
+    color: #ffffff;
     cursor: pointer;
     font-size: 11px;
     font-weight: 700;
@@ -946,9 +985,16 @@ body.sidebar-collapsed .nav-link {
 }
 
 .subject-nav-child.active {
-    background: transparent !important;
-    color: rgba(255, 255, 255, 0.78) !important;
+    background: #ffffff !important;
+    color: #000000 !important;
     font-weight: 700 !important;
+    border-radius: 0 !important;
+}
+
+.subject-nav-child.active:hover {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-radius: 0 !important;
 }
 
 .subject-nav-child:hover {
@@ -998,9 +1044,9 @@ body.sidebar-collapsed .nav-link {
 
 #sub-sidebar .subject-nav-child.active,
 #sub-sidebar .subject-nav-child.active:hover {
-    background: transparent !important;
-    color: #475569 !important;
-    font-weight: 500 !important;
+    background-color: #FFD000 !important;
+    color: #000000 !important;
+    font-weight: 700 !important;
 }
 
 #sub-sidebar .subject-nav-group-toggle .subject-nav-chevron {
@@ -1049,6 +1095,42 @@ body.sidebar-collapsed .nav-link {
     font-size: 0.68rem;
     font-weight: 600;
     line-height: 1.2;
+}
+
+#sidebar .teacher-section-nav-children {
+    padding: 0.2rem 0 0.7rem;
+}
+
+#sidebar .teacher-section-room-link {
+    border-radius: 0;
+    color: #ffffff;
+    padding: 0.62rem 1rem 0.62rem 3rem;
+}
+
+#sidebar .teacher-section-room-link:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+#sidebar .teacher-section-room-link.active,
+#sidebar .teacher-section-room-link.active:hover {
+    background: #ffffff;
+    color: #000000;
+}
+
+#sidebar .teacher-section-room-link__title {
+    color: inherit;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+#sidebar .teacher-section-room-link__meta {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.66rem;
+    font-weight: 700;
+}
+
+#sidebar .teacher-section-room-link.active .teacher-section-room-link__meta {
+    color: #475569;
 }
 
 body.sidebar-collapsed .sidebar-group-chevron,
@@ -1428,6 +1510,41 @@ header .relative button.active #dropdownChevron {
     #layout-wrapper {
         margin-left: 0 !important;
         width: 100% !important;
+    }
+
+    /* Force visibility of submenu and chevron when sidebar is active on mobile */
+    #sidebar.sidebar-visible .sidebar-group-chevron {
+        display: block !important;
+        position: absolute !important;
+        right: 16px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        color: #ffffff !important;
+        opacity: 0.7 !important;
+        pointer-events: none !important;
+    }
+
+    #sidebar.sidebar-visible .sidebar-group-chevron.rotate-90 {
+        transform: translateY(-50%) rotate(90deg) !important;
+    }
+
+    #sidebar.sidebar-visible .sidebar-submenu {
+        display: block !important;
+    }
+
+    #sidebar.sidebar-visible .sidebar-submenu.hidden {
+        display: none !important;
+    }
+
+    #sidebar.sidebar-visible .nav-sublink {
+        padding-left: 82px !important;
+        color: #ffffff !important;
+        opacity: 0.8 !important;
+    }
+
+    #sidebar.sidebar-visible .nav-sublink.active {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        opacity: 1 !important;
     }
 }
 
