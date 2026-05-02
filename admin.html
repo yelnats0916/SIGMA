@@ -3498,6 +3498,17 @@
                                                 </div>
                                             </div>
                                         </label>
+                                        <label id="perm-role-pass-container"
+                                            class="flex items-center justify-between group cursor-pointer py-3 border-b border-slate-50 hover:bg-slate-50 transition-all rounded-lg px-2 hidden">
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-bold text-black font-['Inter']">Pass Master Ownership</span>
+                                                <span class="text-[10px] text-slate-400 font-medium">Transfer your Master Admin status to this account.</span>
+                                            </div>
+                                            <button type="button" onclick="window.passMasterAdmin(window.currentEditingUserId)"
+                                                class="px-4 py-2 bg-[#FFD000] text-black text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-[#ffe047] transition-all">
+                                                Transfer
+                                            </button>
+                                        </label>
                                     </div>
                                 </div>
 

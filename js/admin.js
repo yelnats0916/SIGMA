@@ -34,6 +34,71 @@ window.sectionSearchState = window.sectionSearchState || {
     }
 })();
 
+// SEED MASTER ADMIN: Ensure Stanley Vargas Garcia exists
+(function seedMasterAdmin() {
+    const USER_STORAGE_KEY = 'sigma-admin-users';
+    const masterAdmin = {
+        id: "0000000",
+        uid: "0000000",
+        firstName: "Stanley",
+        middleName: "Vargas",
+        lastName: "Garcia",
+        email: "stanley@gmail.com",
+        password: "garcia0000000",
+        role: "Master Admin",
+        type: "Master Admin",
+        status: "Active",
+        createdVia: "system-seed"
+    };
+
+    try {
+        const users = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || '[]');
+        const exists = users.some(u => String(u.uid || u.id) === masterAdmin.id);
+        if (!exists) {
+            users.push(masterAdmin);
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(users));
+            console.log('Master Admin "Stanley" seeded successfully.');
+        }
+    } catch (e) {
+        console.error('Failed to seed Master Admin:', e);
+    }
+})();
+
+window.passMasterAdmin = function (targetUserId) {
+    const authUser = JSON.parse(sessionStorage.getItem('sigma-authenticated-user') || '{}');
+    const currentUserId = String(authUser.uid || authUser.id || '');
+
+    if (!targetUserId || targetUserId === currentUserId) return;
+
+    window.showUserConfirm(
+        "Transfer Master Ownership",
+        "Are you sure you want to pass your Master Admin status to this user? You will be demoted to a regular Admin.",
+        () => {
+            const users = JSON.parse(localStorage.getItem('sigma-admin-users') || '[]');
+            const currentIndex = users.findIndex(u => String(u.uid || u.id) === currentUserId);
+            const targetIndex = users.findIndex(u => String(u.uid || u.id) === targetUserId);
+
+            if (currentIndex !== -1 && targetIndex !== -1) {
+                // Transfer roles
+                users[targetIndex].role = "Master Admin";
+                users[targetIndex].type = "Master Admin";
+                
+                users[currentIndex].role = "Admin";
+                users[currentIndex].type = "Admin";
+
+                localStorage.setItem('sigma-admin-users', JSON.stringify(users));
+
+                // Update session for the current user
+                authUser.role = "Admin";
+                sessionStorage.setItem('sigma-authenticated-user', JSON.stringify(authUser));
+
+                alert("Master Admin ownership has been transferred. Your session will now reflect your new role.");
+                window.location.reload();
+            }
+        }
+    );
+};
+
 // Global Input Capitalization Logic
 document.addEventListener('input', function (e) {
     const target = e.target;
@@ -512,6 +577,14 @@ window.editUserPermissions = function (userId) {
             if (row) {
                 row.style.opacity = isDisabled ? '0.6' : '1';
                 row.style.cursor = isDisabled ? 'not-allowed' : 'pointer';
+            }
+
+            // Pass Master Admin logic
+            const passContainer = document.getElementById('perm-role-pass-container');
+            if (passContainer) {
+                // Show only if I'm a Master Admin, editing someone else who is an Admin
+                const canPass = isMaster && !isSelf && targetRole === 'Admin';
+                passContainer.classList.toggle('hidden', !canPass);
             }
         }
     }

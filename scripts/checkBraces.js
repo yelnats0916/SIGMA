@@ -1,5 +1,5 @@
 const fs = require('fs');
-const content = fs.readFileSync('js/admin.js', 'utf8');
+const content = fs.readFileSync('js/teacher.js', 'utf8');
 let stack = [];
 let lines = content.split('\n');
 for (let i = 0; i < lines.length; i++) {
