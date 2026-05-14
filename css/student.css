@@ -16,8 +16,37 @@
     transition: none !important;
 }
 
-body {
+/* Global Typography: Inter for text, preserve Font Awesome for icons */
+body,
+button,
+input,
+select,
+textarea,
+div,
+p,
+span,
+a,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+td,
+th {
     font-family: 'Inter', sans-serif !important;
+}
+
+/* Ensure icons use Font Awesome */
+.fa-solid,
+.fa-regular,
+.fa-light,
+.fa-thin,
+.fa-duotone,
+.fa-brands,
+.fa,
+i {
+    font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
 }
 
 :root {
@@ -31,6 +60,13 @@ body {
     --sidebar-expanded-width: 280px;
     --sidebar-collapsed-width: 82px;
     --sidebar-width: var(--sidebar-expanded-width);
+    --panel-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+}
+
+.standard-panel-shadow,
+.sharp-shadow,
+.shadow-sm {
+    box-shadow: var(--panel-shadow) !important;
 }
 
 body.sidebar-collapsed {
@@ -64,7 +100,7 @@ body.sidebar-collapsed #sub-sidebar {
     display: flex !important;
 }
 
-/* ─── Scrollbar: Normal Size workstation style ─ */
+/* â”€â”€â”€ Scrollbar: Normal Size workstation style â”€ */
 * {
     scrollbar-width: auto;
     scrollbar-color: rgba(0, 0, 0, .05) transparent;
@@ -104,11 +140,251 @@ body.sidebar-collapsed #sub-sidebar {
     background: rgba(0, 0, 0, .32) !important;
 }
 
+.invisible-scrollbar,
+#sigma-panels-container,
+#sigmaAiPanel,
+#sigmaAiMessages,
+.mobile-sigma-sheet,
+.mobile-sigma-cards,
+.home-left-stack,
+.home-sticky-rail--right,
+.home-right-stack,
+.home-dashboard-panels,
+.home-dashboard-list,
+#section-topic-content .student-topic-progress-rail,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto,
+#section-assignments #assessments-right-rail {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+}
+
+.invisible-scrollbar::-webkit-scrollbar,
+#sigma-panels-container::-webkit-scrollbar,
+#sigmaAiPanel::-webkit-scrollbar,
+#sigmaAiMessages::-webkit-scrollbar,
+.mobile-sigma-sheet::-webkit-scrollbar,
+.mobile-sigma-cards::-webkit-scrollbar,
+.home-left-stack::-webkit-scrollbar,
+.home-sticky-rail--right::-webkit-scrollbar,
+.home-right-stack::-webkit-scrollbar,
+.home-dashboard-panels::-webkit-scrollbar,
+.home-dashboard-list::-webkit-scrollbar,
+#section-topic-content .student-topic-progress-rail::-webkit-scrollbar,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto::-webkit-scrollbar,
+#section-assignments #assessments-right-rail::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* Final admin metric-panel scrollbar copy: transparent until the panel is hovered. */
+#sigma-panels-container,
+#sigmaAiMessages,
+.mobile-sigma-cards,
+#section-home .home-dashboard-panels,
+.home-dashboard-list,
+#section-topic-content .student-topic-progress-rail,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto,
+#section-assignments #assessments-right-rail {
+    scrollbar-width: auto !important;
+    scrollbar-color: transparent transparent !important;
+}
+
+#sigma-panels-container:hover,
+#sigmaAiMessages:hover,
+.mobile-sigma-cards:hover,
+#section-home .home-dashboard-panels:hover,
+.home-dashboard-list:hover,
+#section-topic-content .student-topic-progress-rail:hover,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto:hover,
+#section-assignments #assessments-right-rail:hover {
+    scrollbar-color: rgba(0, 0, 0, .18) transparent !important;
+}
+
+#sigma-panels-container::-webkit-scrollbar,
+#sigmaAiMessages::-webkit-scrollbar,
+.mobile-sigma-cards::-webkit-scrollbar,
+#section-home .home-dashboard-panels::-webkit-scrollbar,
+.home-dashboard-list::-webkit-scrollbar,
+#section-topic-content .student-topic-progress-rail::-webkit-scrollbar,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto::-webkit-scrollbar,
+#section-assignments #assessments-right-rail::-webkit-scrollbar {
+    display: block !important;
+    width: 6px !important;
+    height: 6px !important;
+}
+
+#sigma-panels-container::-webkit-scrollbar-track,
+#sigmaAiMessages::-webkit-scrollbar-track,
+.mobile-sigma-cards::-webkit-scrollbar-track,
+#section-home .home-dashboard-panels::-webkit-scrollbar-track,
+.home-dashboard-list::-webkit-scrollbar-track,
+#section-topic-content .student-topic-progress-rail::-webkit-scrollbar-track,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto::-webkit-scrollbar-track,
+#section-assignments #assessments-right-rail::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+#sigma-panels-container::-webkit-scrollbar-thumb,
+#sigmaAiMessages::-webkit-scrollbar-thumb,
+.mobile-sigma-cards::-webkit-scrollbar-thumb,
+#section-home .home-dashboard-panels::-webkit-scrollbar-thumb,
+.home-dashboard-list::-webkit-scrollbar-thumb,
+#section-topic-content .student-topic-progress-rail::-webkit-scrollbar-thumb,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto::-webkit-scrollbar-thumb,
+#section-assignments #assessments-right-rail::-webkit-scrollbar-thumb {
+    background: transparent !important;
+    border-radius: 10px !important;
+}
+
+#sigma-panels-container:hover::-webkit-scrollbar-thumb,
+#sigmaAiMessages:hover::-webkit-scrollbar-thumb,
+.mobile-sigma-cards:hover::-webkit-scrollbar-thumb,
+#section-home .home-dashboard-panels:hover::-webkit-scrollbar-thumb,
+.home-dashboard-list:hover::-webkit-scrollbar-thumb,
+#section-topic-content .student-topic-progress-rail:hover::-webkit-scrollbar-thumb,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto:hover::-webkit-scrollbar-thumb,
+#section-assignments #assessments-right-rail:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, .18) !important;
+}
+
+#sigma-panels-container::-webkit-scrollbar-thumb:hover,
+#sigmaAiMessages::-webkit-scrollbar-thumb:hover,
+.mobile-sigma-cards::-webkit-scrollbar-thumb:hover,
+#section-home .home-dashboard-panels::-webkit-scrollbar-thumb:hover,
+.home-dashboard-list::-webkit-scrollbar-thumb:hover,
+#section-topic-content .student-topic-progress-rail::-webkit-scrollbar-thumb:hover,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto::-webkit-scrollbar-thumb:hover,
+#section-assignments #assessments-right-rail::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, .32) !important;
+}
+
+/* Make the SIGMA card rail itself scrollable so the hover scrollbar can appear. */
+#section-home #sigma-panels-container {
+    max-height: calc(100vh - var(--shell-offset) - 3rem) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain !important;
+    scrollbar-width: auto !important;
+    scrollbar-color: transparent transparent !important;
+}
+
+#section-home #sigma-panels-container:hover {
+    scrollbar-color: rgba(0, 0, 0, .18) transparent !important;
+}
+
+#section-home #sigma-panels-container::-webkit-scrollbar {
+    display: block !important;
+    width: 6px !important;
+    height: 6px !important;
+}
+
+#section-home #sigma-panels-container::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+#section-home #sigma-panels-container::-webkit-scrollbar-thumb {
+    background: transparent !important;
+    border-radius: 10px !important;
+}
+
+#section-home #sigma-panels-container:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, .18) !important;
+}
+
+#section-home #sigma-panels-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, .32) !important;
+}
+
+/* Admin metric-panel scrollbar behavior: invisible by default, visible on hover. */
+#sigma-panels-container,
+#sigmaAiMessages,
+.mobile-sigma-cards,
+#section-home .home-dashboard-panels,
+.home-dashboard-list,
+#section-topic-content .student-topic-progress-rail,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto,
+#section-assignments #assessments-right-rail {
+    scrollbar-width: auto !important;
+    scrollbar-color: transparent transparent !important;
+}
+
+#sigma-panels-container:hover,
+#sigmaAiMessages:hover,
+.mobile-sigma-cards:hover,
+#section-home .home-dashboard-panels:hover,
+.home-dashboard-list:hover,
+#section-topic-content .student-topic-progress-rail:hover,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto:hover,
+#section-assignments #assessments-right-rail:hover {
+    scrollbar-color: rgba(0, 0, 0, .18) transparent !important;
+}
+
+#sigma-panels-container::-webkit-scrollbar,
+#sigmaAiMessages::-webkit-scrollbar,
+.mobile-sigma-cards::-webkit-scrollbar,
+#section-home .home-dashboard-panels::-webkit-scrollbar,
+.home-dashboard-list::-webkit-scrollbar,
+#section-topic-content .student-topic-progress-rail::-webkit-scrollbar,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto::-webkit-scrollbar,
+#section-assignments #assessments-right-rail::-webkit-scrollbar {
+    display: block !important;
+    width: 6px !important;
+    height: 6px !important;
+}
+
+#sigma-panels-container::-webkit-scrollbar-track,
+#sigmaAiMessages::-webkit-scrollbar-track,
+.mobile-sigma-cards::-webkit-scrollbar-track,
+#section-home .home-dashboard-panels::-webkit-scrollbar-track,
+.home-dashboard-list::-webkit-scrollbar-track,
+#section-topic-content .student-topic-progress-rail::-webkit-scrollbar-track,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto::-webkit-scrollbar-track,
+#section-assignments #assessments-right-rail::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+#sigma-panels-container::-webkit-scrollbar-thumb,
+#sigmaAiMessages::-webkit-scrollbar-thumb,
+.mobile-sigma-cards::-webkit-scrollbar-thumb,
+#section-home .home-dashboard-panels::-webkit-scrollbar-thumb,
+.home-dashboard-list::-webkit-scrollbar-thumb,
+#section-topic-content .student-topic-progress-rail::-webkit-scrollbar-thumb,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto::-webkit-scrollbar-thumb,
+#section-assignments #assessments-right-rail::-webkit-scrollbar-thumb {
+    background: transparent !important;
+    border-radius: 10px !important;
+}
+
+#sigma-panels-container:hover::-webkit-scrollbar-thumb,
+#sigmaAiMessages:hover::-webkit-scrollbar-thumb,
+.mobile-sigma-cards:hover::-webkit-scrollbar-thumb,
+#section-home .home-dashboard-panels:hover::-webkit-scrollbar-thumb,
+.home-dashboard-list:hover::-webkit-scrollbar-thumb,
+#section-topic-content .student-topic-progress-rail:hover::-webkit-scrollbar-thumb,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto:hover::-webkit-scrollbar-thumb,
+#section-assignments #assessments-right-rail:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, .18) !important;
+}
+
+#sigma-panels-container::-webkit-scrollbar-thumb:hover,
+#sigmaAiMessages::-webkit-scrollbar-thumb:hover,
+.mobile-sigma-cards::-webkit-scrollbar-thumb:hover,
+#section-home .home-dashboard-panels::-webkit-scrollbar-thumb:hover,
+.home-dashboard-list::-webkit-scrollbar-thumb:hover,
+#section-topic-content .student-topic-progress-rail::-webkit-scrollbar-thumb:hover,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto::-webkit-scrollbar-thumb:hover,
+#section-assignments #assessments-right-rail::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, .32) !important;
+}
+
 /* Classroom cards & Drag and Drop - SortableJS */
 .classroom-card {
     cursor: grab;
     user-select: none;
-    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    transition: box-shadow 0.22s ease !important;
 }
 
 .advisory-panel-card {
@@ -120,10 +396,11 @@ body.sidebar-collapsed #sub-sidebar {
     cursor: grabbing;
 }
 
+/* ── Sortable ghost: placeholder left in the grid while dragging ── */
 .sortable-ghost {
-    background: #f8fafc !important;
-    border: 2px dashed #e2e8f0 !important;
-    opacity: 1 !important;
+    background: #f0fdf4 !important;
+    border: 2px dashed #86efac !important;
+    opacity: 0.5 !important;
     visibility: visible !important;
     box-shadow: none !important;
 }
@@ -132,33 +409,37 @@ body.sidebar-collapsed #sub-sidebar {
     visibility: hidden !important;
 }
 
-.sortable-drag {
-    opacity: 1 !important;
-    box-shadow: 0 50px 100px rgba(0, 0, 0, 0.3) !important;
-    z-index: 99999 !important;
+/* ── In-grid original card while dragging (stays in grid flow) ── */
+.sortable-drag-original {
+    opacity: 0.4 !important;
     cursor: grabbing !important;
     pointer-events: none !important;
-    position: fixed !important;
-    /* Forces it to float anywhere on screen */
     transition: none !important;
 }
 
+/* ── Body-level floating clone ──
+   DO NOT override position/transform/top/left here.
+   SortableJS controls all positioning via inline styles.
+   We only style the visual appearance.                   */
+.sortable-drag-clone {
+    z-index: 99999 !important;
+    opacity: 1 !important;
+    background: #ffffff !important;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.30) !important;
+    cursor: grabbing !important;
+    pointer-events: none !important;
+}
+
 .classroom-card:hover {
-    box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.1) !important;
-    border-color: #e2e8f0;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22) !important;
     background-color: #f8fafc !important;
 }
 
-.sortable-drag {
-    opacity: 1 !important;
-    background: white !important;
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15) !important;
-    z-index: 9999 !important;
-}
-
-.sortable-ghost {
-    opacity: 0.2 !important;
-    background: #f1f5f9 !important;
+/* Thick underline on card banner title hover */
+.classroom-card-banner h3:hover {
+    text-decoration: underline !important;
+    text-decoration-thickness: 3px !important;
+    text-underline-offset: 4px !important;
 }
 
 .classroom-card button {
@@ -207,7 +488,7 @@ body.sidebar-collapsed #sub-sidebar {
     background: transparent;
     border: none;
     border-radius: 10px;
-    color: #64748b;
+    color: #000000;
     cursor: pointer;
     transition: none !important;
     /* No animation */
@@ -327,7 +608,7 @@ body.subjects-panels-mode .subject-paths-row.inline-active-right .subject-path-p
     display: block;
 }
 
-/* ─── Curriculum Mode (Core Subjects etc.) ─────────────── */
+/* â”€â”€â”€ Curriculum Mode (Core Subjects etc.) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 body.curriculum-mode {
     overflow-y: auto !important;
 }
@@ -363,15 +644,13 @@ body.curriculum-mode .curriculum-hero {
 
 body.curriculum-mode .curriculum-subject-grid {
     padding: 0 0 4rem;
-    /* Removed horizontal padding for alignment */
-    background: #f8fafc;
+    background: transparent;
     margin-top: 0;
-    /* Removed overlap to connect directly to banner bottom */
     position: relative;
     z-index: 5;
 }
 
-/* ─── Top Navigation Bar ────────────────────────────────── */
+/* â”€â”€â”€ Top Navigation Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .top-nav {
     width: 100%;
     height: var(--student-top-nav-height);
@@ -414,7 +693,7 @@ body.curriculum-mode .curriculum-subject-grid {
     font-size: 8px;
 }
 
-/* ─── Section isolation ───────────────────────────────────── */
+/* â”€â”€â”€ Section isolation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .dynamic-section {
     display: none !important;
 }
@@ -423,32 +702,20 @@ body.curriculum-mode .curriculum-subject-grid {
     display: block !important;
 }
 
-/* ─── Logo block hidden (logo is in navbar now) ─────────── */
+/* â”€â”€â”€ Logo block hidden (logo is in navbar now) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #logo-block {
     display: none !important;
 }
 
 /* Structural transitions handled per-component below */
 
-/* Header — always 80px, white, fixed, never changes size */
-#student-header {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 82px !important;
-    background: #ffffff;
-    border-bottom: 2px solid #15803d;
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
-    z-index: 100 !important;
-    display: flex;
-    flex-direction: column;
-}
+/* Header â€” always 80px, white, fixed, never changes size */
+/* removed duplicate header block */
 
 .admin-topbar__inner {
     width: 100%;
     max-width: 100%;
-    height: 60px !important;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -552,7 +819,7 @@ body.curriculum-mode .curriculum-subject-grid {
     position: relative;
 }
 
-/* ─── Header Search Styles (Matched with Admin) ─── */
+/* â”€â”€â”€ Header Search Styles (Matched with Admin) â”€â”€â”€ */
 #searchBar,
 #searchBar:focus,
 #searchBar:active,
@@ -562,8 +829,8 @@ body.curriculum-mode .curriculum-subject-grid {
     outline: none !important;
     box-shadow: none !important;
     -webkit-appearance: none !important;
+    appearance: none !important;
     -webkit-box-shadow: none !important;
-    ring: 0 !important;
 }
 
 #student-header .absolute.left-1\/2 {
@@ -629,9 +896,9 @@ body.curriculum-mode .curriculum-subject-grid {
     outline-offset: 0 !important;
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    WORKSTATION LAYOUT SYSTEM (Standardized with Admin)
-   ────────────────────────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 :root {
     --student-bg: #f8fafc;
@@ -660,10 +927,11 @@ body.sidebar-collapsed {
     width: 100% !important;
     background: #ffffff;
     border-bottom: 2px solid var(--student-primary);
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+    box-shadow: var(--panel-shadow) !important;
     z-index: 1001 !important;
     display: flex;
     flex-direction: column;
+    height: calc(var(--student-top-nav-height) + var(--student-header-height));
 }
 
 #sidebar {
@@ -692,9 +960,9 @@ body.sidebar-collapsed {
     background-color: var(--student-bg);
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    SIDEBAR NAVIGATION (Admin Standard)
-   ────────────────────────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .nav-link {
     position: relative;
@@ -750,18 +1018,18 @@ body.sidebar-collapsed {
     color: #ffffff !important;
 }
 
-/* Maintain transparent state when Subjects tab is hovered */
+/* Maintain white state when active tab is hovered */
 #nav-courses.nav-link.active:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    color: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
 }
 
 #nav-courses.nav-link.active:hover i {
-    color: #ffffff !important;
+    color: #FFD000 !important;
 }
 
 #nav-courses.nav-link.active:hover span {
-    color: #ffffff !important;
+    color: #000000 !important;
 }
 
 /* Yellow highlight for active child tabs in subsidebar (admin page style) */
@@ -902,7 +1170,7 @@ body.sidebar-collapsed .nav-link {
     display: none !important;
 }
 
-/* ─── Nav context — larger, bolder ──────────────────────── */
+/* â”€â”€â”€ Nav context â€” larger, bolder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #nav-context {
     display: none;
     margin-left: 4px;
@@ -925,6 +1193,7 @@ body.sidebar-collapsed .nav-link {
 #sub-sidebar.sub-sidebar-visible {
     transform: none !important;
     opacity: 1;
+    z-index: 45 !important;
 }
 
 #sub-sidebar.hidden {
@@ -953,7 +1222,16 @@ body.sidebar-collapsed .nav-link {
 }
 
 .nav-link.active {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+.nav-link.active i {
     color: #FFD000 !important;
+}
+
+.nav-link.active span {
+    color: #000000 !important;
 }
 
 .sidebar-rail-icon {
@@ -997,6 +1275,12 @@ body.sidebar-collapsed .nav-link {
     text-decoration: none !important;
 }
 
+.nav-sublink i {
+    width: 14px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
 .nav-sublink:hover {
     color: #ffffff !important;
     background-color: rgba(255, 255, 255, 0.05);
@@ -1021,7 +1305,7 @@ body.sidebar-collapsed .nav-link {
 }
 
 .nav-link.active .sidebar-group-chevron {
-    color: var(--icc-green) !important;
+    color: var(--icc-yellow) !important;
 }
 
 .subject-nav-group {
@@ -1031,16 +1315,24 @@ body.sidebar-collapsed .nav-link {
 }
 
 .subject-nav-group-toggle {
+    display: flex;
+    align-items: center;
     border: 0;
     background: transparent !important;
     text-align: left;
     cursor: pointer;
-    gap: 0.55rem;
+    gap: 12px;
     font-family: 'Inter', sans-serif !important;
     font-size: 0.9rem !important;
     font-weight: 600 !important;
     letter-spacing: 0 !important;
     color: #ffffff !important;
+}
+
+.subject-nav-group-toggle i:first-child {
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
 }
 
 .subject-nav-group-toggle.active,
@@ -1122,6 +1414,9 @@ body.sidebar-collapsed .nav-link {
 }
 
 #sub-sidebar .subject-nav-child {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     color: #475569;
     border-radius: 8px;
     padding-left: 2.65rem;
@@ -1129,9 +1424,18 @@ body.sidebar-collapsed .nav-link {
     font-weight: 500 !important;
 }
 
+#sub-sidebar .subject-nav-child-icon {
+    width: 16px;
+    flex: 0 0 16px;
+    color: #000000 !important;
+    font-size: 13px;
+    text-align: center;
+}
+
 #sub-sidebar .subject-nav-child:hover {
     color: #475569;
-    background: #f8fafc;
+    background: #e5e7eb !important;
+    border-radius: 0 !important;
     font-weight: 500 !important;
 }
 
@@ -1140,9 +1444,11 @@ body.sidebar-collapsed .nav-link {
 }
 
 #sub-sidebar .subject-nav-group-toggle {
-    min-height: 34px;
-    padding-top: 0.35rem;
-    padding-bottom: 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 42px;
+    padding: 0 12px;
     color: #1f2937 !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 0.82rem !important;
@@ -1184,13 +1490,49 @@ body.sidebar-collapsed .nav-link {
 }
 
 #sub-sidebar .subject-nav-child.active,
-#sub-sidebar .subject-nav-child.active:hover {
+#sub-sidebar .subject-nav-child.active:hover,
+#sub-sidebar .topic-nav-item.active,
+#sub-sidebar .topic-nav-item.active:hover,
+#sub-sidebar .sub-sidebar-link.active,
+#sub-sidebar .sub-sidebar-link.active:hover {
     background-color: #FFD000 !important;
     color: #000000 !important;
     font-weight: 700 !important;
+    border-radius: 0 !important;
+}
+
+#sub-sidebar .subject-nav-child .subject-nav-child-icon,
+#sub-sidebar .subject-nav-child.active .subject-nav-child-icon,
+#sub-sidebar .subject-nav-child.active:hover .subject-nav-child-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    color: #000000 !important;
+}
+
+#sub-sidebar *:not(.fa-solid):not(.fa-regular):not(.fa-brands):not(.fab):not(.far):not(.fas):not(.fa) {
+    font-family: 'Inter', sans-serif !important;
+    color: #000000 !important;
+}
+
+#sub-sidebar .topic-nav-item,
+#sub-sidebar .subject-nav-child,
+#sub-sidebar .sub-sidebar-link {
+    white-space: normal !important;
+    text-overflow: unset !important;
+    overflow: visible !important;
+}
+
+#sub-sidebar .truncate {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
 }
 
 #sub-sidebar .subject-nav-group-toggle .subject-nav-chevron {
+    margin-left: auto;
     color: #94a3b8;
 }
 
@@ -1209,10 +1551,10 @@ body.sidebar-collapsed .nav-link {
     color: #1f2937;
     cursor: pointer;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: flex-start;
-    gap: 0.2rem;
-    padding: 0.7rem 0.8rem;
+    gap: 0.45rem;
+    padding: 0.55rem 0.65rem;
     text-align: left;
 }
 
@@ -1226,17 +1568,37 @@ body.sidebar-collapsed .nav-link {
     color: #000000;
 }
 
+.student-section-room-link.active .student-section-room-link__icon {
+    color: #000000;
+}
+
+.student-section-room-link__icon {
+    flex-shrink: 0;
+    font-size: 10px;
+    margin-top: 0.2em;
+    color: inherit;
+}
+
+.student-section-room-link__content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
 .student-section-room-link__title {
     color: inherit;
     font-size: 0.82rem;
-    font-weight: 800;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
     line-height: 1.2;
 }
+
 
 .student-section-room-link__meta {
     color: #94a3b8;
     font-size: 0.68rem;
-    font-weight: 700;
+    font-weight: 400;
+    font-family: 'Inter', sans-serif;
     line-height: 1.2;
 }
 
@@ -1267,11 +1629,15 @@ body.sidebar-collapsed .nav-link {
 #sidebar .student-section-room-link__title {
     color: inherit;
     font-size: 0.78rem;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
 }
 
 #sidebar .student-section-room-link__meta {
     color: rgba(255, 255, 255, 0.72);
     font-size: 0.66rem;
+    font-weight: 400;
+    font-family: 'Inter', sans-serif;
 }
 
 #sidebar .student-section-room-link.active .student-section-room-link__meta {
@@ -1367,11 +1733,16 @@ header .relative button i {
     }
 
     #sidebar.sidebar-visible .nav-link.active {
-        color: #FFD000 !important;
+        background-color: #ffffff !important;
+        color: #000000 !important;
     }
 
     #sidebar.sidebar-visible .nav-link.active i {
         color: #FFD000 !important;
+    }
+
+    #sidebar.sidebar-visible .nav-link.active span {
+        color: #000000 !important;
     }
 
     #layout-wrapper {
@@ -1404,7 +1775,7 @@ header .relative button i {
     }
 }
 
-/* ─── HOME: two-column — center scrolls, right FIXED ────── */
+/* â”€â”€â”€ HOME: two-column â€” center scrolls, right FIXED â”€â”€â”€â”€â”€â”€ */
 #section-home {
     min-height: calc(100vh - var(--shell-offset));
     overflow: visible;
@@ -1439,7 +1810,7 @@ header .relative button i {
     border-radius: 10px;
 }
 
-/* ─── RIGHT COL: truly fixed to viewport, independent of page scroll ─ */
+/* â”€â”€â”€ RIGHT COL: truly fixed to viewport, independent of page scroll â”€ */
 .home-right-stack {
     position: sticky;
     top: calc(var(--shell-offset) + 1.5rem);
@@ -1512,7 +1883,7 @@ header .relative button i {
     border: 0;
     border-radius: 999px;
     background: transparent;
-    color: #64748b;
+    color: #000000;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1691,7 +2062,7 @@ header .relative button i {
 
 /* Right col uses global scrollbar rules */
 
-/* ─── Subjects Program Panels ─────────────────────────────── */
+/* â”€â”€â”€ Subjects Program Panels â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #section-courses {
     margin-top: -14px;
     height: calc(100vh - var(--shell-offset) + 2px);
@@ -2276,6 +2647,311 @@ header .relative button i {
     display: none;
 }
 
+.teacher-topic-page-shell {
+    width: 100%;
+    min-height: calc(100vh - var(--shell-offset));
+    overflow: visible;
+    padding: 0;
+    margin: 0 !important;
+    background: #f8fafc;
+}
+
+.teacher-topic-page-grid {
+    display: grid;
+    grid-template-columns: 1024px 280px;
+    grid-template-areas:
+        "main rail";
+    gap: 0 2rem;
+    align-items: flex-start;
+    justify-content: flex-start;
+    width: 100%;
+    min-height: calc(100vh - var(--shell-offset));
+    padding: 0 2rem 0 4rem !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+    .teacher-topic-page-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+}
+
+.teacher-topic-page-grid>.teacher-topic-main-shell {
+    grid-area: main;
+}
+
+.teacher-topic-page-grid>#assessments-right-rail {
+    grid-area: rail;
+}
+
+#assessments-right-rail {
+    grid-area: rail;
+    width: 280px;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: visible;
+    margin-top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-bottom: 2rem;
+}
+
+#assessments-sigma-panel,
+#assessments-todo-panel {
+    width: 280px;
+}
+
+#assessments-sigma-panel {
+    padding-top: 1.5rem;
+}
+
+#assessments-todo-panel {
+    margin-top: 1rem;
+}
+
+#section-assignments:not(.hidden) {
+    min-height: calc(100vh - var(--shell-offset));
+    height: auto;
+    overflow: visible;
+    background: #f8fafc;
+}
+
+#section-assignments:not(.hidden)>div,
+#section-assignments #assessments-layout {
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+#section-assignments .teacher-topic-page-shell,
+#section-assignments .teacher-topic-page-grid,
+#section-assignments .teacher-topic-main-shell {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+}
+
+#section-assignments .teacher-topic-main-shell .overflow-x-auto {
+    min-height: 0;
+}
+
+#section-assignments #assessments-right-rail {
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+.teacher-topic-main-shell {
+    width: 1024px;
+    max-width: 1024px;
+    min-height: 100%;
+    background: #ffffff;
+    border-left: 1px solid #e2e8f0;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--panel-shadow);
+}
+
+.teacher-topic-header {
+    padding: 2rem 2.5rem;
+}
+
+.teacher-topic-header h1 {
+    margin: 0;
+    color: #000000;
+    font-family: 'Inter', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+}
+
+.teacher-topic-list {
+    border-top: 1px solid #f1f5f9;
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.teacher-topic-card {
+    width: 100%;
+    min-height: 160px;
+    display: grid;
+    grid-template-columns: 230px minmax(0, 1fr);
+    padding: 0;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 1rem;
+    text-align: left;
+    box-shadow: none;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.teacher-topic-card:hover {
+    border-color: #15803d;
+    transform: translateY(-1px);
+}
+
+.teacher-topic-card__image {
+    width: 100%;
+    height: 100%;
+    min-height: 160px;
+    object-fit: cover;
+}
+
+.teacher-topic-card__body {
+    position: relative;
+    padding: 2rem 2.5rem;
+}
+
+.teacher-topic-card__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    color: #94a3b8;
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+#section-assignments {
+    min-height: calc(100vh - var(--shell-offset));
+    overflow: visible;
+    position: relative;
+}
+
+.teacher-topic-progress-rail {
+    width: 260px;
+    height: 100%;
+    overflow-y: auto;
+    margin-top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-bottom: 2rem;
+}
+
+.teacher-topic-progress-card {
+    background: #ffffff;
+    border: 1px solid #f1f5f9;
+    border-radius: 1rem;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+.teacher-topic-progress-kicker,
+.teacher-topic-progress-label {
+    margin: 0;
+    color: #000000;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.teacher-topic-progress-label {
+    color: #64748b;
+}
+
+.teacher-topic-progress-percent {
+    font-size: 2.25rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.teacher-topic-overall-percent {
+    font-size: 3rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.teacher-topic-progress-bar {
+    width: 100%;
+    height: 0.4rem;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+@media (max-width: 1023px) {
+    .teacher-topic-page-grid {
+        grid-template-columns: minmax(0, 1024px);
+    }
+}
+
+@media (max-width: 767px) {
+
+    /* Shell / grid fit */
+    .teacher-topic-page-shell {
+        min-height: unset !important;
+        height: auto !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        overflow: visible !important;
+    }
+
+    .teacher-topic-page-grid {
+        grid-template-columns: 1fr !important;
+        padding: 0 !important;
+        gap: 0 !important;
+        width: 100% !important;
+    }
+
+    .teacher-topic-main-shell {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: unset !important;
+        height: auto !important;
+        display: block !important;
+        border-left: none !important;
+        border-right: none !important;
+    }
+
+    .teacher-topic-main-shell>.overflow-y-auto {
+        height: auto !important;
+        max-height: none !important;
+        overflow-y: visible !important;
+        flex: none !important;
+    }
+
+    .teacher-topic-header {
+        padding: 1.25rem 1rem 1rem !important;
+    }
+
+    .teacher-topic-header h1 {
+        font-size: 1.2rem !important;
+    }
+
+    .teacher-topic-list {
+        padding: 1rem !important;
+        gap: 0.75rem !important;
+    }
+
+    /* Progress rail drops below topics */
+    .teacher-topic-progress-rail {
+        width: 100% !important;
+        padding: 1rem 1rem 100px 1rem !important;
+        display: flex !important;
+        position: static !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    #sigmaAiNotch,
+    [id="sigmaAiNotch"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+}
+
 .subjects-inline-card--row .subjects-inline-card-title {
     font-size: 1.2rem;
 }
@@ -2369,12 +3045,13 @@ header .relative button i {
 .curriculum-hero {
     position: relative;
     overflow: hidden;
-    border-radius: 0;
+    border-radius: 1.25rem;
     min-height: 60px;
     display: grid;
     grid-template-columns: minmax(150px, 220px) 1fr;
     background: linear-gradient(135deg, #14532d 0%, #15803d 65%, #166534 100%);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--panel-shadow);
+    margin-bottom: 1.25rem;
 }
 
 .curriculum-hero--no-image {
@@ -2516,7 +3193,7 @@ header .relative button i {
     min-height: 160px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+    box-shadow: var(--standard-panel-shadow);
     cursor: pointer;
 }
 
@@ -2630,7 +3307,7 @@ header .relative button i {
 }
 
 
-/* ─── SIGMA AI home panel ────────────────────────────────── */
+/* â”€â”€â”€ SIGMA AI home panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .home-sigma-panel {
     width: 100%;
     min-height: 360px;
@@ -2817,7 +3494,7 @@ header .relative button i {
     scroll-margin-top: 100px;
 }
 
-/* ─── Topic Detail Page ───────────────────────────────────── */
+/* â”€â”€â”€ Topic Detail Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #section-topic-detail {
     margin: 0;
     min-height: calc(100vh - var(--shell-offset));
@@ -2829,7 +3506,7 @@ header .relative button i {
     flex-direction: column;
 }
 
-/* ─── Header Dropdown Panels ─────────────────────────────── */
+/* â”€â”€â”€ Header Dropdown Panels â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .header-panel {
     position: fixed;
     top: var(--shell-offset);
@@ -2876,7 +3553,7 @@ header .relative button i {
     background: #94a3b8;
 }
 
-/* ─── SIGMA AI Notch & Panel ────────────────────────────── */
+/* â”€â”€â”€ SIGMA AI Notch & Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #sigmaAiNotch {
     position: fixed;
     right: 0;
@@ -2892,7 +3569,7 @@ header .relative button i {
     align-items: center;
     justify-content: center;
     cursor: grab;
-    z-index: 9999;
+    z-index: 100001;
     /* Above everything */
     border: 2px solid #facc15;
     border-right: none;
@@ -2915,6 +3592,7 @@ header .relative button i {
     width: 400px;
     height: calc(100vh - var(--shell-offset));
     background: white;
+    z-index: 100000;
     box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
     border-left: 1px solid #e5e7eb;
     display: flex;
@@ -2922,68 +3600,49 @@ header .relative button i {
     transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ─── SortableJS Drag & Drop (Synchronized with Teacher) ── */
-.sortable-ghost {
-    background: #f8fafc !important;
-    border: 2px dashed #e2e8f0 !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    box-shadow: none !important;
-    border-radius: 24px !important;
-}
+/* â”€â”€â”€ SortableJS Drag & Drop (Synchronized with Teacher) â”€â”€ */
 
-.sortable-ghost * {
-    visibility: hidden !important;
-}
 
-.sortable-chosen {
-    cursor: grabbing !important;
-    transform: scale(1.02);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
-    z-index: 9999;
-    touch-action: none;
-}
 
-.sortable-drag {
-    opacity: 1 !important;
-    background-color: white !important;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12) !important;
-    z-index: 9999 !important;
-}
+
+
+
+
 
 #classrooms-grid .classroom-card {
     transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
 }
 
-/* ─── Mobile-Only Card Adjustments ─────────────────────── */
+/* â”€â”€â”€ Mobile-Only Card Adjustments â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 768px) {
     .mobile-hide-meta {
-        display: none !important;
+        display: flex !important;
+        /* Force show */
     }
 
     .classroom-card-banner {
-        height: 80px !important;
-        /* Significantly shorter banner */
+        height: 112px !important;
+        /* Normal desktop height */
     }
 
     .card-body-main {
-        padding: 1rem !important;
-        /* Reduced padding */
-        padding-top: 1rem !important;
+        padding: 1.5rem !important;
+        /* Normal desktop padding */
+        padding-top: 1.5rem !important;
     }
 
     .mobile-hide-avatar {
-        display: none !important;
-        /* Remove overlapping space to shorten the card */
+        display: block !important;
+        /* Force show */
     }
 
     .classroom-card {
-        min-height: 0 !important;
+        min-height: 280px !important;
         height: auto !important;
-        width: 88% !important;
-        /* Narrower cards to allow side-scrolling space */
-        margin-left: auto !important;
-        margin-right: auto !important;
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-bottom: 1.5rem !important;
     }
 }
 
@@ -3262,7 +3921,7 @@ header .relative button i {
     overflow-y: auto;
 }
 
-/* ─── Sub-sidebar title with back button (topic mode) ──── */
+/* â”€â”€â”€ Sub-sidebar title with back button (topic mode) â”€â”€â”€â”€ */
 #sub-sidebar>div:first-child {
     display: flex;
     align-items: center;
@@ -3316,10 +3975,11 @@ header .relative button i {
     border-bottom: none;
 }
 
-/* ─── Topic Content Page ──────────────────────────────────── */
+/* â”€â”€â”€ Topic Content Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #section-topic-content {
-    margin: -2rem;
-    min-height: calc(100vh - 64px);
+    margin: 0;
+    min-height: calc(100vh - var(--shell-offset));
+    overflow: visible;
     background: #f8fafc;
 }
 
@@ -3328,7 +3988,7 @@ header .relative button i {
     flex-direction: column;
 }
 
-/* ─── Topic content sub-sidebar nav items ─────────────────── */
+/* â”€â”€â”€ Topic content sub-sidebar nav items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .topic-content-nav-item {
     display: flex;
     align-items: center;
@@ -3361,7 +4021,7 @@ header .relative button i {
     flex-shrink: 0;
 }
 
-/* ─── Video playlist item ─────────────────────────────────── */
+/* â”€â”€â”€ Video playlist item â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .video-playlist-item {
     display: flex;
     align-items: center;
@@ -3394,7 +4054,7 @@ header .relative button i {
     justify-content: center;
 }
 
-/* ─── Handout card ────────────────────────────────────────── */
+/* â”€â”€â”€ Handout card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .handout-card {
     transition: all .2s ease;
 }
@@ -3404,7 +4064,7 @@ header .relative button i {
     box-shadow: 0 4px 12px rgba(0, 0, 0, .06);
 }
 
-/* ─── Right progress panel (topic content) ────────────────── */
+/* â”€â”€â”€ Right progress panel (topic content) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .topic-right-panel {
     width: 280px;
     flex-shrink: 0;
@@ -3414,7 +4074,7 @@ header .relative button i {
     align-self: flex-start;
 }
 
-/* ─── GRADES ANALYTIC PANEL ────────────────────────────────── */
+/* â”€â”€â”€ GRADES ANALYTIC PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .grades-analytic-container {
     padding-bottom: 2rem;
 }
@@ -3424,17 +4084,28 @@ header .relative button i {
     border-radius: 24px;
     border: 1px solid #f1f5f9;
     padding: 1.5rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: border-color 0.22s ease, box-shadow 0.22s ease !important;
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
 }
 
+.student-room-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 1rem;
+    align-items: start;
+    width: 100%;
+}
+
+.student-room-layout--full {
+    grid-template-columns: 1fr !important;
+}
+
 .grade-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    border-color: rgba(21, 128, 61, 0.15);
+    box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 0.1) !important;
+    border-color: #000;
 }
 
 .grade-mini-chart {
@@ -3518,7 +4189,7 @@ header .relative button i {
     }
 }
 
-/* ─── Student classroom room page ─────────────────────────── */
+/* â”€â”€â”€ Student classroom room page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #section-classroom-detail {
     min-height: calc(100vh - var(--shell-offset));
 }
@@ -3569,7 +4240,7 @@ header .relative button i {
     margin: 0;
     color: #ffffff;
     font-size: 3rem;
-    font-weight: 900;
+    font-weight: bold;
     line-height: 1;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -3586,7 +4257,7 @@ header .relative button i {
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    padding: 0 1.25rem;
+    padding: 0;
 }
 
 .student-room-tabs__group {
@@ -3600,6 +4271,7 @@ header .relative button i {
     display: inline-flex;
     align-items: center;
     flex-shrink: 0;
+    padding-right: 1.5rem;
 }
 
 .student-room-tab {
@@ -3631,7 +4303,7 @@ header .relative button i {
     border: 0;
     border-radius: 0.65rem;
     background: transparent;
-    color: #64748b;
+    color: #000000;
     font-size: 1rem;
     display: inline-flex;
     align-items: center;
@@ -3641,17 +4313,17 @@ header .relative button i {
 
 .student-room-topics-btn:hover {
     background: #f1f5f9;
-    color: #FFD000;
+    color: #000000;
 }
 
-.student-room-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
-    gap: 1rem;
-    align-items: start;
-    width: 100%;
-    padding: 0;
+/* People panel button is mobile-only â€” force hide on desktop */
+@media (min-width: 1024px) {
+    #classroom-quick-people-btn {
+        display: none !important;
+    }
 }
+
+
 
 .student-room-main {
     display: flex;
@@ -3661,12 +4333,14 @@ header .relative button i {
     min-width: 0;
     width: 100%;
     padding-top: 1.5rem;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .student-room-main--full {
     grid-column: 1 / -1;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .student-room-feed {
@@ -3676,12 +4350,15 @@ header .relative button i {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    padding-left: 1.5rem;
 }
 
 .student-room-panel {
     width: 100%;
     max-width: 1040px;
     margin: 0 auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
 }
 
 .student-room-feed-card {
@@ -3812,6 +4489,20 @@ header .relative button i {
 .student-room-attendance {
     display: flex;
     flex-direction: column;
+    width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.student-room-attendance #classroom-attendance-pagination-controls {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+.student-room-attendance th,
+.student-room-attendance td {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
 }
 
 .student-room-attendance-card {
@@ -4214,6 +4905,9 @@ header .relative button i {
     display: flex;
     flex-direction: column;
     gap: 0.45rem;
+    overflow-y: auto;
+    max-height: 40vh;
+    overscroll-behavior: contain;
 }
 
 .student-room-person {
@@ -4227,6 +4921,7 @@ header .relative button i {
     font-weight: 700;
     text-align: left;
     cursor: pointer;
+    flex-shrink: 0;
 }
 
 .student-room-person:hover {
@@ -4472,10 +5167,38 @@ header .relative button i {
 
     .student-room-layout {
         grid-template-columns: 1fr;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+    }
+
+    #section-classroom-detail,
+    #section-classroom-detail>div,
+    #section-classroom-detail>div>div,
+    .student-room-shell,
+    .student-room-panel,
+    .student-room-feed,
+    .student-room-layout {
+        width: 100% !important;
+        max-width: 100vw !important;
+        min-width: 100vw !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
     }
 
     .student-room-main {
-        align-items: center;
+        width: 100% !important;
+        max-width: 100vw !important;
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        padding-bottom: 6rem !important;
     }
 
     .student-room-banner__title {
@@ -4487,6 +5210,10 @@ header .relative button i {
     .student-room-tabs__inner {
         padding: 0 0.5rem;
         gap: 0;
+    }
+
+    .student-room-tabs__actions {
+        padding-right: 0;
     }
 
     .student-room-tab {
@@ -4512,10 +5239,12 @@ header .relative button i {
         overscroll-behavior: contain;
         touch-action: pan-y;
         background: #fff;
-        border-radius: 1.5rem 1.5rem 0 0;
+        border-radius: 0 !important;
+        max-height: none !important;
         transform: translateY(100vh);
         transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-        padding-bottom: env(safe-area-inset-bottom, 2rem);
+        padding-bottom: 0 !important;
+        /* Removed bottom padding as requested */
         border: none;
         box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
         margin: 0;
@@ -4524,6 +5253,11 @@ header .relative button i {
 
     .student-room-people.active {
         transform: translateY(0);
+    }
+
+    .student-room-people__list {
+        max-height: none !important;
+        overflow-y: visible !important;
     }
 
     .classroom-people-backdrop {
@@ -4560,10 +5294,6 @@ header .relative button i {
 }
 
 #profile-toggle.active .header-profile-btn__chevron {
-    color: #FFD000 !important;
-}
-
-profile-toggle.active .header-profile-btn__chevron {
     color: #FFD000 !important;
 }
 
@@ -4915,7 +5645,7 @@ profile-toggle.active .header-profile-btn__chevron {
         z-index: 1100;
         align-items: center;
         justify-content: space-around;
-        box-shadow: 0 -6px 20px rgba(15, 23, 42, 0.06);
+        box-shadow: 0 -1px 3px rgba(15, 23, 42, 0.1);
         padding: 0 max(0.75rem, env(safe-area-inset-left)) max(0px, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-right));
     }
 
@@ -4970,12 +5700,15 @@ profile-toggle.active .header-profile-btn__chevron {
         right: 0;
         bottom: 68px;
         background: #fff;
-        border-top-left-radius: 0;
-        border-top-right-radius: 0;
+        border-top-left-radius: 24px;
+        border-top-right-radius: 24px;
         transform: translateY(calc(100% + 68px));
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 1300;
-        max-height: calc(100vh - var(--shell-offset) - 68px);
+        height: calc(100vh - 68px);
+        height: calc(100dvh - 68px);
+        max-height: calc(100vh - 68px);
+        max-height: calc(100dvh - 68px);
         min-height: 45vh;
         overflow: hidden;
         box-shadow: 0 -14px 30px rgba(15, 23, 42, 0.12);
@@ -4984,7 +5717,6 @@ profile-toggle.active .header-profile-btn__chevron {
 
     .mobile-sigma-sheet.open {
         transform: translateY(0);
-        height: calc(100vh - var(--shell-offset) - 68px);
     }
 
     .mobile-sigma-sheet-backdrop.open {
@@ -5067,12 +5799,20 @@ profile-toggle.active .header-profile-btn__chevron {
         transform: translateY(calc(100% + 68px));
         transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         z-index: 1300;
-        height: calc(100vh - var(--shell-offset) - 68px);
-        /* Goes until below white nav bar approx */
+        height: calc(100vh - 68px);
+        height: calc(100dvh - 68px);
+        max-height: calc(100vh - 68px);
+        max-height: calc(100dvh - 68px);
         display: flex;
         flex-direction: column;
         box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
         will-change: transform;
+    }
+
+    .student-room-panel {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        padding-bottom: 0 !important;
     }
 
     .mobile-pull-up-panel.open {
@@ -5171,29 +5911,32 @@ profile-toggle.active .header-profile-btn__chevron {
         font-size: 1.8rem !important;
     }
 
-    #admin-announcements-feed {
+    #admin-announcements-feed,
+    .room-announcements-feed {
         padding: 0 !important;
-        /* Removed side padding as requested */
+        padding-bottom: 80px !important;
         width: 100% !important;
-        max-width: 100% !important;
-        margin: 0 !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
         display: flex !important;
         flex-direction: column !important;
-        gap: 2px !important;
-        /* Spacing between cards reduced further */
+        gap: 1rem !important;
         box-sizing: border-box !important;
+        background: transparent !important;
     }
 
-    .announcement-card {
+    .announcement-card,
+    #admin-announcements-feed>article,
+    .room-announcements-feed>article {
         margin: 0 !important;
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
-        border-radius: 0 !important;
-        /* Removed radius as requested */
-        border: 1px solid #cbd5e1 !important;
-        /* Visible grey border */
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+        border-radius: 22px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #ffffff !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
     }
 }
 
@@ -5207,67 +5950,116 @@ profile-toggle.active .header-profile-btn__chevron {
     padding: 1rem 1.5rem;
 }
 
+/* â”€â”€â”€ Curriculum Mode (Global Page Scroll for Topics) â”€â”€â”€ */
+body.curriculum-mode {
+    overflow-y: auto !important;
+}
+
+body.curriculum-mode #layout-wrapper {
+    overflow: visible !important;
+    height: auto;
+}
+
+body.curriculum-mode #layout-wrapper main {
+    padding: 0;
+    overflow: visible !important;
+    height: auto;
+}
+
+body.curriculum-mode #section-topic-detail {
+    height: auto;
+    min-height: calc(100vh - var(--shell-offset));
+    overflow: visible;
+}
+
+body.curriculum-mode #section-topic-content {
+    height: auto;
+    min-height: calc(100vh - var(--shell-offset));
+    overflow: visible;
+}
+
+body.curriculum-mode .student-topic-page-shell {
+    height: auto;
+    overflow: visible;
+}
+
+body.curriculum-mode .topic-detail-grid {
+    height: auto;
+}
+
+body.curriculum-mode .student-topic-main-shell {
+    height: auto;
+    overflow: visible;
+}
+
+body.curriculum-mode .student-topic-progress-rail {
+    position: sticky;
+    top: calc(var(--shell-offset) + 1.25rem);
+    height: auto;
+    max-height: calc(100vh - var(--shell-offset) - 2rem);
+    overflow-y: auto;
+}
+
+#section-topic-detail {
+    margin: 0;
+    min-height: calc(100vh - var(--shell-offset));
+    overflow: visible;
+    background: #f8fafc;
+}
+
+#section-topic-detail:not(.hidden) {
+    display: block !important;
+}
+
 .student-topic-page-shell {
     width: 100%;
+    height: auto;
     min-height: calc(100vh - var(--shell-offset));
-    padding: 0;
+    overflow: visible;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
 }
 
 .topic-detail-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1024px) 260px;
-    gap: 1.25rem;
-    align-items: start;
-    justify-content: center;
+    grid-template-columns: 1024px 280px;
+    grid-template-areas:
+        "main rail";
+    gap: 0 2rem;
+    align-items: flex-start;
+    justify-content: flex-start;
     width: 100%;
-    padding: 0 0 2rem;
+    min-height: calc(100vh - var(--shell-offset));
+    padding: 0 2rem 0 4rem !important;
+    margin: 0 !important;
     box-sizing: border-box;
 }
 
-/* Topics section content padding fix */
-.topic-detail-grid .min-w-0 {
-    padding-left: 2rem;
-}
-
-.topic-detail-grid h1 {
-    padding-left: 2rem;
-    margin-left: 0;
-}
-
-/* Topic cards alignment fix */
-.topic-detail-grid .space-y-5>* {
-    padding-left: 2rem;
-}
-
-.topic-detail-grid .space-y-5 {
-    padding-left: 0;
-}
-
 .student-topic-main-shell {
-    width: 100%;
+    grid-area: main;
+    width: 1024px;
     max-width: 1024px;
-    min-height: calc(100vh - var(--shell-offset));
+    height: auto;
     background: #ffffff;
+    border-radius: 0;
+    box-shadow: var(--panel-shadow);
     border-left: 1px solid #e2e8f0;
     border-right: 1px solid #e2e8f0;
-    padding: 0;
     display: flex;
     flex-direction: column;
-}
-
-.topic-detail-grid .student-topic-main-shell {
-    padding-left: 0;
+    overflow: visible;
 }
 
 .student-topic-header {
     padding: 2rem 2.5rem;
+    border-bottom: 1px solid #f1f5f9;
 }
 
-.student-topic-header h1,
-.topic-detail-grid .student-topic-header h1 {
+.student-topic-header h1 {
     margin: 0;
-    padding-left: 0;
     color: #000000;
+    font-family: 'Inter', sans-serif;
     font-size: 1.5rem;
     font-weight: 700;
     line-height: 1.2;
@@ -5282,53 +6074,129 @@ profile-toggle.active .header-profile-btn__chevron {
     gap: 1.25rem;
 }
 
-.topic-detail-grid .student-topic-list>* {
-    padding-left: 0;
+.student-topic-card {
+    width: 100%;
+    min-height: 160px;
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    padding: 0;
+    overflow: hidden;
+    background-color: #ffffff;
+    border: 1px solid #f1f5f9;
+    border-radius: 1rem;
+    text-align: left;
+    cursor: pointer;
+    box-shadow: var(--panel-shadow);
+}
+
+.student-topic-card {
+    transition: box-shadow 0.2s ease;
+}
+
+.student-topic-card:hover {
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+}
+
+.student-topic-card:hover .student-topic-card__body h3 {
+    color: #FFD000;
+}
+
+.student-topic-card__image-container {
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    overflow: hidden;
+    border-right: 1px solid #f1f5f9;
+}
+
+.student-topic-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.student-topic-card__body {
+    position: relative;
+    padding: 2rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.student-topic-card__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    color: #64748b;
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.student-topic-card__body h3 {
+    margin: 0 0 0.75rem;
+    color: #0f172a;
+    font-size: 1.35rem;
+    font-weight: 900;
+    line-height: 1.2;
+}
+
+.student-topic-card__body p {
+    margin: 0;
+    color: #475569;
+    font-size: 0.95rem;
+    line-height: 1.45;
 }
 
 .student-topic-progress-rail {
-    width: 260px;
-    margin-top: 7rem;
+    grid-area: rail;
+    width: 280px;
+    height: max-content;
+    position: sticky;
+    top: 10rem;
+    overflow: visible;
+    margin-top: 0;
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    padding-bottom: 2rem;
+    z-index: 50;
+    align-self: flex-start;
 }
 
 .student-topic-progress-card {
     background: #ffffff;
     border: 1px solid #f1f5f9;
     border-radius: 1rem;
-    padding: 1rem;
-    box-shadow: none;
+    padding: 1rem 1rem 1rem 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+.student-topic-progress-kicker,
+.student-topic-progress-label {
+    margin: 0;
+    color: #000000;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
 }
 
 .student-topic-progress-kicker {
-    margin: 0;
-    color: #94a3b8;
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 0.12em;
     text-transform: uppercase;
+}
+
+.student-topic-progress-label {
+    color: #000000;
 }
 
 .student-topic-progress-percent {
     font-size: 2.25rem;
-    font-weight: 900;
+    font-weight: 700;
     line-height: 1;
-}
-
-.student-topic-overall-percent {
-    font-size: 3rem;
-    font-weight: 900;
-    line-height: 1;
-}
-
-.student-topic-progress-label {
-    color: #64748b;
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
 }
 
 .student-topic-progress-bar {
@@ -5338,24 +6206,32 @@ profile-toggle.active .header-profile-btn__chevron {
     overflow: hidden;
 }
 
-@media (max-width: 1279px) {
+@media (max-width: 1023px) {
     .topic-detail-grid {
-        grid-template-columns: minmax(0, 1024px);
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 0 !important;
+        padding: 0 !important;
     }
 
     .student-topic-progress-rail {
-        width: min(100%, 1024px);
-        margin: 1rem auto 0;
+        display: flex !important;
+        position: static !important;
+        width: 100% !important;
+        margin: 1.5rem 0 0 0 !important;
+        padding: 1.5rem !important;
     }
 }
 
-/* ── Mobile topic page fit ────────────────────────────── */
 @media (max-width: 767px) {
     .student-topic-page-shell {
         min-height: unset !important;
+        height: auto !important;
         width: 100vw !important;
         max-width: 100vw !important;
-        overflow-x: hidden !important;
+        overflow: visible !important;
+        padding: 0 !important;
     }
 
     .topic-detail-grid {
@@ -5369,98 +6245,79 @@ profile-toggle.active .header-profile-btn__chevron {
         width: 100% !important;
         max-width: 100% !important;
         min-height: unset !important;
+        height: auto !important;
+        display: block !important;
         border-left: none !important;
         border-right: none !important;
-        border-radius: 0 !important;
     }
 
     .student-topic-header {
-        padding: 1.25rem 1rem 1rem !important;
+        padding: 1.25rem 1rem 1rem 1.25rem !important;
     }
 
-    .student-topic-header h1,
-    .topic-detail-grid .student-topic-header h1 {
+    .student-topic-header h1 {
         font-size: 1.2rem !important;
     }
 
     .student-topic-list {
-        padding: 1rem !important;
+        padding: 1rem 1rem 1rem 0 !important;
         gap: 0.75rem !important;
     }
 
-    /* Right-side progress rail drops below on mobile */
     .student-topic-progress-rail {
         width: 100% !important;
         margin: 0 !important;
-        padding: 1rem !important;
+        padding: 1rem 1rem 100px 1rem !important;
         box-sizing: border-box !important;
+        display: flex !important;
+        position: static !important;
+        max-height: none !important;
+        overflow: visible !important;
     }
 
-    /* Topic detail grid left padding override */
-    .topic-detail-grid .min-w-0 {
-        padding-left: 0 !important;
+    .student-topic-card {
+        grid-template-columns: 7.5rem minmax(0, 1fr) !important;
+        min-height: unset !important;
+        border-radius: 1rem !important;
     }
 
-    .topic-detail-grid h1 {
-        padding-left: 0 !important;
+    .student-topic-card__image-container {
+        width: 7.5rem !important;
+        padding: 0.5rem !important;
+        background-color: #ffffff !important;
+        border-right: 1px solid #f1f5f9 !important;
     }
 
-    .topic-detail-grid .space-y-5 > * {
-        padding-left: 0 !important;
+    .student-topic-card__image {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: unset !important;
+        object-fit: contain !important;
     }
 
-    /* Ensure topic page doesn't get cut off by mobile bottom bar */
-    #section-topic-detail,
-    #section-topic-content {
-        padding-bottom: 68px !important;
+    .student-topic-card__body {
+        padding: 0.625rem 0.75rem 0.625rem 0 !important;
     }
 
-    /* ── Topic card scale-down (image + content) ── */
-    .student-topic-list > div,
-    .student-topic-list > * {
-        border-radius: 0.875rem !important;
-    }
-
-    /* The card row itself */
-    .student-topic-list .bg-white.border-2.rounded-2xl {
-        flex-direction: row !important;
-        border-radius: 0.875rem !important;
-    }
-
-    /* Scale down the image from w-48 h-48 → w-20 h-20 */
-    .student-topic-list .w-48.h-48 {
-        width: 5rem !important;
-        height: 5rem !important;
-        flex-shrink: 0 !important;
-    }
-
-    /* Tighter content padding */
-    .student-topic-list .flex-1.p-6 {
-        padding: 0.625rem 0.75rem !important;
-    }
-
-    /* Smaller title */
-    .student-topic-list .text-xl.font-black {
+    .student-topic-card__body h3 {
         font-size: 0.85rem !important;
-        line-height: 1.3 !important;
+        margin-bottom: 0.25rem !important;
     }
 
-    /* Smaller description */
-    .student-topic-list .text-sm.text-gray-500 {
+    .student-topic-card__body p {
         font-size: 0.7rem !important;
-        margin-top: 0.2rem !important;
-        -webkit-line-clamp: 2 !important;
+        line-height: 1.35 !important;
     }
 
-    /* Tighten bottom row */
-    .student-topic-list .flex.items-center.justify-between.mt-4 {
-        margin-top: 0.5rem !important;
-    }
-
-    /* Smaller badge and AI btn */
-    .student-topic-list .text-xs.font-bold.px-3.py-1\.5 {
+    .student-topic-card__meta {
+        margin-bottom: 0.4rem !important;
         font-size: 0.6rem !important;
-        padding: 0.2rem 0.5rem !important;
+    }
+
+    .student-topic-open-btn {
+        padding: 0.15rem 0.5rem !important;
+        font-size: 0.55rem !important;
+        gap: 0.2rem !important;
     }
 }
 
@@ -5586,5 +6443,1366 @@ profile-toggle.active .header-profile-btn__chevron {
     .subjects-track-list::-webkit-scrollbar-thumb:hover,
     .subject-paths-row::-webkit-scrollbar-thumb:hover {
         background: rgba(0, 0, 0, .32) !important;
+    }
+}
+
+/* Mobile Sidebar: Hide subjects chevron; show sections chevron only when inside a room */
+@media (max-width: 1023px) {
+    #sidebar.sidebar-visible #nav-subjects .sidebar-group-chevron {
+        display: none !important;
+    }
+
+    /* Sections chevron: show when inside a room (JS removes .hidden), hide otherwise */
+    #sidebar.sidebar-visible #nav-classrooms .sidebar-group-chevron:not(.hidden) {
+        display: block !important;
+        position: absolute !important;
+        right: 16px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        color: #FFD000 !important;
+        pointer-events: auto !important;
+        cursor: pointer;
+    }
+
+    #sidebar.sidebar-visible #nav-classrooms .sidebar-group-chevron.rotate-90:not(.hidden) {
+        transform: translateY(-50%) rotate(90deg) !important;
+    }
+
+    #sidebar.sidebar-visible #nav-classrooms .sidebar-group-chevron.hidden {
+        display: none !important;
+    }
+}
+
+
+/* --- Overlay Mode for Sub-sidebar --- */
+#sub-sidebar.sub-sidebar-overlay-mode {
+    border-right: 1px solid rgba(0, 0, 0, 0.05) !important;
+    background-color: white !important;
+}
+
+/* --- Layout Stabilization --- */
+@media (min-width: 1024px) {
+    #layout-wrapper {
+        transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    #section-home>.grid {
+        display: grid !important;
+        grid-template-columns: minmax(220px, 3fr) minmax(0, 6fr) minmax(220px, 3fr) !important;
+        gap: clamp(1rem, 1.5vw, 2rem) !important;
+        align-items: start !important;
+    }
+
+    #section-home>.grid>div:nth-child(1) {
+        grid-column: 1 !important;
+        display: block !important;
+        min-width: 0 !important;
+    }
+
+    #section-home>.grid>div:nth-child(2) {
+        grid-column: 2 !important;
+        min-width: 0 !important;
+    }
+
+    #section-home>.grid>div:nth-child(3) {
+        grid-column: 3 !important;
+        display: flex !important;
+        min-width: 0 !important;
+    }
+
+    .home-dashboard-card {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+        text-align: left;
+        font-family: 'Inter', sans-serif !important;
+    }
+
+    .home-dashboard-card--clickable {
+        cursor: pointer;
+        transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .home-dashboard-card--clickable:hover {
+        border-color: rgba(21, 128, 61, 0.25);
+        box-shadow: 0 18px 34px rgba(15, 23, 42, 0.09);
+    }
+
+    .home-dashboard-card--combined {
+        gap: 0;
+        padding: 0;
+    }
+
+    .home-dashboard-item {
+        padding: 1rem;
+        width: 100%;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .home-dashboard-item:last-child {
+        border-bottom: none;
+    }
+
+    .home-dashboard-panel-heading {
+        color: #15803d;
+        font-size: 0.62rem;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        line-height: 1.2;
+        padding: 1.25rem 1rem 0.5rem;
+        margin: 0;
+        text-transform: uppercase;
+    }
+
+    .home-dashboard-panel-heading--spaced {
+        margin-top: 0.5rem;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .home-dashboard-card__eyebrow {
+        color: #15803d;
+        font-size: 0.62rem;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    .home-dashboard-card__title {
+        color: #000000;
+        font-size: 0.9rem;
+        font-weight: 700;
+        line-height: 1.25;
+        display: block;
+    }
+
+    .home-dashboard-subject-link {
+        color: #000000;
+        font-size: 1rem;
+        font-weight: 700;
+        line-height: 1.25;
+        text-align: left;
+        transition: color 0.15s ease;
+        display: block;
+        margin: 0.1rem 0;
+    }
+
+    .home-dashboard-subject-link:hover {
+        color: #15803d;
+    }
+
+    .home-dashboard-subject-link--meta {
+        font-size: 0.85rem;
+        margin-top: 0.15rem;
+    }
+
+    .home-dashboard-card__meta {
+        color: #000000;
+        font-size: 0.82rem;
+        font-weight: 400;
+        line-height: 1.25;
+        display: block;
+    }
+
+    .home-dashboard-card__time {
+        color: #000000;
+        font-size: 0.86rem;
+        font-weight: 400;
+        display: block;
+        margin-top: 0.25rem;
+    }
+
+    .home-dashboard-card__row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        width: 100%;
+        gap: 1rem;
+    }
+
+    /* Standardize Initial Load - Force hide mobile overlay on desktop regardless of JS state */
+    #sidebar-overlay {
+        display: none !important;
+    }
+
+    /* Ensure sticky panels remain sticky */
+    .sticky {
+        position: sticky !important;
+    }
+
+}
+
+/* Home page sticky rails:
+   The side rails pin to the browser viewport while the main page scrolls. */
+#section-home .home-sticky-rail {
+    position: sticky !important;
+    top: calc(var(--shell-offset) + 1.5rem) !important;
+    align-self: start !important;
+    height: auto !important;
+    max-height: none !important;
+    z-index: 20;
+}
+
+#section-home #sigma-panels-container,
+#section-home .home-dashboard-panels {
+    max-height: none !important;
+    overflow: visible !important;
+    overscroll-behavior: auto;
+}
+
+.home-dashboard-panels {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    width: 100%;
+}
+
+.home-dashboard-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.home-dashboard-group__title {
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+}
+
+.home-dashboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.home-dashboard-card {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+    text-align: left;
+    font-family: 'Inter', sans-serif !important;
+}
+
+.home-dashboard-card--clickable {
+    cursor: default;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.home-dashboard-card--clickable:hover {
+    border-color: #e5e7eb;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+}
+
+.home-dashboard-card--combined {
+    gap: 0;
+}
+
+.home-dashboard-item {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid #edf1f5;
+}
+
+.home-dashboard-item:first-child {
+    padding-top: 0;
+}
+
+.home-dashboard-item:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.home-dashboard-panel-heading {
+    color: #15803d;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    line-height: 1.2;
+    padding: 1.25rem 0 0.5rem;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.home-dashboard-panel-heading--spaced {
+    margin-top: 1rem;
+}
+
+.home-dashboard-card__eyebrow {
+    color: #15803d;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.home-dashboard-card__title {
+    color: #000000;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.home-dashboard-subject-link {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: #000000;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.25;
+    padding: 0;
+    text-align: left;
+    transition: color 0.18s ease;
+}
+
+.home-dashboard-subject-link:hover,
+.home-dashboard-subject-link:focus-visible {
+    color: #facc15;
+}
+
+.home-dashboard-subject-link--meta {
+    font-size: 0.82rem;
+    font-weight: 400;
+}
+
+.home-dashboard-card__meta {
+    color: #000000;
+    font-size: 0.82rem;
+    font-weight: 400;
+    line-height: 1.25;
+}
+
+.home-dashboard-card__time {
+    color: #000000;
+    font-size: 0.86rem;
+    font-weight: 400;
+}
+
+.home-dashboard-card__row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.home-dashboard-badge {
+    flex: 0 0 auto;
+    border-radius: 10px;
+    padding: 0.4rem 0.55rem;
+    font-size: 0.62rem;
+    font-weight: 400;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #000000;
+}
+
+.home-dashboard-badge--danger {
+    background: #fef2f2;
+}
+
+.home-dashboard-badge--info {
+    background: #eff6ff;
+}
+
+/* Utility Classes */
+.invisible {
+    visibility: hidden !important;
+}
+
+/* Admin metric-panel scrollbar behavior: transparent until the panel is hovered. */
+#section-home .home-dashboard-panels {
+    max-height: calc(100vh - var(--shell-offset) - 3rem) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+#sigma-panels-container,
+#sigmaAiMessages,
+.mobile-sigma-cards,
+#section-home .home-dashboard-panels,
+.home-dashboard-list,
+#section-topic-content .student-topic-progress-rail,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto,
+#section-assignments #assessments-right-rail {
+    scrollbar-width: auto !important;
+    scrollbar-color: transparent transparent !important;
+}
+
+#sigma-panels-container:hover,
+#sigmaAiMessages:hover,
+.mobile-sigma-cards:hover,
+#section-home .home-dashboard-panels:hover,
+.home-dashboard-list:hover,
+#section-topic-content .student-topic-progress-rail:hover,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto:hover,
+#section-assignments #assessments-right-rail:hover {
+    scrollbar-color: rgba(0, 0, 0, .18) transparent !important;
+}
+
+#sigma-panels-container::-webkit-scrollbar,
+#sigmaAiMessages::-webkit-scrollbar,
+.mobile-sigma-cards::-webkit-scrollbar,
+#section-home .home-dashboard-panels::-webkit-scrollbar,
+.home-dashboard-list::-webkit-scrollbar,
+#section-topic-content .student-topic-progress-rail::-webkit-scrollbar,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto::-webkit-scrollbar,
+#section-assignments #assessments-right-rail::-webkit-scrollbar {
+    display: block !important;
+    width: 6px !important;
+    height: 6px !important;
+}
+
+#sigma-panels-container::-webkit-scrollbar-track,
+#sigmaAiMessages::-webkit-scrollbar-track,
+.mobile-sigma-cards::-webkit-scrollbar-track,
+#section-home .home-dashboard-panels::-webkit-scrollbar-track,
+.home-dashboard-list::-webkit-scrollbar-track,
+#section-topic-content .student-topic-progress-rail::-webkit-scrollbar-track,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto::-webkit-scrollbar-track,
+#section-assignments #assessments-right-rail::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+#sigma-panels-container::-webkit-scrollbar-thumb,
+#sigmaAiMessages::-webkit-scrollbar-thumb,
+.mobile-sigma-cards::-webkit-scrollbar-thumb,
+#section-home .home-dashboard-panels::-webkit-scrollbar-thumb,
+.home-dashboard-list::-webkit-scrollbar-thumb,
+#section-topic-content .student-topic-progress-rail::-webkit-scrollbar-thumb,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto::-webkit-scrollbar-thumb,
+#section-assignments #assessments-right-rail::-webkit-scrollbar-thumb {
+    background: transparent !important;
+    border-radius: 10px !important;
+}
+
+#sigma-panels-container:hover::-webkit-scrollbar-thumb,
+#sigmaAiMessages:hover::-webkit-scrollbar-thumb,
+.mobile-sigma-cards:hover::-webkit-scrollbar-thumb,
+#section-home .home-dashboard-panels:hover::-webkit-scrollbar-thumb,
+.home-dashboard-list:hover::-webkit-scrollbar-thumb,
+#section-topic-content .student-topic-progress-rail:hover::-webkit-scrollbar-thumb,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto:hover::-webkit-scrollbar-thumb,
+#section-assignments #assessments-right-rail:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, .18) !important;
+}
+
+#sigma-panels-container::-webkit-scrollbar-thumb:hover,
+#sigmaAiMessages::-webkit-scrollbar-thumb:hover,
+.mobile-sigma-cards::-webkit-scrollbar-thumb:hover,
+#section-home .home-dashboard-panels::-webkit-scrollbar-thumb:hover,
+.home-dashboard-list::-webkit-scrollbar-thumb:hover,
+#section-topic-content .student-topic-progress-rail::-webkit-scrollbar-thumb:hover,
+#section-assignments .teacher-topic-main-shell .overflow-y-auto::-webkit-scrollbar-thumb:hover,
+#section-assignments #assessments-right-rail::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, .32) !important;
+}
+
+/* Final SIGMA rail scrollbar override: transparent until hovered. */
+#section-home #sigma-panels-container,
+#section-dashboard #sigma-panels-container {
+    max-height: calc(100vh - var(--shell-offset) - 3rem) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain !important;
+    scrollbar-width: auto !important;
+    scrollbar-color: transparent transparent !important;
+}
+
+#section-home #sigma-panels-container:hover,
+#section-dashboard #sigma-panels-container:hover {
+    scrollbar-color: rgba(0, 0, 0, .18) transparent !important;
+}
+
+#section-home #sigma-panels-container::-webkit-scrollbar,
+#section-dashboard #sigma-panels-container::-webkit-scrollbar {
+    display: block !important;
+    width: 6px !important;
+    height: 6px !important;
+}
+
+#section-home #sigma-panels-container::-webkit-scrollbar-track,
+#section-dashboard #sigma-panels-container::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+#section-home #sigma-panels-container::-webkit-scrollbar-thumb,
+#section-dashboard #sigma-panels-container::-webkit-scrollbar-thumb {
+    background: transparent !important;
+    border-radius: 10px !important;
+}
+
+#section-home #sigma-panels-container:hover::-webkit-scrollbar-thumb,
+#section-dashboard #sigma-panels-container:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, .18) !important;
+}
+
+#section-home #sigma-panels-container::-webkit-scrollbar-thumb:hover,
+#section-dashboard #sigma-panels-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, .32) !important;
+}
+
+/* Topic sidebars: shared teacher/student sizing and yellow active topic title. */
+#sub-sidebar .topic-nav-item {
+    background: transparent !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+#sub-sidebar .topic-nav-item p:first-child {
+    color: #000000 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase !important;
+}
+
+#sub-sidebar .topic-nav-item p:last-child,
+#sub-sidebar .topic-nav-item .topic-nav-title {
+    color: #000000 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
+}
+
+#sub-sidebar .topic-nav-item:hover p:last-child,
+#sub-sidebar .topic-nav-item.active p:last-child,
+#sub-sidebar .topic-nav-item:hover .topic-nav-title,
+#sub-sidebar .topic-nav-item.active .topic-nav-title {
+    color: #000000 !important;
+}
+
+#sub-sidebar .topic-nav-item.active,
+#sub-sidebar .topic-nav-item.active:hover {
+    background: #facc15 !important;
+    border-radius: 0 !important;
+}
+
+/* Match teacher topic progress header typography/color. */
+.student-topic-progress-kicker,
+.student-topic-progress-label {
+    color: #000000 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.12em !important;
+}
+
+.student-topic-progress-kicker {
+    color: #15803d !important;
+    text-transform: uppercase !important;
+}
+
+.student-topic-progress-percent {
+    color: #000000 !important;
+    font-weight: 700 !important;
+}
+
+#sub-sidebar .subject-nav-child:not(.active):hover,
+#sub-sidebar .topic-nav-item:not(.active):hover,
+#sub-sidebar .sub-sidebar-link:not(.active):hover {
+    background: #e5e7eb !important;
+    border-radius: 0 !important;
+}
+
+/* Keep sidebar icons visible on selected yellow rows. */
+#sub-sidebar .subject-nav-child.active .subject-nav-child-icon,
+#sub-sidebar .subject-nav-child.active:hover .subject-nav-child-icon,
+#sub-sidebar .topic-nav-item.active>i,
+#sub-sidebar .topic-nav-item.active:hover>i,
+#sub-sidebar .topic-nav-item.active .fa-solid,
+#sub-sidebar .topic-nav-item.active:hover .fa-solid,
+#sub-sidebar .topic-nav-item.active .fa-regular,
+#sub-sidebar .topic-nav-item.active:hover .fa-regular {
+    color: #000000 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* -- Classrooms Grid - sidebar-aware column switching ------------- */
+#classrooms-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 280px);
+    gap: 24px;
+    justify-content: start;
+}
+
+body:not(.sidebar-collapsed) #classrooms-grid {
+    grid-template-columns: repeat(3, 280px);
+}
+
+@media (max-width: 768px) {
+    #classrooms-grid {
+        grid-template-columns: 1fr !important;
+        gap: 24px;
+    }
+
+    #classrooms-grid .classroom-card {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        height: 280px !important;
+        min-height: 280px !important;
+        max-height: 280px !important;
+        margin: 0 0 1.25rem 0 !important;
+    }
+
+    #classrooms-grid .classroom-card>div:first-child {
+        flex: 0 0 39% !important;
+        height: auto !important;
+    }
+
+    #classrooms-grid .classroom-card>div:last-child {
+        flex: 1 !important;
+        height: auto !important;
+        overflow: hidden !important;
+        padding: 14px 16px !important;
+    }
+}
+
+/* -- Classroom card: fixed 1:1 square ratio (280x280 base) -------- */
+#classrooms-grid .classroom-card {
+    width: 280px;
+    height: 280px;
+    min-width: 280px;
+    min-height: 280px;
+    max-width: 280px;
+    max-height: 280px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Banner: always 39% of the card height (˜110px of 280px) */
+#classrooms-grid .classroom-card>div:first-child {
+    flex: 0 0 39%;
+    min-height: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Body: remaining 61% */
+#classrooms-grid .classroom-card>div:last-child {
+    flex: 1;
+    overflow: hidden;
+    padding: 14px 16px;
+    font-family: 'Inter', sans-serif;
+}
+
+/* -- Mobile overrides for fixed grid cards -- */
+@media (max-width: 1023px) {
+    .subjects-inline-grid--list {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+    }
+
+    .subjects-inline-card--row {
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 280px !important;
+        height: auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-bottom: 1.5rem !important;
+        transform-origin: top center;
+    }
+
+    .subjects-inline-card--row .subjects-inline-card-media {
+        height: 180px !important;
+        min-height: 180px !important;
+        display: block !important;
+        position: relative !important;
+        z-index: 2 !important;
+    }
+
+    .subjects-inline-card-progress-fill-bg {
+        z-index: 1 !important;
+    }
+
+    .subjects-inline-card--row .subjects-inline-card-media {
+        height: 180px !important;
+        min-height: 180px !important;
+    }
+
+    .subjects-inline-card-body {
+        padding: 1.25rem !important;
+    }
+}
+
+@media (max-width: 1023px) {
+    #classrooms-grid .classroom-card {
+        width: 85% !important;
+        max-width: 85% !important;
+        margin: 0 auto 1.25rem auto !important;
+        min-width: 0 !important;
+    }
+}
+
+/* ============================================================
+   STUDENT PORTAL MOBILE — Consolidated override block
+   (replaces all previous stacked overrides)
+   ============================================================ */
+@media (max-width: 1023px) {
+
+    /* 1. Remove top gap — white panel extends behind nav bar */
+    #layout-wrapper {
+        margin-top: 0 !important;
+        padding-top: var(--shell-offset) !important;
+        background-color: #ffffff !important;
+    }
+
+    .dynamic-section>div>div.bg-white {
+        margin-top: 0 !important;
+        border-top: none !important;
+        box-shadow: none !important;
+        min-height: 100vh !important;
+    }
+
+    /* 2. Full-bleed panel (edge-to-edge) */
+    #section-home>div>div.bg-white,
+    #section-classrooms>div>div.bg-white,
+    .dynamic-section>div>div.bg-white,
+    .bg-white.border-x.border-slate-200 {
+        width: 100% !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+        border-radius: 0 !important;
+    }
+
+    /* 3. Header spacing */
+    #section-classrooms {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    #section-classrooms .px-10,
+    #classrooms-grid-wrapper {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
+    #classes-section-title {
+        margin-top: 1.25rem !important;
+        margin-bottom: 1rem !important;
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+        font-size: 1.75rem !important;
+    }
+
+    /* 4. Cards - Exact Desktop Mirror */
+    #classrooms-grid .classroom-card {
+        width: 280px !important;
+        height: 280px !important;
+        min-width: 280px !important;
+        min-height: 280px !important;
+        max-width: 280px !important;
+        max-height: 280px !important;
+        margin: 0 auto 1.5rem auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        transform-origin: top center;
+        border-radius: 24px !important;
+        overflow: hidden !important;
+    }
+
+    /* Banner size fallback if Tailwind fails, matches desktop h-28 */
+    .classroom-card-banner,
+    .classroom-card>div:first-child {
+        height: 112px !important;
+        min-height: 112px !important;
+        max-height: 112px !important;
+        flex: 0 0 112px !important;
+    }
+
+    .card-body-main,
+    .classroom-card>div:last-child {
+        padding: 14px 16px !important;
+        flex: 1 !important;
+        height: 154px !important;
+        /* Remaining 280px - 126px */
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* Show all text on mobile and keep size normal */
+    #main-content .truncate,
+    .classroom-card h3,
+    .classroom-card p,
+    .classroom-card span,
+    .subjects-inline-card-title,
+    .subjects-inline-card-copy,
+    .curriculum-subject-title,
+    .curriculum-subject-text,
+    .student-topic-card h3,
+    .student-topic-card p {
+        white-space: normal !important;
+        text-overflow: clip !important;
+        overflow: visible !important;
+        font-size: var(--desktop-size, inherit) !important;
+    }
+
+    /* Explicitly set card text to desktop sizes */
+    .subjects-inline-card-title {
+        font-size: 1.08rem !important;
+    }
+
+    .subjects-inline-card-copy {
+        font-size: 0.9rem !important;
+    }
+
+    .classroom-card h3 {
+        font-size: 1.25rem !important;
+    }
+
+    .classroom-card p,
+    .classroom-card span {
+        font-size: 0.75rem !important;
+    }
+
+    .curriculum-subject-title {
+        font-size: 1.15rem !important;
+    }
+
+    .curriculum-subject-text {
+        font-size: 0.875rem !important;
+    }
+
+    .student-topic-card h3 {
+        font-size: 1.25rem !important;
+    }
+
+    .student-topic-card p {
+        font-size: 0.875rem !important;
+    }
+
+    #classes-section-title {
+        margin-top: 1.25rem !important;
+        margin-bottom: 1rem !important;
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+        font-size: 1.5rem !important;
+        /* Back to desktop 2xl */
+        white-space: normal !important;
+    }
+
+    #classrooms-grid {
+        gap: 1.5rem !important;
+        grid-template-columns: 1fr !important;
+        width: 100% !important;
+    }
+
+    /* Scale down if it doesn't fit (for very small screens) */
+    @media (max-width: 340px) {
+
+        .classroom-card,
+        .subjects-inline-card--row {
+            transform: scale(0.9);
+            width: 111.11% !important;
+            /* Offset scale(0.9) to fill 100% width */
+            margin-left: -5.55% !important;
+        }
+    }
+
+    /* 5. Bottom clearance — last card clears 68px fixed bottom appbar */
+    #classrooms-grid-wrapper {
+        padding-bottom: calc(68px + 4rem) !important;
+    }
+}
+
+/* Authoritative home layout. Keep this last so older duplicate home rail
+   rules cannot break the desktop layout after DevTools resize/dock changes. */
+@media (min-width: 1024px) {
+
+    #layout-wrapper,
+    #main-content,
+    #content-sections,
+    #section-home {
+        overflow: visible !important;
+    }
+
+    #content-sections {
+        height: auto !important;
+        min-height: calc(100vh - var(--shell-offset)) !important;
+    }
+
+    #section-home>.grid {
+        --home-grid-gap: clamp(1.5rem, 1.65vw, 2rem);
+        --home-rail-width: calc((100vw - var(--sidebar-width) - 2rem - var(--home-grid-gap) - var(--home-grid-gap)) / 4);
+        display: grid !important;
+        grid-template-columns: minmax(260px, 3fr) minmax(0, 6fr) minmax(260px, 3fr) !important;
+        gap: var(--home-grid-gap) !important;
+        align-items: start !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    #section-home>.grid>div:nth-child(1) {
+        grid-column: 1 !important;
+        display: block !important;
+        min-width: 0 !important;
+        width: auto !important;
+    }
+
+    #section-home>.grid>div:nth-child(2) {
+        grid-column: 2 !important;
+        min-width: 0 !important;
+        width: auto !important;
+    }
+
+    #section-home>.grid>div:nth-child(3) {
+        grid-column: 3 !important;
+        display: flex !important;
+        min-width: 0 !important;
+        width: auto !important;
+    }
+
+    #section-home .home-sticky-rail {
+        position: relative !important;
+        align-self: start !important;
+        top: auto !important;
+        height: calc(100vh - var(--shell-offset) - 3rem) !important;
+        max-height: none !important;
+        overflow: visible !important;
+        z-index: 20 !important;
+    }
+
+    #section-home #sigma-panels-container {
+        position: fixed !important;
+        top: calc(var(--shell-offset) + 1.5rem) !important;
+        left: calc(var(--sidebar-width) + 1rem) !important;
+        width: var(--home-rail-width) !important;
+        max-height: calc(100vh - var(--shell-offset) - 3rem) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        overscroll-behavior: contain !important;
+        z-index: 20 !important;
+    }
+
+    #section-home .home-dashboard-panels {
+        position: fixed !important;
+        top: calc(var(--shell-offset) + 1.5rem) !important;
+        right: 1rem !important;
+        width: var(--home-rail-width) !important;
+        max-height: calc(100vh - var(--shell-offset) - 3rem) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        overscroll-behavior: contain !important;
+    }
+}
+
+@media (max-width: 1023px) {
+
+    #section-home .home-sticky-rail--left,
+    #section-home .home-sticky-rail--right {
+        display: none !important;
+        position: static !important;
+    }
+
+    #section-home #sigma-panels-container,
+    #section-home .home-dashboard-panels {
+        position: static !important;
+        width: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    #section-home>.grid {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    #section-home>.grid>div:nth-child(2) {
+        grid-column: 1 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+}
+
+/* ============================================================
+   ROOT FIX: Allow classrooms section to scroll past viewport
+   (h-full on #content-sections was blocking scroll)
+   ============================================================ */
+@media (max-width: 1023px) {
+    #content-sections {
+        height: auto !important;
+        min-height: 100% !important;
+        overflow: visible !important;
+    }
+
+    #layout-wrapper {
+        height: auto !important;
+        min-height: calc(100vh - var(--shell-offset)) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Tailwind h-28 banner class drives the height now, no override needed */
+
+    /* Override Tailwind p-6 + pt-10 body class on mobile */
+    #classrooms-grid .classroom-card .card-body-main,
+    #classrooms-grid .classroom-card>div.p-6 {
+        padding: 0.875rem !important;
+        padding-top: 0.875rem !important;
+    }
+
+    /* Bottom clearance above 68px fixed nav bar */
+    #classrooms-grid-wrapper {
+        padding-bottom: calc(68px + 4rem) !important;
+    }
+}
+
+/* Final announcement feed/card layout. Images stay in normal flow so they
+   never cover author/title text, and mobile feed content clears the app bar. */
+.announcement-card,
+#admin-announcements-feed>article {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+.announcement-image-container {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    background: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.announcement-image-container img {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: 420px !important;
+    object-fit: contain !important;
+    background: #ffffff !important;
+}
+
+@media (max-width: 1023px) {
+    #section-home .main-dashboard-column {
+        padding-bottom: calc(68px + 1.5rem + env(safe-area-inset-bottom)) !important;
+    }
+
+    #admin-announcements-feed,
+    .room-announcements-feed {
+        width: 100% !important;
+        max-width: 100vw !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        padding-bottom: calc(68px + 1.5rem + env(safe-area-inset-bottom)) !important;
+        scroll-padding-bottom: calc(68px + 1.5rem + env(safe-area-inset-bottom)) !important;
+    }
+
+    .announcement-card,
+    .room-announcements-feed article,
+    #admin-announcements-feed>article {
+        border-radius: 0 !important;
+        margin: 0 0 1rem 0 !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        border-left: none !important;
+        border-right: none !important;
+        background: #ffffff !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .announcement-card>div:first-child,
+    #admin-announcements-feed>article>div:first-child {
+        padding: 1.25rem 1rem 1rem !important;
+    }
+
+    .announcement-card .pl-\[3\.25rem\],
+    .room-announcements-feed article .pl-\[3\.25rem\],
+    #admin-announcements-feed>article .pl-\[3\.25rem\],
+    .announcement-card [class*="pl-"],
+    .room-announcements-feed article [class*="pl-"] {
+        padding-left: 0 !important;
+    }
+
+    .announcement-image-container img {
+        max-height: min(52vh, 360px) !important;
+    }
+}
+
+/* Final classroom card sorting rules. Keep the drag target stable so cards
+   reliably swap positions in the grid instead of selecting/clicking content. */
+#classrooms-grid .classroom-card {
+    cursor: grab !important;
+    user-select: none !important;
+    touch-action: none !important;
+}
+
+body.classroom-card-sorting,
+body.classroom-card-sorting * {
+    cursor: grabbing !important;
+    user-select: none !important;
+}
+
+#classrooms-grid .sortable-chosen,
+#classrooms-grid .sortable-drag-original {
+    cursor: grabbing !important;
+}
+
+#classrooms-grid .sortable-ghost {
+    width: 280px !important;
+    height: 280px !important;
+    min-width: 280px !important;
+    min-height: 280px !important;
+    opacity: 0.35 !important;
+    visibility: visible !important;
+}
+
+@media (max-width: 768px) {
+    #classrooms-grid .sortable-ghost {
+        width: 85% !important;
+        height: auto !important;
+        min-width: 0 !important;
+        min-height: 80px !important;
+    }
+}
+
+/* Card structure while being dragged (in-grid original + body clone) */
+#classrooms-grid .classroom-card.sortable-chosen,
+#classrooms-grid .classroom-card.sortable-drag-original,
+body>.sortable-drag-clone {
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border-radius: 24px !important;
+    overflow: hidden !important;
+    transition: none !important;
+    cursor: grabbing !important;
+}
+
+#classrooms-grid .classroom-card.sortable-chosen .classroom-card-banner,
+#classrooms-grid .classroom-card.sortable-drag-original .classroom-card-banner,
+body>.sortable-drag-clone .classroom-card-banner {
+    flex: 0 0 112px !important;
+    height: 112px !important;
+    min-height: 112px !important;
+    max-height: 112px !important;
+    width: 100% !important;
+    border-radius: 24px 24px 0 0 !important;
+}
+
+#classrooms-grid .classroom-card.sortable-chosen>.relative.px-6:not(.classroom-card-banner),
+#classrooms-grid .classroom-card.sortable-drag-original>.relative.px-6:not(.classroom-card-banner),
+body>.sortable-drag-clone>.relative.px-6:not(.classroom-card-banner) {
+    flex: 0 0 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    position: relative !important;
+}
+
+#classrooms-grid .classroom-card.sortable-chosen .mobile-hide-avatar,
+#classrooms-grid .classroom-card.sortable-drag-original .mobile-hide-avatar,
+body>.sortable-drag-clone .mobile-hide-avatar {
+    width: 64px !important;
+    height: 64px !important;
+    left: 24px !important;
+    top: 0 !important;
+}
+
+#classrooms-grid .classroom-card.sortable-chosen .card-body-main,
+#classrooms-grid .classroom-card.sortable-drag-original .card-body-main,
+body>.sortable-drag-clone .card-body-main {
+    box-sizing: border-box !important;
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 14px 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* KEY FIX: mt-auto pushes content to the bottom of the flex card body.
+   When the clone is taller than expected (grid cells > 280px), this creates
+   a massive gap between badge and section info. Pin content to top. */
+#classrooms-grid .classroom-card.sortable-chosen .card-body-main>.mt-auto,
+#classrooms-grid .classroom-card.sortable-drag-original .card-body-main>.mt-auto,
+body>.sortable-drag-clone .card-body-main>.mt-auto {
+    margin-top: 0 !important;
+}
+
+@media (min-width: 769px) {
+
+    #classrooms-grid .classroom-card.sortable-chosen,
+    #classrooms-grid .classroom-card.sortable-drag-original {
+        width: 280px !important;
+        height: 280px !important;
+        min-width: 280px !important;
+        min-height: 280px !important;
+        max-width: 280px !important;
+        max-height: 280px !important;
+    }
+
+    /* Clone size is set inline by JS — no CSS override needed here */
+}
+
+@media (max-width: 768px) {
+
+    #classrooms-grid .classroom-card.sortable-chosen .classroom-card-banner,
+    #classrooms-grid .classroom-card.sortable-drag-original .classroom-card-banner,
+    body>.sortable-drag-clone .classroom-card-banner {
+        flex: 0 0 112px !important;
+        height: 112px !important;
+        min-height: 112px !important;
+        max-height: 112px !important;
+    }
+
+    #classrooms-grid .classroom-card.sortable-chosen .card-body-main,
+    #classrooms-grid .classroom-card.sortable-drag-original .card-body-main,
+    body>.sortable-drag-clone .card-body-main {
+        padding: 0.875rem !important;
+        padding-top: 0.875rem !important;
+    }
+}
+
+/* Body-level floating clone — appearance only, NO position/transform overrides.
+   SortableJS sets position:fixed + top/left/transform via its own inline styles
+   to track the cursor. We must not touch those or the clone freezes in place.   */
+body>.sortable-drag-clone {
+    z-index: 99999 !important;
+    opacity: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border-radius: 24px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    pointer-events: none !important;
+    cursor: grabbing !important;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.30) !important;
+}
+
+/* Ensure banner text stays visible and formatted during drag */
+body>.sortable-drag-clone h3 {
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    color: #ffffff !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1.3 !important;
+    text-align: center !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+@media (max-width: 1023px) {
+    .hide-on-mobile {
+        display: none !important;
+    }
+}
+
+@media (min-width: 1024px) {
+    .show-on-mobile {
+        display: none !important;
+    }
+}
+
+/* ============================================================
+   TOPIC CONTENT PAGE — Mobile (Student + Teacher)
+   Remove left/right padding and all border radii from panels
+   and video players so they fit the screen edge-to-edge.
+   ============================================================ */
+@media (max-width: 1023px) {
+
+    /* Strip px-10 padding from breadcrumb, action row, tab row, and main content */
+    #section-topic-content .px-10,
+    #section-topic-detail .px-10,
+    #topic-content-header .px-10,
+    #topic-content-main.px-10,
+    #topic-content-main {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    /* Full-bleed main shell */
+    .student-topic-main-shell,
+    .teacher-topic-main-shell {
+        width: 100% !important;
+        max-width: 100vw !important;
+        border-left: none !important;
+        border-right: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    /* Video player — no radius, full bleed */
+    #topic-video-player-container,
+    .video-selection-card,
+    .video-selection-card .bg-gray-900 {
+        border-radius: 0 !important;
+    }
+
+    #topic-video-player-container {
+        width: 100vw !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    /* Info panel under video */
+    .space-y-6 > .bg-white.border.border-gray-100.rounded-2xl {
+        border-radius: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+    }
+
+    /* Video selection grid cards */
+    .video-selection-card {
+        border-radius: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+    }
+
+    /* Lesson / handout cards */
+    .handout-card {
+        border-radius: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+    }
+
+    /* Grid layout for videos — single column, no gap on sides */
+    #section-topic-content .grid.grid-cols-1,
+    .space-y-6,
+    .space-y-4 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    /* Topic content header breadcrumb row */
+    #topic-content-header > div,
+    #topic-breadcrumb-container {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
     }
 }

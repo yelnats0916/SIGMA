@@ -135,6 +135,32 @@
                             <span id="timeoutReleaseTs" class="hidden"></span>
                         </div>
 
+                        <!-- INLINE RECAPTCHA -->
+                        <div id="landingRecaptchaContainer" class="hidden mb-6">
+                            <div class="login-captcha-box w-full bg-white p-5 rounded-none shadow-sm flex items-center gap-5 cursor-default">
+                                <div class="relative w-8 h-8 flex items-center justify-center shrink-0">
+                                    <!-- Real hidden checkbox for state -->
+                                    <input type="checkbox" id="landingCaptchaCheck" class="absolute inset-0 opacity-0 cursor-pointer z-20">
+                                    <!-- Visual checkbox -->
+                                    <div id="landingCaptchaVisual" class="w-7 h-7 border-2 border-slate-300 rounded bg-white transition-all z-10 flex items-center justify-center">
+                                        <i class="fa-solid fa-check text-white text-sm opacity-0 transition-opacity"></i>
+                                    </div>
+                                    <!-- Loading Spinner -->
+                                    <i id="landingCaptchaSpinner" class="fa-solid fa-circle-notch fa-spin text-black text-xl absolute hidden z-30"></i>
+                                </div>
+                                <div class="flex-1 text-left -ml-2">
+                                    <span class="block text-xl font-bold text-black leading-tight">I'm not a robot</span>
+                                </div>
+                                <div class="flex flex-col items-center text-black shrink-0 gap-1.5">
+                                    <i class="fa-solid fa-rotate-right text-2xl"></i>
+                                    <div class="flex flex-col items-center">
+                                        <span class="text-[9px] font-black uppercase tracking-widest leading-none">reCAPTCHA</span>
+                                        <span class="text-[7px] font-bold text-slate-400 uppercase mt-0.5">Privacy - Terms</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <button type="submit" id="loginSubmitBtn"
                             class="sign-in-btn w-full py-3 text-white font-bold rounded-lg transition-all duration-300 text-base lg:text-sm flex items-center justify-center gap-3">
                             <span class="btn-text">Log In</span>
@@ -300,44 +326,7 @@
         </section>
     </div>
 
-    <!-- RECAPTCHA VIEW (Full Page Shift) -->
-    <div id="recaptchaView"
-        class="hidden fixed inset-0 z-[90] bg-white flex flex-col items-center justify-start pt-24 lg:pt-32 transition-all duration-500 opacity-0 translate-y-10">
-        <div class="max-w-md w-full px-8 text-center space-y-6">
-            <div class="flex items-center justify-center gap-3">
-                <div class="w-14 h-14 rounded-2xl bg-icc-yellow flex items-center justify-center shadow-sm">
-                    <i class="fa-solid fa-bolt text-black text-xl"></i>
-                </div>
-                <span class="text-2xl font-black uppercase tracking-[0.28em] text-slate-900">Sigma</span>
-            </div>
 
-            <div
-                class="bg-gray-50 p-10 rounded-none border-2 border-gray-100 shadow-sm flex flex-col items-center gap-6">
-                <div id="recaptchaBoxContainer"
-                    class="login-captcha-box login-captcha-box--full hover:border-icc transition-colors w-full">
-                    <input type="checkbox" id="fullPageCaptchaCheck" class="login-captcha-check">
-                    <span class="min-w-0 flex-1 text-left">
-                        <span class="block text-xl font-semibold text-gray-700">I'm not a robot</span>
-                    </span>
-                    <span class="recaptcha-wiremark">
-                        <span class="recaptcha-wiremark__icon">
-                            <i class="fa-solid fa-rotate-right"></i>
-                        </span>
-                        <span class="recaptcha-wiremark__text">reCAPTCHA</span>
-                        <span class="recaptcha-wiremark__meta">Privacy - Terms</span>
-                    </span>
-                </div>
-                <div id="recaptchaLoadingState"
-                    class="hidden flex flex-col items-center justify-center gap-3 py-6 min-h-[84px]">
-                    <i class="fa-solid fa-spinner fa-spin text-3xl text-icc"></i>
-                    <span class="text-sm font-bold uppercase tracking-[0.22em] text-gray-400">Checking...</span>
-                </div>
-                <div id="recaptchaError" class="hidden text-red-600 text-sm font-bold uppercase tracking-widest mt-2">
-                    Invalid navigation or session expired.
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- LOGIN PANEL MODAL -->
     <div id="loginModal"
@@ -385,6 +374,32 @@
                     class="hidden p-3 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 text-xs font-bold text-center uppercase tracking-widest">
                     <span id="modalTimeoutMessageLabel">Wait for 60 seconds.</span>
                     <span id="modalTimeoutReleaseTs" class="hidden"></span>
+                </div>
+
+                <!-- INLINE RECAPTCHA (MODAL) -->
+                <div id="modalRecaptchaContainer" class="hidden mb-6">
+                    <div class="login-captcha-box w-full bg-white p-5 rounded-none shadow-sm flex items-center gap-5 cursor-default">
+                        <div class="relative w-8 h-8 flex items-center justify-center shrink-0">
+                            <!-- Real hidden checkbox for state -->
+                            <input type="checkbox" id="modalCaptchaCheck" class="absolute inset-0 opacity-0 cursor-pointer z-20">
+                            <!-- Visual checkbox -->
+                            <div id="modalCaptchaVisual" class="w-7 h-7 border-2 border-slate-300 rounded bg-white transition-all z-10 flex items-center justify-center">
+                                <i class="fa-solid fa-check text-white text-sm opacity-0 transition-opacity"></i>
+                            </div>
+                            <!-- Loading Spinner -->
+                            <i id="modalCaptchaSpinner" class="fa-solid fa-circle-notch fa-spin text-black text-xl absolute hidden z-30"></i>
+                        </div>
+                        <div class="flex-1 text-left -ml-2">
+                            <span class="block text-xl font-bold text-black leading-tight">I'm not a robot</span>
+                        </div>
+                        <div class="flex flex-col items-center text-black shrink-0 gap-1.5">
+                            <i class="fa-solid fa-rotate-right text-2xl"></i>
+                            <div class="flex flex-col items-center">
+                                <span class="text-[9px] font-black uppercase tracking-widest leading-none">reCAPTCHA</span>
+                                <span class="text-[7px] font-bold text-slate-400 uppercase mt-0.5">Privacy - Terms</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <button type="submit" id="modalLoginSubmitBtn"
                     class="w-full bg-icc-yellow text-white font-black py-4 rounded-2xl text-lg shadow-lg shadow-icc-yellow/20 hover:bg-[#ffe047] hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest mt-4 flex items-center justify-center gap-3">

@@ -31,7 +31,8 @@
 
 <body class="bg-admin-bg min-h-screen font-['Inter'] flex flex-col overflow-x-hidden sidebar-collapsed">
 
-    <header id="teacher-header" class="shrink-0 z-[250] fixed top-0 left-0 right-0 flex flex-col bg-white">
+    <header id="teacher-header"
+        class="shrink-0 z-[250] fixed top-0 left-0 right-0 flex flex-col bg-white standard-panel-shadow">
         <!-- ═══ TOP NAVIGATION BAR ════════════════════════════════════ -->
         <nav class="top-nav justify-between shrink-0">
             <div class="flex items-center gap-3">
@@ -51,8 +52,7 @@
                     <i class="fa-solid fa-bars text-[17px] text-black"></i>
                 </button>
                 <div id="logo-container">
-                    <button id="nav-logo-btn" title="Go to Dashboard"
-                        onclick="document.getElementById('nav-home').click();">
+                    <button id="nav-logo-btn" title="Go to Dashboard" onclick="window.switchTab('nav-dashboard');">
                         <img src="image/ICC logo.jpg" alt="ICC Logo">
                     </button>
                 </div>
@@ -65,11 +65,8 @@
             <div class="absolute left-1/2 -translate-x-1/2 w-full max-w-sm md:block z-[101]">
                 <div
                     class="header-search-shell relative flex items-center group bg-white border border-slate-300 rounded-full focus-within:border-[#FFD000] focus-within:bg-white hover:bg-white focus-within:ring-0 focus-within:outline-none focus-within:shadow-none transition-all overflow-hidden">
-                    <button type="button" id="mobileSearchBackBtn" class="mobile-search-back-btn hidden">
-                        <i class="fa-solid fa-arrow-left"></i>
-                    </button>
                     <span
-                        class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 search-icon-container">
+                        class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none opacity-0 group-focus-within:opacity-100 transition-opacity duration-300">
                         <i class="fa-solid fa-magnifying-glass text-slate-900 text-sm"></i>
                     </span>
                     <input id="searchBar" type="text" placeholder="Search"
@@ -198,7 +195,7 @@
 
     <!-- ═══ SIDEBAR ═══════════════════════════════════════════════ -->
     <aside id="sidebar">
-        <nav class="py-4 flex flex-col h-full">
+        <nav class="py-4 flex flex-col">
             <a href="#" id="nav-dashboard" class="nav-link active" title="Home">
                 <div class="sidebar-rail-icon">
                     <i class="fa-solid fa-house"></i>
@@ -224,15 +221,18 @@
                     <i class="fa-solid fa-chevron-right sidebar-group-chevron"></i>
                 </a>
                 <div id="subjects-submenu" class="sidebar-submenu hidden">
-                    <a href="#" id="nav-subjects-core" class="nav-sublink no-underline" data-program-key="core-subjects">
+                    <a href="#" id="nav-subjects-core" class="nav-sublink no-underline"
+                        data-program-key="core-subjects">
                         <i class="fa-solid fa-layer-group"></i>
                         <span>Core Subjects</span>
                     </a>
-                    <a href="#" id="nav-subjects-applied" class="nav-sublink no-underline" data-program-key="applied-subjects">
+                    <a href="#" id="nav-subjects-applied" class="nav-sublink no-underline"
+                        data-program-key="applied-subjects">
                         <i class="fa-solid fa-book-open"></i>
                         <span>Applied Subjects</span>
                     </a>
-                    <a href="#" id="nav-subjects-specialized" class="nav-sublink no-underline" data-program-key="specialized-subjects">
+                    <a href="#" id="nav-subjects-specialized" class="nav-sublink no-underline"
+                        data-program-key="specialized-subjects">
                         <i class="fa-solid fa-briefcase"></i>
                         <span>Specialized Subjects</span>
                     </a>
@@ -245,13 +245,29 @@
                 </div>
                 <span class="full-label">Assessments</span>
             </a>
-            <a href="#" id="nav-grades" class="nav-link no-underline group" title="Grades">
-                <div class="sidebar-rail-icon">
-                    <i class="fa-solid fa-chart-bar"></i>
-                    <span class="rail-label">Grades</span>
+            <div class="nav-group" data-sidebar-group="grades">
+                <a href="#" id="nav-grades" class="nav-link nav-link--group no-underline group" title="Grades"
+                    data-toggle="submenu">
+                    <div class="sidebar-rail-icon">
+                        <i class="fa-solid fa-chart-bar"></i>
+                        <span class="rail-label">Grades</span>
+                    </div>
+                    <span class="full-label">Grades</span>
+                    <i class="fa-solid fa-chevron-right sidebar-group-chevron"></i>
+                </a>
+                <div id="grades-submenu" class="sidebar-submenu hidden">
+                    <a href="#" id="nav-grades-analytics" class="nav-sublink no-underline"
+                        data-grades-tab="analytics">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>Performance</span>
+                    </a>
+                    <a href="#" id="nav-grades-gradebook" class="nav-sublink no-underline"
+                        data-grades-tab="gradebook">
+                        <i class="fa-solid fa-table-list"></i>
+                        <span>Gradebooks</span>
+                    </a>
                 </div>
-                <span class="full-label">Grades</span>
-            </a>
+            </div>
             <div class="mt-auto pb-4"></div>
         </nav>
     </aside>
@@ -278,67 +294,66 @@
             <div id="content-sections" class="w-full h-full">
 
                 <!-- DASHBOARD SECTION -->
-                <section id="section-dashboard" class="dynamic-section transition-opacity duration-300">
+                <section id="section-dashboard" class="dynamic-section hidden transition-opacity duration-300">
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 p-4 pt-4 items-start">
                         <!-- 1. Left Section (3/12) - Sticky Metrics -->
-                        <div class="lg:col-span-3 mt-2 sticky top-[106px] h-fit">
-                            <div id="sigma-panels-container"
-                                class="space-y-4 max-h-[calc(100vh-106px)] overflow-y-auto custom-scrollbar pr-2">
-                                <!-- SIGMA Panel 1: Descriptive (Subjects) -->
+                        <div class="lg:col-span-3 mt-2 home-sticky-rail home-sticky-rail--left">
+                            <div id="sigma-panels-container" class="space-y-4 custom-scrollbar pr-2">
+                                <!-- SIGMA Panel 1: Descriptive (Progress) -->
                                 <div data-id="sigma-descriptive-yellow"
-                                    class="bg-white border border-slate-200 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] standard-panel-shadow flex flex-col overflow-hidden relative cursor-grab select-none">
                                     <div class="bg-[#FFD000] px-5 py-4 flex items-center">
                                         <div class="flex items-center gap-2">
                                             <i class="fa-solid fa-bolt text-black text-[12px]"></i>
-                                            <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
+                                            <h4 class="text-[11px] font-black text-black tracking-widest">SIGMA</h4>
                                         </div>
+                                        <span class="ml-auto text-[10px] text-black/60 font-normal">05/05/2026</span>
                                     </div>
                                     <div class="p-5">
                                         <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
                                             <i class="fa-solid fa-book-open mr-2 text-[#FFD000] text-[16px]"></i>
-                                            Learning continuity remains stable across all assigned sections. Student
-                                            engagement metrics have increased by 12% this week, indicating positive
-                                            response to new materials.
+                                            You have completed 12 assignments this month. Your overall progress
+                                            across all subjects is currently at 85%, showing steady improvement.
                                         </p>
                                     </div>
                                     <div class="mt-auto h-[2px] w-full bg-[#FFD000]"></div>
                                 </div>
 
-                                <!-- SIGMA Panel 2: Predictive (Grades) -->
+                                <!-- SIGMA Panel 2: Predictive (Excellence) -->
                                 <div data-id="sigma-predictive-black"
-                                    class="bg-white border border-slate-200 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
-                                    <div class="bg-[#000000] px-5 py-4 flex items-center">
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] standard-panel-shadow flex flex-col overflow-hidden relative cursor-grab select-none">
+                                    <div class="bg-black px-5 py-4 flex items-center">
                                         <div class="flex items-center gap-2">
                                             <i class="fa-solid fa-bolt text-[#FFD000] text-[12px]"></i>
                                             <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
                                         </div>
+                                        <span class="ml-auto text-[10px] text-white/80 font-normal">05/05/2026</span>
                                     </div>
                                     <div class="p-5">
                                         <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
                                             <i class="fa-solid fa-award mr-2 text-black text-[16px]"></i>
-                                            Trending towards academic distinction at the institutional level. AI
-                                            modeling predicts a 92% student pass rate for the upcoming departmental
-                                            midterms based on current performance.
+                                            You are on track for an Academic Excellence award this semester.
+                                            Maintaining your current study pace predicts a 1.25 GPA by year-end.
                                         </p>
                                     </div>
                                     <div class="mt-auto h-[2px] w-full bg-black"></div>
                                 </div>
 
-                                <!-- SIGMA Panel 3: Prescriptive (Assessments) -->
+                                <!-- SIGMA Panel 3: Prescriptive (Review) -->
                                 <div data-id="sigma-prescriptive-green"
-                                    class="bg-white border border-slate-200 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] standard-panel-shadow flex flex-col overflow-hidden relative cursor-grab select-none">
                                     <div class="bg-[#15803d] px-5 py-4 flex items-center">
                                         <div class="flex items-center gap-2">
                                             <i class="fa-solid fa-bolt text-white text-[12px]"></i>
                                             <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
                                         </div>
+                                        <span class="ml-auto text-[10px] text-white/80 font-normal">05/05/2026</span>
                                     </div>
                                     <div class="p-5">
                                         <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
                                             <i class="fa-solid fa-clipboard-list mr-2 text-[#15803d] text-[16px]"></i>
-                                            Compiling a targeted review for 'Logic Gates' is recommended. Class
-                                            analytics suggest that 40% of the cohort requires additional reinforcement
-                                            in this specific competency area.
+                                            Focus on 'Logic Gates' in Computer Programming. AI suggests reviewing
+                                            this topic to improve your score in the next assessment.
                                         </p>
                                     </div>
                                     <div class="mt-auto h-[2px] w-full bg-[#15803d]"></div>
@@ -346,60 +361,60 @@
 
                                 <!-- SIGMA Panel 4: Descriptive (Attendance) -->
                                 <div data-id="sigma-descriptive-attendance"
-                                    class="bg-white border border-slate-200 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] standard-panel-shadow flex flex-col overflow-hidden relative cursor-grab select-none">
                                     <div class="bg-[#FFD000] px-5 py-4 flex items-center">
                                         <div class="flex items-center gap-2">
                                             <i class="fa-solid fa-bolt text-black text-[12px]"></i>
-                                            <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
+                                            <h4 class="text-[11px] font-black text-black tracking-widest">SIGMA</h4>
                                         </div>
+                                        <span class="ml-auto text-[10px] text-black/60 font-normal">05/05/2026</span>
                                     </div>
                                     <div class="p-5">
                                         <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
                                             <i class="fa-solid fa-calendar-check mr-2 text-[#FFD000] text-[16px]"></i>
-                                            Section-wide attendance has improved by 5% this month. Mid-morning
-                                            laboratory sessions continue to demonstrate the highest sustained
-                                            participation rates across the faculty.
+                                            Your attendance record is 98% this semester. You have participated in
+                                            all synchronous sessions for your core subjects.
                                         </p>
                                     </div>
                                     <div class="mt-auto h-[2px] w-full bg-[#FFD000]"></div>
                                 </div>
 
-                                <!-- SIGMA Panel 5: Predictive (AI Insights) -->
+                                <!-- SIGMA Panel 5: Predictive (Deadlines) -->
                                 <div data-id="sigma-predictive-ai"
-                                    class="bg-white border border-slate-200 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
-                                    <div class="bg-[#000000] px-5 py-4 flex items-center">
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] standard-panel-shadow flex flex-col overflow-hidden relative cursor-grab select-none">
+                                    <div class="bg-black px-5 py-4 flex items-center">
                                         <div class="flex items-center gap-2">
                                             <i class="fa-solid fa-bolt text-[#FFD000] text-[12px]"></i>
                                             <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
                                         </div>
+                                        <span class="ml-auto text-[10px] text-white/80 font-normal">05/05/2026</span>
                                     </div>
                                     <div class="p-5">
                                         <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
                                             <i class="fa-solid fa-bolt mr-2 text-black text-[16px]"></i>
-                                            The integrated AI-assisted automated grading system is projected to reduce
-                                            your total administrative workload by approximately 6 hours per week
-                                            throughout this semester.
+                                            Upcoming deadlines in 'Web Development' are approaching. Based on your
+                                            habits, you have a 95% likelihood of on-time submission.
                                         </p>
                                     </div>
                                     <div class="mt-auto h-[2px] w-full bg-black"></div>
                                 </div>
 
-                                <!-- SIGMA Panel 6: Prescriptive (Curriculum) -->
+                                <!-- SIGMA Panel 6: Prescriptive (Study Group) -->
                                 <div data-id="sigma-prescriptive-curriculum"
-                                    class="bg-white border border-slate-200 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] standard-panel-shadow flex flex-col overflow-hidden relative cursor-grab select-none">
                                     <div class="bg-[#15803d] px-5 py-4 flex items-center">
                                         <div class="flex items-center gap-2">
                                             <i class="fa-solid fa-bolt text-white text-[12px]"></i>
                                             <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
                                         </div>
+                                        <span class="ml-auto text-[10px] text-white/80 font-normal">05/05/2026</span>
                                     </div>
                                     <div class="p-5">
                                         <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
                                             <i
                                                 class="fa-solid fa-wand-magic-sparkles mr-2 text-[#15803d] text-[16px]"></i>
-                                            Schedule interactive peer-review sessions for the next curriculum module.
-                                            Historical data indicates this strategy effectively enhances collaborative
-                                            learning and retention in STEM subjects.
+                                            Join the 'Advanced Mathematics' peer study group. Collaborative learning
+                                            sessions are scheduled for Friday at 3:00 PM.
                                         </p>
                                     </div>
                                     <div class="mt-auto h-[2px] w-full bg-[#15803d]"></div>
@@ -412,7 +427,7 @@
 
                             <!-- Welcome Panel -->
                             <div
-                                class="welcome-panel relative h-[220px] rounded-[22px] overflow-hidden shadow-lg border border-slate-200 flex items-center px-12 group">
+                                class="welcome-panel relative h-[220px] rounded-[22px] overflow-hidden standard-panel-shadow border border-slate-200 flex items-center px-12 group">
                                 <img id="welcome-panel-teacher-img" src="image/Welcome.jpg" alt="Welcome to ICC"
                                     class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                                 <div class="absolute inset-0 bg-gradient-to-r from-icc/90 via-icc/40 to-transparent">
@@ -423,11 +438,10 @@
                                     <h2 class="text-white text-4xl font-black leading-tight drop-shadow-md uppercase">
                                         INTERFACE COMPUTER COLLEGE</h2>
                                 </div>
-
                             </div>
 
                             <!-- Announcement Composer Trigger -->
-                            <div class="bg-white border border-slate-200 shadow-sm rounded-[22px] p-3">
+                            <div class="bg-white border border-slate-200 standard-panel-shadow rounded-[22px] p-3">
                                 <button id="trigger-announcement-composer"
                                     class="w-full h-10 bg-slate-100 hover:bg-slate-200 transition-all rounded-full px-6 text-left text-slate-500 text-[13px] font-medium flex items-center gap-3 group">
                                     <i class="fa-solid fa-bullhorn text-[12px] text-slate-400"></i>
@@ -437,7 +451,7 @@
 
                             <!-- Announcement Tabs -->
                             <div
-                                class="bg-white border border-slate-200 shadow-sm rounded-full p-2 flex items-center gap-2 mb-6">
+                                class="bg-white border border-slate-200 standard-panel-shadow rounded-full p-2 flex items-center gap-2 mb-6">
                                 <button id="announcement-tab-all"
                                     class="px-8 py-3 rounded-full text-[11px] font-black uppercase tracking-widest bg-[#15803d] text-white transition-all shadow-sm">
                                     Announcements
@@ -459,96 +473,10 @@
                         </div>
 
                         <!-- 3. Right Section (3/12) - Sticky Sidebar -->
-                        <div class="lg:col-span-3 mt-0 sticky top-[106px] h-fit lg:ml-0 lg:pr-0 w-full">
+                        <div class="lg:col-span-3 mt-0 lg:ml-0 lg:pr-0 w-full home-sticky-rail home-sticky-rail--right">
                             <div class="home-right-stack">
-                                <div class="home-subject-rail" id="home-subject-rail">
-                                    <div
-                                        class="home-subject-rail__head flex flex-row items-center justify-between pb-3 border-b border-slate-200">
-                                        <button type="button" class="home-subject-rail__title font-black"
-                                            data-home-subjects-nav="landing">Subjects</button>
-                                        <div class="home-subject-rail__tools flex items-center gap-2">
-                                            <button type="button" id="home-subject-search-toggle"
-                                                class="home-subject-rail__icon-btn p-2 hover:bg-slate-100 rounded-xl transition-colors"
-                                                aria-label="Search subjects" title="Search subjects">
-                                                <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
-                                            </button>
-                                            <div class="home-subject-rail__settings-wrap relative">
-                                                <button type="button" id="home-subject-settings-toggle"
-                                                    class="home-subject-rail__icon-btn p-2 hover:bg-slate-100 rounded-xl transition-colors"
-                                                    aria-label="Subjects settings" title="Subjects settings">
-                                                    <i class="fa-solid fa-sliders text-slate-400"></i>
-                                                </button>
-                                                <div id="home-subject-settings-menu"
-                                                    class="home-subject-settings-menu hidden">
-                                                    <p class="home-subject-settings-menu__label">View Options</p>
-                                                    <label class="home-subject-settings-menu__option">
-                                                        <input type="checkbox" id="home-subject-hide-completed-toggle"
-                                                            class="w-4 h-4 rounded border-slate-300 text-green-600 focus:ring-green-500">
-                                                        <span>Hide completed subjects</span>
-                                                    </label>
-                                                    <p
-                                                        class="home-subject-settings-menu__label home-subject-settings-menu__label--spaced">
-                                                        Category Filter</p>
-                                                    <label class="home-subject-settings-menu__option">
-                                                        <input type="radio" name="home-subject-filter" value="all"
-                                                            checked
-                                                            class="w-4 h-4 border-slate-300 text-green-600 focus:ring-green-500">
-                                                        <span>All subjects</span>
-                                                    </label>
-                                                    <label class="home-subject-settings-menu__option">
-                                                        <input type="radio" name="home-subject-filter" value="core"
-                                                            class="w-4 h-4 border-slate-300 text-green-600 focus:ring-green-500">
-                                                        <span>Core subjects</span>
-                                                    </label>
-                                                    <label class="home-subject-settings-menu__option">
-                                                        <input type="radio" name="home-subject-filter" value="applied"
-                                                            class="w-4 h-4 border-slate-300 text-green-600 focus:ring-green-500">
-                                                        <span>Applied subjects</span>
-                                                    </label>
-                                                    <label class="home-subject-settings-menu__option">
-                                                        <input type="radio" name="home-subject-filter"
-                                                            value="specialized"
-                                                            class="w-4 h-4 border-slate-300 text-green-600 focus:ring-green-500">
-                                                        <span>Specialized subjects</span>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div id="home-subject-search-box"
-                                        class="hidden animate-in fade-in slide-in-from-top-2 duration-200 mt-4 px-1">
-                                        <div class="relative group">
-                                            <i
-                                                class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[12px] group-focus-within:text-green-600 transition-colors"></i>
-                                            <input type="text" id="home-subject-search-input"
-                                                placeholder="Search subjects..."
-                                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-[11px] font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-green-600/20 focus:bg-white transition-all">
-                                        </div>
-                                    </div>
-
-                                    <div class="home-subject-rail__content space-y-4 mt-3">
-                                        <!-- Enrolled Subjects -->
-                                        <div class="space-y-2">
-                                            <div class="flex items-center justify-between">
-                                                <h3 class="text-[12px] font-extrabold text-slate-400">Assigned Subjects
-                                                </h3>
-                                            </div>
-                                            <div class="space-y-0" id="home-enrolled-subject-list">
-                                                <!-- JS Rendered -->
-                                            </div>
-                                        </div>
-
-                                        <!-- Completed Subjects -->
-                                        <div class="space-y-2 pt-3 border-t border-slate-50"
-                                            id="home-completed-subject-block">
-                                            <h3 class="text-[12px] font-extrabold text-slate-400">Completed Subjects
-                                            </h3>
-                                            <div class="space-y-0" id="home-completed-subject-list">
-                                                <!-- JS Rendered -->
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="home-dashboard-panels" id="teacher-home-dashboard-combined-list">
+                                    <!-- Injected by JS: renderTeacherHomeDashboardPanels -->
                                 </div>
                             </div>
                         </div>
@@ -670,17 +598,18 @@
 
                 <!-- CLASSES SECTION -->
                 <section id="section-classes" class="dynamic-section hidden">
-                    <div class="mx-auto max-w-[1024px] w-full">
-                        <div class="bg-white min-h-[calc(100vh-var(--shell-offset))] p-0 relative flex flex-col">
+                    <div class="w-full">
+                        <div
+                            class="bg-white border-x border-slate-200 min-h-[calc(100vh-var(--shell-offset))] p-0 relative standard-panel-shadow">
                             <!-- Page Title -->
-                            <div id="classes-page-header" class="px-10 pt-6 pb-2">
+                            <div class="px-10 py-8">
                                 <h1 id="classes-section-title" class="text-2xl font-bold text-black tracking-tight">
                                     Classrooms</h1>
                             </div>
 
                             <!-- Classroom cards grid -->
                             <div id="classrooms-grid-wrapper" class="px-10 pb-10">
-                                <div id="classrooms-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div id="classrooms-grid">
                                     <!-- Classroom Card 1 -->
                                     <div class="classroom-card bg-white border border-gray-100 rounded-[24px] overflow-hidden shadow-sm group cursor-pointer"
                                         onclick="showStudentList('Grade 11 - ICT A', 'Programming 1', 'room')">
@@ -772,7 +701,7 @@
                                     </div>
 
                                     <!-- Classroom Card 4 -->
-                                    <div class="classroom-card bg-white border border-gray-100 rounded-[24px] overflow-hidden shadow-sm group cursor-pointer"
+                                    <div class="classroom-card bg-white border border-gray-100 rounded-[24px] overflow-hidden standard-panel-shadow group cursor-pointer"
                                         onclick="showStudentList('Grade 11 - ICT B', 'Animation', 'room')">
                                         <div
                                             class="h-32 bg-slate-700 w-full flex items-end justify-end px-6 pb-4 rounded-t-[24px]">
@@ -807,57 +736,53 @@
 
                 <!-- ══ CLASSROOM DETAIL ════════════════════════════════ -->
                 <section id="section-classroom-detail" class="dynamic-section hidden">
-                    <div class="mx-auto max-w-[1024px] w-full">
-                        <div class="bg-white min-h-[calc(100vh-var(--shell-offset))] p-0 relative flex flex-col">
+                    <div class="mx-auto max-w-[1024px] w-full standard-panel-shadow bg-white rounded-none">
+                        <div class="min-h-[calc(100vh-var(--shell-offset))] p-0 relative flex flex-col">
                             <div id="classroom-detail-view" class="classroom-detail-shell">
                                 <!-- Enhanced Header: Banner + Teacher Profile -->
                                 <div class="relative mb-0 overflow-hidden classroom-detail-hero">
                                     <!-- Banner -->
-                                    <div class="h-40 relative bg-icc overflow-hidden classroom-detail-banner">
+                                    <div class="classroom-detail-banner">
                                         <img src="image/Welcome.jpg" alt="Subject Banner"
-                                            class="w-full h-full object-cover opacity-40">
-                                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
-                                        </div>
-                                        <div class="absolute inset-0 flex items-center px-12">
-                                            <h2 id="detail-header-subject"
-                                                class="text-5xl font-black text-white uppercase tracking-[0.12em] drop-shadow-lg leading-tight">
-                                                Subject Name</h2>
+                                            class="w-full h-full object-cover">
+                                        <div class="classroom-detail-banner__overlay"></div>
+                                        <div class="classroom-detail-banner__content">
+                                            <h2 id="detail-header-subject">Subject Name</h2>
                                         </div>
                                     </div>
                                 </div>
-                                <div id="classes-detail-tabs"
-                                    class="hidden bg-white border-b border-gray-100 classroom-detail-tabs">
-                                    <div class="flex items-center justify-between px-5">
+                                <div id="classes-detail-tabs" class="hidden classroom-detail-tabs">
+                                    <div class="flex items-center justify-between">
                                         <div class="flex items-center gap-0 overflow-x-auto">
                                             <button onclick="switchClassDetailTab('room')" id="tab-btn-room"
-                                                class="teacher-section-tab active px-8 py-4 text-sm font-medium border-b-[3px] border-icc whitespace-nowrap leading-none focus:outline-none focus:ring-0 focus-visible:outline-none">Room</button>
+                                                class="teacher-section-tab active">Room</button>
                                             <button onclick="switchClassDetailTab('attendance')" id="tab-btn-attendance"
-                                                class="teacher-section-tab px-8 py-4 text-sm font-medium border-b-[3px] border-transparent whitespace-nowrap leading-none focus:outline-none focus:ring-0 focus-visible:outline-none">Attendance</button>
+                                                class="teacher-section-tab">Attendance</button>
                                             <button onclick="switchClassDetailTab('materials')" id="tab-btn-materials"
-                                                class="teacher-section-tab px-8 py-4 text-sm font-medium border-b-[3px] border-transparent whitespace-nowrap leading-none focus:outline-none focus:ring-0 focus-visible:outline-none">Materials</button>
+                                                class="teacher-section-tab">Materials</button>
                                         </div>
 
                                         <!-- Relocated Quick Actions -->
                                         <div class="flex items-center gap-2">
 
-                                            <button id="classroom-quick-topics-btn" onclick="window.openCurrentClassroomTopics && window.openCurrentClassroomTopics()"
-                                                class="classroom-quick-btn" title="Topics">
+                                            <button id="classroom-quick-topics-btn"
+                                                onclick="window.openCurrentClassroomTopics && window.openCurrentClassroomTopics()"
+                                                class="classroom-quick-btn hide-on-mobile" title="Topics">
                                                 <i class="fa-solid fa-book"></i>
                                             </button>
-                                            <div class="relative">
+                                            <button id="classroom-quick-back-btn"
+                                                onclick="window.returnToSections && window.returnToSections()"
+                                                class="classroom-quick-btn hide-on-mobile" title="Back to Sections">
+                                                <i class="fa-solid fa-door-open"></i>
+                                            </button>
+                                            <div class="relative hide-on-mobile">
                                                 <button id="classroom-quick-settings-btn" class="classroom-quick-btn"
                                                     title="Settings">
                                                     <i class="fa-solid fa-gear"></i>
                                                 </button>
                                                 <div id="classroom-settings-menu"
                                                     class="classroom-settings-menu hidden">
-                                                    <p class="classroom-settings-menu__label">Attendance Mode</p>
-                                                    <button type="button" class="classroom-settings-option"
-                                                        data-attendance-mode="trust">Students Press Present</button>
-                                                    <button type="button" class="classroom-settings-option"
-                                                        data-attendance-mode="manual">Teacher Roll Call</button>
-                                                    <p
-                                                        class="classroom-settings-menu__label classroom-settings-menu__label--spaced">
+                                                    <p class="classroom-settings-menu__label">
                                                         Comments</p>
                                                     <button type="button" class="classroom-settings-option"
                                                         data-comment-mode="enabled">Students Can Comment</button>
@@ -865,321 +790,269 @@
                                                         data-comment-mode="disabled">Comments Off</button>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
 
-                                    <!-- Tab Contents -->
-                                    <div id="class-detail-content" class="classroom-detail-content">
-                                        <!-- Room Tab -->
-                                        <div id="detail-section-room"
-                                            class="space-y-6 classroom-room-panel classroom-tab-section">
-                                            <div class="classroom-room-panel__inner">
-                                                <div class="classroom-room-layout">
-                                                    <div class="classroom-room-main">
-                                                        <div
-                                                            class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 md:p-10 classroom-room-card">
-                                                            <button type="button" class="announcement-composer"
-                                                                onclick="openAnnouncementPad()">
-                                                                <div class="announcement-composer__input">
-                                                                    What do you want to Announce?
-                                                                </div>
-                                                            </button>
-                                                        </div>
-                                                        <div id="room-announcements-feed"
-                                                            class="room-announcements-feed hidden"></div>
-                                                    </div>
-                                                    <aside id="classroom-mobile-people-panel"
-                                                        class="classroom-room-people">
-                                                        <!-- Mobile Pull Down Handle -->
-                                                        <div class="lg:hidden w-full flex justify-center pb-4 pt-2 cursor-pointer"
-                                                            onclick="window.toggleMobilePeoplePanel()">
-                                                            <div class="w-12 h-1.5 bg-gray-200 rounded-full"></div>
-                                                        </div>
-                                                        <div class="classroom-room-people__section">
-                                                            <p class="classroom-room-people__label">Teacher</p>
-                                                            <div id="room-teacher-list"
-                                                                class="classroom-room-people__list">
-                                                            </div>
-                                                        </div>
-                                                        <div class="classroom-room-people__divider"></div>
-                                                        <div class="classroom-room-people__section">
-                                                            <p class="classroom-room-people__label">Students</p>
-                                                            <div id="room-student-list"
-                                                                class="classroom-room-people__list">
-                                                            </div>
-                                                        </div>
-                                                    </aside>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div id="detail-section-students"
-                                            class="hidden space-y-4 classroom-tab-section">
-                                            <div
-                                                class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm mt-2 classroom-tab-surface">
-                                                <div class="flex items-center justify-between mb-6">
-                                                    <h2
-                                                        class="text-sm font-black text-black uppercase tracking-widest leading-none">
-                                                        Student Roster</h2>
-                                                    <div class="flex items-center gap-2">
+                                            <!-- Mobile Ellipsis Dropdown -->
+                                            <div class="relative show-on-mobile">
+                                                <button id="classroom-mobile-ellipsis-btn" class="classroom-quick-btn"
+                                                    onclick="document.getElementById('classroom-mobile-dropdown').classList.toggle('hidden')">
+                                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                                </button>
+                                                <div id="classroom-mobile-dropdown"
+                                                    class="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-[14px] shadow-lg hidden z-50 flex flex-col py-2"
+                                                    style="font-family:'Inter', sans-serif;">
+                                                    <button
+                                                        onclick="window.openCurrentClassroomTopics && window.openCurrentClassroomTopics(); document.getElementById('classroom-mobile-dropdown').classList.add('hidden')"
+                                                        class="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 w-full text-left transition-colors"
+                                                        style="color:#000000; font-weight:400; font-size:15px;">
+                                                        <i class="fa-solid fa-book w-5 text-center text-slate-700"></i>
                                                         <span
-                                                            class="px-3 py-1 bg-green-50 text-green-600 text-[10px] font-bold rounded-full">38
-                                                            Active</span>
-                                                    </div>
-                                                </div>
-                                                <div class="overflow-x-auto">
-                                                    <table class="w-full text-left border-collapse">
-                                                        <thead>
-                                                            <tr class="border-b border-gray-50">
-                                                                <th
-                                                                    class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                                                    Student Name</th>
-                                                                <th
-                                                                    class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                                                    Status</th>
-                                                                <th
-                                                                    class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
-                                                                    Action</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody id="student-roster-body" class="divide-y divide-gray-50">
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Attendance Tab (Now Recording Interface) -->
-                                        <div id="detail-section-attendance"
-                                            class="hidden space-y-4 classroom-tab-section">
-                                            <div
-                                                class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm mt-2 classroom-tab-surface classroom-tab-surface--padded">
-                                                <div class="flex items-center justify-between mb-6">
-                                                    <div class="flex items-center gap-4">
-                                                        <h2 id="attendance-current-date"
-                                                            class="text-[11px] md:text-sm font-black text-black uppercase tracking-widest leading-none">
-                                                            March 24, 2026</h2>
-                                                        <button onclick="switchTab('nav-attendance')"
-                                                            class="w-8 h-8 rounded-full border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-100 transition-none shadow-sm"
-                                                            title="Open Full Attendance">
-                                                            <i class="fa-solid fa-clipboard-check text-xs"></i>
-                                                        </button>
-                                                    </div>
-                                                    <div
-                                                        class="flex items-center gap-4 text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                                                        <span class="flex items-center gap-1.5"><span
-                                                                class="w-2 h-2 rounded-full bg-icc"></span>
-                                                            Present</span>
-                                                        <span class="flex items-center gap-1.5"><span
-                                                                class="w-2 h-2 rounded-full bg-red-500"></span>
-                                                            Absent</span>
-                                                        <span class="flex items-center gap-1.5"><span
-                                                                class="w-2 h-2 rounded-full bg-yellow-500"></span>
-                                                            Late</span>
-                                                    </div>
-                                                </div>
-
-                                                <div id="attendance-mode-note" class="attendance-mode-note hidden">
-                                                </div>
-
-                                                <div
-                                                    class="bg-gray-50 rounded-xl overflow-x-auto border border-gray-100 relative shadow-inner">
-                                                    <table
-                                                        class="w-full text-left border-collapse min-w-[500px] md:min-w-[700px]">
-                                                        <thead>
-                                                            <tr class="bg-white border-b border-gray-100">
-                                                                <th
-                                                                    class="px-2 md:px-3 py-2 w-[160px] md:w-64 sticky left-0 z-20 bg-white border-r border-gray-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
-                                                                    <div onclick="toggleAttendanceFinder()"
-                                                                        class="attendance-search-wrapper px-2 md:px-3 py-2 rounded-lg cursor-pointer flex items-center h-full">
-                                                                        <span id="attendance-header-title"
-                                                                            class="text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Student
-                                                                            Name</span>
-                                                                        <input type="text" id="attendance-search-input"
-                                                                            onkeyup="filterAttendanceRows(this.value)"
-                                                                            onblur="hideAttendanceFinder()"
-                                                                            class="hidden attendance-search-input"
-                                                                            placeholder="SEARCH NAME..."
-                                                                            autocomplete="off">
-                                                                    </div>
-                                                                </th>
-                                                                <th
-                                                                    class="px-3 md:px-6 py-3 md:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">
-                                                                    Mark Status</th>
-                                                                <th
-                                                                    class="px-3 md:px-6 py-3 md:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">
-                                                                    Status</th>
-                                                                <th
-                                                                    class="px-3 md:px-6 py-3 md:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                                                    Excuse (If Applicable)</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody id="attendance-recording-body"
-                                                            class="divide-y divide-gray-100">
-                                                            <!-- Attendance recording rows will be injected here -->
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-
-                                                <!-- Submit Button -->
-                                                <div class="mt-6 flex justify-end">
-                                                    <button onclick="submitAttendance()"
-                                                        class="px-6 py-2.5 bg-icc text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-icc-dark transition-all shadow-md flex items-center gap-3">
-                                                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                                                        Submit Attendance
+                                                            style="color:#000000; font-weight:400; text-transform:capitalize;">Topics</span>
+                                                    </button>
+                                                    <button
+                                                        onclick="window.returnToSections && window.returnToSections(); document.getElementById('classroom-mobile-dropdown').classList.add('hidden')"
+                                                        class="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 w-full text-left transition-colors"
+                                                        style="color:#000000; font-weight:400; font-size:15px;">
+                                                        <i
+                                                            class="fa-solid fa-door-open w-5 text-center text-slate-700"></i>
+                                                        <span
+                                                            style="color:#000000; font-weight:400; text-transform:capitalize;">Sections</span>
+                                                    </button>
+                                                    <button
+                                                        onclick="window.toggleMobilePeoplePanel && window.toggleMobilePeoplePanel(); document.getElementById('classroom-mobile-dropdown').classList.add('hidden')"
+                                                        class="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 w-full text-left transition-colors"
+                                                        style="color:#000000; font-weight:400; font-size:15px;">
+                                                        <i class="fa-solid fa-users w-5 text-center text-slate-700"></i>
+                                                        <span
+                                                            style="color:#000000; font-weight:400; text-transform:capitalize;">People</span>
+                                                    </button>
+                                                    <button
+                                                        onclick="document.getElementById('classroom-mobile-dropdown').classList.add('hidden'); document.getElementById('classroom-quick-settings-btn').click();"
+                                                        class="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 w-full text-left transition-colors"
+                                                        style="color:#000000; font-weight:400; font-size:15px;">
+                                                        <i class="fa-solid fa-gear w-5 text-center text-slate-700"></i>
+                                                        <span
+                                                            style="color:#000000; font-weight:400; text-transform:capitalize;">Settings</span>
                                                     </button>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <!-- Performance Tab (Hidden) -->
-                                        <div id="detail-section-analytics"
-                                            class="hidden space-y-6 classroom-tab-section">
-                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                                <div
-                                                    class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm col-span-2">
-                                                    <h3
-                                                        class="text-sm font-black text-gray-800 uppercase tracking-widest mb-6">
-                                                        Class Progress Overview</h3>
-                                                    <div class="h-64 flex items-end justify-between gap-4 px-4">
-                                                        <div
-                                                            class="flex-1 bg-icc-light/50 rounded-t-lg relative group h-[60%]">
-                                                            <div
-                                                                class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                Week 1: 82%</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tab Contents -->
+                                <div id="class-detail-content" class="classroom-detail-content">
+                                    <!-- Room Tab -->
+                                    <div id="detail-section-room" class="classroom-room-panel classroom-tab-section">
+                                        <div class="classroom-room-panel__inner">
+                                            <div class="classroom-room-layout">
+                                                <div class="classroom-room-main">
+                                                    <button type="button" class="announcement-composer"
+                                                        onclick="openAnnouncementPad()">
+                                                        <div class="announcement-composer__input">
+                                                            What do you want to Announce?
                                                         </div>
-                                                        <div
-                                                            class="flex-1 bg-icc-light/50 rounded-t-lg relative group h-[75%]">
-                                                            <div
-                                                                class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                Week 2: 88%</div>
-                                                        </div>
-                                                        <div
-                                                            class="flex-1 bg-icc rounded-t-lg relative group h-[85%] shadow-lg shadow-icc/10">
-                                                            <div
-                                                                class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                Week 3: 92%</div>
-                                                        </div>
-                                                        <div class="flex-1 bg-gray-100 rounded-t-lg h-[40%]"></div>
-                                                        <div class="flex-1 bg-gray-100 rounded-t-lg h-[30%]"></div>
-                                                    </div>
-                                                    <div
-                                                        class="flex justify-between mt-4 px-4 text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                                                        <span>Week 1</span><span>Week 2</span><span>Week
-                                                            3</span><span>Week
-                                                            4</span><span>Week 5</span>
-                                                    </div>
+                                                    </button>
+                                                    <div id="room-announcements-feed"
+                                                        class="room-announcements-feed hidden"></div>
                                                 </div>
-                                                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                                                    <h3
-                                                        class="text-sm font-black text-gray-800 uppercase tracking-widest mb-4">
-                                                        Top Performers</h3>
-                                                    <div class="space-y-4">
-                                                        <div
-                                                            class="flex items-center justify-between p-2 bg-icc-light/20 rounded-xl">
-                                                            <div class="flex items-center gap-3">
-                                                                <div
-                                                                    class="w-8 h-8 rounded-full bg-icc text-white flex items-center justify-center text-[10px] font-black">
-                                                                    1</div>
-                                                                <span class="text-xs font-bold text-gray-800">Bautista,
-                                                                    <span
-                                                                        class="view-user-firstName-banner">Firstname</span></span>
-                                                            </div>
-                                                            <span class="text-xs font-black text-icc">98.5%</span>
-                                                        </div>
-                                                        <div
-                                                            class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-xl transition-colors">
-                                                            <div class="flex items-center gap-3">
-                                                                <div
-                                                                    class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-[10px] font-black">
-                                                                    2</div>
-                                                                <span class="text-xs font-bold text-gray-800">Dela Cruz,
-                                                                    Juan</span>
-                                                            </div>
-                                                            <span class="text-xs font-black text-gray-400">96.2%</span>
-                                                        </div>
-                                                        <div
-                                                            class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-xl transition-colors">
-                                                            <div class="flex items-center gap-3">
-                                                                <div
-                                                                    class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-[10px] font-black">
-                                                                    3</div>
-                                                                <span class="text-xs font-bold text-gray-800">Garcia,
-                                                                    Ana</span>
-                                                            </div>
-                                                            <span class="text-xs font-black text-gray-400">95.8%</span>
+
+                                                <div class="classroom-room-people" id="classroom-mobile-people-panel">
+                                                    <div class="classroom-room-people__section">
+                                                        <h3 class="classroom-room-people__label">Teacher</h3>
+                                                        <div id="room-teacher-list" class="classroom-room-people__list">
                                                         </div>
                                                     </div>
-                                                    <button
-                                                        class="w-full mt-6 py-2 text-[10px] font-black text-icc uppercase tracking-widest hover:underline">View
-                                                        All Rankings</button>
+                                                    <div class="classroom-room-people__divider"></div>
+                                                    <div class="classroom-room-people__section">
+                                                        <h3 class="classroom-room-people__label">Classmates</h3>
+                                                        <div id="room-student-list" class="classroom-room-people__list">
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        <div id="detail-section-materials"
-                                            class="hidden space-y-6 classroom-tab-section">
-                                            <!-- Module List -->
-                                            <div class="space-y-6">
-                                                <div class="flex items-center justify-between mb-4 px-10">
-                                                    <div id="admin-sync-indicator"
-                                                        class="hidden flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full border border-blue-100">
-                                                        <i class="fa-solid fa-rotate text-[10px] animate-spin"></i>
-                                                        <span
-                                                            class="text-[10px] font-black uppercase tracking-widest">Admin
-                                                            Sync Active</span>
+                                    <div id="detail-section-students" class="hidden space-y-4 classroom-tab-section">
+                                        <div class="mt-0 classroom-tab-surface">
+                                            <div class="flex items-center justify-between mb-6">
+                                                <h2
+                                                    class="text-sm font-black text-black uppercase tracking-widest leading-none">
+                                                    Student Roster</h2>
+                                                <div class="flex items-center gap-2">
+                                                    <span
+                                                        class="px-3 py-1 bg-green-50 text-green-600 text-[10px] font-bold rounded-full">38
+                                                        Active</span>
+                                                </div>
+                                            </div>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-left border-collapse">
+                                                    <thead>
+                                                        <tr class="border-b border-gray-50">
+                                                            <th
+                                                                class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                                Student Name</th>
+                                                            <th
+                                                                class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                                Status</th>
+                                                            <th
+                                                                class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
+                                                                Action</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="student-roster-body" class="divide-y divide-gray-50">
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Attendance Tab (Now Recording Interface) -->
+                                    <div id="detail-section-attendance" class="hidden space-y-4 classroom-tab-section">
+                                        <!-- Content removed per user request. Will be updated later. -->
+                                    </div>
+
+                                    <!-- Performance Tab (Hidden) -->
+                                    <div id="detail-section-analytics" class="hidden space-y-6 classroom-tab-section">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                            <div
+                                                class="bg-white p-6 rounded-2xl border border-gray-100 standard-panel-shadow col-span-2">
+                                                <h3
+                                                    class="text-sm font-black text-gray-800 uppercase tracking-widest mb-6">
+                                                    Class Progress Overview</h3>
+                                                <div class="h-64 flex items-end justify-between gap-4 px-4">
+                                                    <div
+                                                        class="flex-1 bg-icc-light/50 rounded-t-lg relative group h-[60%]">
+                                                        <div
+                                                            class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            Week 1: 82%</div>
                                                     </div>
-                                                    <!-- Add Materials Trigger -->
-                                                    <div class="relative">
-                                                        <button type="button" onclick="toggleMaterialsPopup()"
-                                                            class="text-sm font-bold text-black transition-colors hover:text-[#FFD000] flex items-center gap-2 py-2">
-                                                            <i class="fa-solid fa-plus text-xs"></i>
-                                                            Add Materials
-                                                        </button>
-
-                                                        <!-- Materials Small Panel -->
-                                                        <div id="materials-popup-panel"
-                                                            class="hidden absolute top-full left-0 mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden animate-slide-up-sm">
+                                                    <div
+                                                        class="flex-1 bg-icc-light/50 rounded-t-lg relative group h-[75%]">
+                                                        <div
+                                                            class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            Week 2: 88%</div>
+                                                    </div>
+                                                    <div
+                                                        class="flex-1 bg-icc rounded-t-lg relative group h-[85%] shadow-lg shadow-icc/10">
+                                                        <div
+                                                            class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            Week 3: 92%</div>
+                                                    </div>
+                                                    <div class="flex-1 bg-gray-100 rounded-t-lg h-[40%]"></div>
+                                                    <div class="flex-1 bg-gray-100 rounded-t-lg h-[30%]"></div>
+                                                </div>
+                                                <div
+                                                    class="flex justify-between mt-4 px-4 text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                                                    <span>Week 1</span><span>Week 2</span><span>Week
+                                                        3</span><span>Week
+                                                        4</span><span>Week 5</span>
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="bg-white p-6 rounded-2xl border border-gray-100 standard-panel-shadow">
+                                                <h3
+                                                    class="text-sm font-black text-gray-800 uppercase tracking-widest mb-4">
+                                                    Top Performers</h3>
+                                                <div class="space-y-4">
+                                                    <div
+                                                        class="flex items-center justify-between p-2 bg-icc-light/20 rounded-xl">
+                                                        <div class="flex items-center gap-3">
                                                             <div
-                                                                class="px-5 py-3 border-b border-gray-50 bg-gray-50/50">
-                                                                <h3
-                                                                    class="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                                                    Materials</h3>
-                                                            </div>
-                                                            <div class="p-1">
-                                                                <button type="button"
-                                                                    onclick="switchTab('nav-materials')"
-                                                                    class="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-gray-700 hover:bg-gray-50 hover:text-[#FFD000] rounded-xl transition-all group text-left">
-                                                                    <i
-                                                                        class="fa-solid fa-folder-open text-gray-300 group-hover:text-[#FFD000] w-4 text-center"></i>
-                                                                    Storage
-                                                                </button>
-                                                                <button type="button"
-                                                                    onclick="window.toggleUploadMaterialOverlay(true)"
-                                                                    class="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-gray-700 hover:bg-gray-50 hover:text-[#FFD000] rounded-xl transition-all group text-left">
-                                                                    <i
-                                                                        class="fa-solid fa-cloud-arrow-up text-gray-300 group-hover:text-[#FFD000] w-4 text-center"></i>
-                                                                    Upload Material
-                                                                </button>
-                                                            </div>
+                                                                class="w-8 h-8 rounded-full bg-icc text-white flex items-center justify-center text-[10px] font-black">
+                                                                1</div>
+                                                            <span class="text-xs font-bold text-gray-800">Bautista,
+                                                                <span
+                                                                    class="view-user-firstName-banner">Firstname</span></span>
+                                                        </div>
+                                                        <span class="text-xs font-black text-icc">98.5%</span>
+                                                    </div>
+                                                    <div
+                                                        class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-xl transition-colors">
+                                                        <div class="flex items-center gap-3">
+                                                            <div
+                                                                class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-[10px] font-black">
+                                                                2</div>
+                                                            <span class="text-xs font-bold text-gray-800">Dela Cruz,
+                                                                Juan</span>
+                                                        </div>
+                                                        <span class="text-xs font-black text-gray-400">96.2%</span>
+                                                    </div>
+                                                    <div
+                                                        class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-xl transition-colors">
+                                                        <div class="flex items-center gap-3">
+                                                            <div
+                                                                class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-[10px] font-black">
+                                                                3</div>
+                                                            <span class="text-xs font-bold text-gray-800">Garcia,
+                                                                Ana</span>
+                                                        </div>
+                                                        <span class="text-xs font-black text-gray-400">95.8%</span>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    class="w-full mt-6 py-2 text-[10px] font-black text-icc uppercase tracking-widest hover:underline">View
+                                                    All Rankings</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="detail-section-materials" class="hidden space-y-6 classroom-tab-section">
+                                        <!-- Module List -->
+                                        <div class="space-y-6 pt-6">
+                                            <div class="flex items-center justify-between mb-4 px-6">
+                                                <div id="admin-sync-indicator"
+                                                    class="hidden flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full border border-blue-100">
+                                                    <i class="fa-solid fa-rotate text-[10px] animate-spin"></i>
+                                                    <span class="text-[10px] font-black uppercase tracking-widest">Admin
+                                                        Sync Active</span>
+                                                </div>
+                                                <!-- Add Materials Trigger -->
+                                                <div class="relative">
+                                                    <button type="button" onclick="toggleMaterialsPopup()"
+                                                        class="text-sm font-bold text-black transition-colors hover:text-[#FFD000] flex items-center gap-2 py-2">
+                                                        <i class="fa-solid fa-plus text-xs"></i>
+                                                        Add Materials
+                                                    </button>
+
+                                                    <!-- Materials Small Panel -->
+                                                    <div id="materials-popup-panel"
+                                                        class="hidden absolute top-full left-0 mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden animate-slide-up-sm">
+                                                        <div class="px-5 py-3 border-b border-gray-50 bg-gray-50/50">
+                                                            <h3
+                                                                class="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                                Materials</h3>
+                                                        </div>
+                                                        <div class="p-1">
+                                                            <button type="button" onclick="switchTab('nav-materials')"
+                                                                class="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-gray-700 hover:bg-gray-50 hover:text-[#FFD000] rounded-xl transition-all group text-left">
+                                                                <i
+                                                                    class="fa-solid fa-folder-open text-gray-300 group-hover:text-[#FFD000] w-4 text-center"></i>
+                                                                Storage
+                                                            </button>
+                                                            <button type="button"
+                                                                onclick="window.toggleUploadMaterialOverlay(true)"
+                                                                class="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-gray-700 hover:bg-gray-50 hover:text-[#FFD000] rounded-xl transition-all group text-left">
+                                                                <i
+                                                                    class="fa-solid fa-cloud-arrow-up text-gray-300 group-hover:text-[#FFD000] w-4 text-center"></i>
+                                                                Upload Material
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                <div id="materials-list-grid"
-                                                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                </div>
+                                            <div id="materials-list-grid"
+                                                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
                 </section>
 
-                <!-- SUBJECTS SECTION -->
-                <section id="section-subjects" class="dynamic-section hidden p-0">
-                    <!-- Content will be added here later -->
-                </section>
 
                 <!-- MATERIALS SECTION -->
                 <section id="section-materials" class="dynamic-section hidden">
@@ -1223,7 +1096,10 @@
                 </section>
 
                 <section id="section-curriculum-page" class="dynamic-section hidden">
-                    <div id="curriculum-page-shell"></div>
+                    <div class="mx-auto max-w-[1024px] w-full">
+                        <div id="curriculum-page-shell"
+                            class="bg-white border-x border-slate-200 min-h-screen standard-panel-shadow"></div>
+                    </div>
                 </section>
 
                 <section id="section-topic-detail" class="dynamic-section hidden">
@@ -1233,306 +1109,225 @@
                 </section>
 
                 <!-- ═══ GRADES UNIFIED SECTION ════════════════════════════════ -->
-                <section id="section-grades" class="dynamic-section hidden h-full flex flex-col overflow-hidden">
-                    <!-- Dashboard Sub-Tabs -->
-                    <div class="px-8 flex items-center border-b border-gray-100 flex-shrink-0 bg-white z-30">
-                        <button onclick="switchGradesSubTab('analytics')" id="grades-tab-analytics"
-                            class="px-8 py-4 text-xs font-black uppercase tracking-widest text-icc border-b-2 border-icc transition-all focus:outline-none">Performance</button>
-                        <button onclick="switchGradesSubTab('gradebook')" id="grades-tab-gradebook"
-                            class="px-8 py-4 text-xs font-black uppercase tracking-widest text-gray-400 border-b-2 border-transparent hover:text-icc transition-all focus:outline-none">Gradebooks</button>
-                    </div>
-
-                    <!-- Analytics Sub-Tab Content -->
-                    <div id="grades-content-analytics" class="flex-1 overflow-y-auto space-y-6 p-6">
-                        <!-- Branding Header -->
-                        <div
-                            class="bg-gradient-to-r from-icc to-icc-dark p-8 rounded-3xl text-white shadow-lg relative overflow-hidden">
-                            <div class="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
-                                <i class="fa-solid fa-chart-pie text-9xl"></i>
-                            </div>
-                            <div class="relative z-10">
-                                <h2 class="text-[10px] font-black uppercase tracking-[0.3em] opacity-80 mb-2">
-                                    Capstone
-                                    Project • Interface Computer College</h2>
-                                <h1 class="text-3xl font-black tracking-tight leading-tight mb-2">SIGMA:
-                                    AI-Integrated
-                                    ELMS
-                                </h1>
-                                <p class="text-sm font-medium opacity-90 max-w-2xl leading-relaxed">
-                                    Student Information and Grade Monitoring Analytics for Senior High School.
-                                    <span class="block mt-1 font-bold text-icc-yellow">AI-Powered insights for
-                                        better
-                                        educational outcomes.</span>
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <!-- LEFT: AI Performance Insights -->
-                            <div class="lg:col-span-2 space-y-6">
-                                <!-- AI Summary Card -->
-                                <div
-                                    class="bg-white rounded-2xl border border-indigo-100 p-6 shadow-sm relative overflow-hidden group">
-                                    <div
-                                        class="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:scale-110 transition-transform duration-700">
-                                        <i class="fa-solid fa-bolt text-8xl text-indigo-600"></i>
+                <section id="section-grades" class="dynamic-section hidden h-full flex flex-col overflow-hidden bg-slate-50/50">
+                    <div class="flex-1 overflow-auto w-full">
+                        <div class="min-w-[1024px] mx-auto min-h-full bg-white standard-panel-shadow flex flex-col relative z-10">
+                            <!-- Analytics Sub-Tab Content -->
+                            <div id="grades-content-analytics" class="flex-1 space-y-10 p-10">
+                                <!-- Branding Header -->
+                                <div class="bg-gradient-to-r from-icc to-icc-dark p-10 rounded-[32px] text-white shadow-lg relative overflow-hidden">
+                                    <div class="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
+                                        <i class="fa-solid fa-chart-pie text-9xl"></i>
                                     </div>
-                                    <div class="flex items-center gap-3 mb-6">
-                                        <div
-                                            class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
-                                            <i class="fa-solid fa-robot text-lg"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="text-sm font-black text-gray-800 uppercase tracking-widest">
-                                                SIGMA
-                                                AI
-                                                Insights</h3>
-                                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                                                Performance Analysis • March 2026</p>
-                                        </div>
+                                    <div class="relative z-10">
+                                        <h2 class="text-[12px] font-black uppercase tracking-[0.4em] opacity-80 mb-3">Capstone Project • Interface Computer College</h2>
+                                        <h1 class="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-4">SIGMA: AI-Integrated ELMS</h1>
+                                        <p class="text-lg font-medium opacity-90 max-w-2xl leading-relaxed mb-6">Student Information and Grade Monitoring Analytics for Senior High School.</p>
+                                        <p class="text-sm font-black uppercase tracking-widest text-yellow-400">AI-Powered insights for better educational outcomes.</p>
                                     </div>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <!-- Real-time Status -->
-                                        <div class="space-y-4">
-                                            <div class="bg-gray-50/50 rounded-[1.5rem] p-5 border border-gray-100">
-                                                <div class="flex items-center justify-between mb-4">
-                                                    <span
-                                                        class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Average
-                                                        Grade</span>
-                                                    <span id="analytics-avg-grade"
-                                                        class="text-xs font-black text-icc">88.4%</span>
-                                                </div>
-                                                <div class="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                                                    <div id="analytics-avg-grade-fill"
-                                                        class="h-full bg-icc transition-all duration-1000"
-                                                        style="width: 88.4%"></div>
-                                                </div>
-                                            </div>
-                                            <div class="bg-gray-50/50 rounded-[1.5rem] p-5 border border-gray-100">
-                                                <div class="flex items-center justify-between mb-4">
-                                                    <span
-                                                        class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Passing
-                                                        Rate</span>
-                                                    <span id="analytics-passing-rate"
-                                                        class="text-xs font-black text-blue-600">92%</span>
-                                                </div>
-                                                <div class="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                                                    <div id="analytics-passing-rate-fill"
-                                                        class="h-full bg-blue-500 transition-all duration-1000"
-                                                        style="width: 92%"></div>
-                                                </div>
-                                            </div>
-                                            <div class="bg-gray-50/50 rounded-[1.5rem] p-5 border border-gray-100">
-                                                <div class="flex items-center justify-between mb-4">
-                                                    <span
-                                                        class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Late
-                                                        Submissions</span>
-                                                    <span id="analytics-late-submissions"
-                                                        class="text-xs font-black text-amber-600">8.5%</span>
-                                                </div>
-                                                <div class="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                                                    <div id="analytics-late-fill"
-                                                        class="h-full bg-amber-500 transition-all duration-1000"
-                                                        style="width: 8.5%"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Performance Distribution -->
-                                        <div class="flex flex-col h-full">
-                                            <div id="analytics-distribution-chart"
-                                                class="flex-1 flex items-end justify-between gap-3 min-h-[160px] pb-2">
-                                                <div class="flex-1 group relative">
-                                                    <div
-                                                        class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        2 Students</div>
-                                                    <div class="w-full bg-red-100 group-hover:bg-red-200 transition-colors rounded-t-xl"
-                                                        style="height: 15%"></div>
-                                                    <p
-                                                        class="text-[8px] font-black text-gray-400 text-center mt-2 uppercase tracking-tighter leading-none h-4">
-                                                        Fail</p>
-                                                </div>
-                                                <div class="flex-1 group relative">
-                                                    <div
-                                                        class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        5 Students</div>
-                                                    <div class="w-full bg-orange-100 group-hover:bg-orange-200 transition-colors rounded-t-xl"
-                                                        style="height: 35%"></div>
-                                                    <p
-                                                        class="text-[8px] font-black text-gray-400 text-center mt-2 uppercase tracking-tighter leading-none h-4">
-                                                        Below</p>
-                                                </div>
-                                                <div class="flex-1 group relative">
-                                                    <div
-                                                        class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        12 Students</div>
-                                                    <div class="w-full bg-yellow-100 group-hover:bg-yellow-200 transition-colors rounded-t-xl"
-                                                        style="height: 65%"></div>
-                                                    <p
-                                                        class="text-[8px] font-black text-gray-400 text-center mt-2 uppercase tracking-tighter leading-none h-4">
-                                                        Avg</p>
-                                                </div>
-                                                <div class="flex-1 group relative">
-                                                    <div
-                                                        class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        18 Students</div>
-                                                    <div class="w-full bg-icc-light group-hover:bg-icc/20 transition-colors rounded-t-xl"
-                                                        style="height: 85%"></div>
-                                                    <p
-                                                        class="text-[8px] font-black text-gray-400 text-center mt-2 uppercase tracking-tighter leading-none h-4">
-                                                        Above</p>
-                                                </div>
-                                                <div class="flex-1 group relative">
-                                                    <div
-                                                        class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        8 Students</div>
-                                                    <div class="w-full bg-icc group-hover:bg-icc-dark transition-colors rounded-t-xl"
-                                                        style="height: 45%"></div>
-                                                    <p
-                                                        class="text-[8px] font-black text-gray-400 text-center mt-2 uppercase tracking-tighter leading-none h-4">
-                                                        Excep</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                 </div>
 
-                                <!-- RIGHT: AI-Driven Action Center -->
-                                <div class="space-y-6">
-                                    <!-- AI At-Risk Prediction -->
-                                    <div class="bg-white rounded-2xl border border-red-100 p-6 shadow-sm">
-                                        <h3
-                                            class="text-sm font-black text-red-600 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                            <i class="fa-solid fa-triangle-exclamation"></i> AI Risk Prediction
-                                        </h3>
-                                        <div id="analytics-risk-list" class="space-y-4">
-                                            <!-- At-Risk students will be injected here -->
-                                            <div
-                                                class="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-100 animate-pulse">
-                                                <div class="w-full h-8 bg-red-100 rounded-lg"></div>
+                                <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                                    <!-- LEFT: AI Performance Insights -->
+                                    <div class="lg:col-span-2 space-y-8">
+                                        <!-- AI Summary Card -->
+                                        <div class="bg-white rounded-3xl border border-indigo-100 p-8 shadow-sm relative overflow-hidden group">
+                                            <div class="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:scale-110 transition-transform duration-700">
+                                                <i class="fa-solid fa-bolt text-8xl text-indigo-600"></i>
                                             </div>
-                                            <div
-                                                class="flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-100 animate-pulse">
-                                                <div class="w-full h-8 bg-amber-100 rounded-lg"></div>
+                                            <div class="flex items-center gap-4 mb-8">
+                                                <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                                                    <i class="fa-solid fa-robot text-xl"></i>
+                                                </div>
+                                                <div>
+                                                    <h3 class="text-base font-black text-gray-800 uppercase tracking-widest">SIGMA AI Insights</h3>
+                                                    <p class="text-[11px] text-gray-400 font-bold uppercase tracking-widest">Performance Analysis • March 2026</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                                <!-- Real-time Status -->
+                                                <div class="space-y-6">
+                                                    <div class="bg-gray-50/50 rounded-[2rem] p-6 border border-gray-100">
+                                                        <div class="flex items-center justify-between mb-4">
+                                                            <span class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Average Grade</span>
+                                                            <span id="analytics-avg-grade" class="text-sm font-black text-icc">88.4%</span>
+                                                        </div>
+                                                        <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                                                            <div id="analytics-avg-grade-fill" class="h-full bg-icc transition-all duration-1000" style="width: 88.4%"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="bg-gray-50/50 rounded-[2rem] p-6 border border-gray-100">
+                                                        <div class="flex items-center justify-between mb-4">
+                                                            <span class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Passing Rate</span>
+                                                            <span id="analytics-passing-rate" class="text-sm font-black text-blue-600">92%</span>
+                                                        </div>
+                                                        <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                                                            <div id="analytics-passing-rate-fill" class="h-full bg-blue-500 transition-all duration-1000" style="width: 92%"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="bg-gray-50/50 rounded-[2rem] p-6 border border-gray-100">
+                                                        <div class="flex items-center justify-between mb-4">
+                                                            <span class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Late Submissions</span>
+                                                            <span id="analytics-late-submissions" class="text-sm font-black text-amber-600">8.5%</span>
+                                                        </div>
+                                                        <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                                                            <div id="analytics-late-fill" class="h-full bg-amber-500 transition-all duration-1000" style="width: 8.5%"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Performance Distribution -->
+                                                <div class="flex flex-col h-full pt-4">
+                                                    <div id="analytics-distribution-chart" class="flex-1 flex items-end justify-between gap-4 min-h-[180px] pb-4">
+                                                        <div class="flex-1 group relative">
+                                                            <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">2 Students</div>
+                                                            <div class="w-full bg-red-100 group-hover:bg-red-200 transition-colors rounded-t-2xl" style="height: 15%"></div>
+                                                            <p class="text-[9px] font-black text-gray-400 text-center mt-3 uppercase tracking-widest">Fail</p>
+                                                        </div>
+                                                        <div class="flex-1 group relative">
+                                                            <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">5 Students</div>
+                                                            <div class="w-full bg-orange-100 group-hover:bg-orange-200 transition-colors rounded-t-2xl" style="height: 35%"></div>
+                                                            <p class="text-[9px] font-black text-gray-400 text-center mt-3 uppercase tracking-widest">Below</p>
+                                                        </div>
+                                                        <div class="flex-1 group relative">
+                                                            <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">12 Students</div>
+                                                            <div class="w-full bg-yellow-100 group-hover:bg-yellow-200 transition-colors rounded-t-2xl" style="height: 65%"></div>
+                                                            <p class="text-[9px] font-black text-gray-400 text-center mt-3 uppercase tracking-widest">Avg</p>
+                                                        </div>
+                                                        <div class="flex-1 group relative">
+                                                            <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">18 Students</div>
+                                                            <div class="w-full bg-icc-light group-hover:bg-icc/20 transition-colors rounded-t-2xl" style="height: 85%"></div>
+                                                            <p class="text-[9px] font-black text-gray-400 text-center mt-3 uppercase tracking-widest">Above</p>
+                                                        </div>
+                                                        <div class="flex-1 group relative">
+                                                            <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">8 Students</div>
+                                                            <div class="w-full bg-icc group-hover:bg-icc-dark transition-colors rounded-t-2xl" style="height: 45%"></div>
+                                                            <p class="text-[9px] font-black text-gray-400 text-center mt-3 uppercase tracking-widest">Excep</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
+                                        <!-- AI Risk Prediction -->
+                                        <div class="bg-white rounded-[32px] border border-red-100 p-8 shadow-sm">
+                                            <h3 class="text-base font-black text-red-600 uppercase tracking-widest mb-6 flex items-center gap-3">
+                                                <i class="fa-solid fa-triangle-exclamation"></i> AI Risk Prediction
+                                            </h3>
+                                            <div id="analytics-risk-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div class="flex items-center justify-between p-4 bg-red-50 rounded-2xl border border-red-100 animate-pulse">
+                                                    <div class="w-full h-8 bg-red-100 rounded-lg"></div>
+                                                </div>
+                                                <div class="flex items-center justify-between p-4 bg-amber-50 rounded-2xl border border-amber-100 animate-pulse">
+                                                    <div class="w-full h-8 bg-amber-100 rounded-lg"></div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <!-- Student Info Analytics -->
-                                    <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-                                        <h3 class="text-sm font-black text-gray-800 uppercase tracking-widest mb-6">
-                                            Student
-                                            Information</h3>
-                                        <div class="space-y-6">
-                                            <div class="grid grid-cols-2 gap-4 text-center">
-                                                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                                    <p id="analytics-total-count"
-                                                        class="text-2xl font-black text-gray-800">45</p>
-                                                    <p
-                                                        class="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">
-                                                        Total Students</p>
-                                                </div>
-                                                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                                    <p id="analytics-active-strand"
-                                                        class="text-2xl font-black text-icc">ICT</p>
-                                                    <p
-                                                        class="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">
-                                                        Primary Strand</p>
-                                                </div>
-
-                                            </div>
-                                            <div class="space-y-4">
-                                                <div class="space-y-2">
-                                                    <div class="flex justify-between text-[10px] font-bold uppercase">
-                                                        <span class="text-gray-400">Gender Distribution</span>
+                                    <!-- RIGHT: Action Center / Student Info -->
+                                    <div class="space-y-8">
+                                        <div class="bg-white rounded-[32px] border border-gray-100 p-8 shadow-sm">
+                                            <h3 class="text-base font-black text-gray-800 uppercase tracking-widest mb-6">Student Information</h3>
+                                            <div class="space-y-8">
+                                                <div class="grid grid-cols-1 gap-4 text-center">
+                                                    <div class="p-6 bg-gray-50 rounded-3xl border border-gray-100">
+                                                        <p id="analytics-total-count" class="text-4xl font-black text-gray-800">45</p>
+                                                        <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest mt-2">Total Students</p>
                                                     </div>
-                                                    <div class="h-3 bg-gray-100 rounded-full flex overflow-hidden">
-                                                        <div id="analytics-gender-male-fill" class="h-full bg-blue-400"
-                                                            style="width: 55%" title="Male (55%)">
-                                                        </div>
-                                                        <div id="analytics-gender-female-fill"
-                                                            class="h-full bg-pink-400" style="width: 45%"
-                                                            title="Female (45%)">
-                                                        </div>
+                                                    <div class="p-6 bg-gray-50 rounded-3xl border border-gray-100">
+                                                        <p id="analytics-active-strand" class="text-3xl font-black text-icc">ICT</p>
+                                                        <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest mt-2">Primary Strand</p>
                                                     </div>
-                                                    <div
-                                                        class="flex justify-between text-[9px] font-bold uppercase text-gray-400 mt-1">
+                                                </div>
+                                                <div class="space-y-4">
+                                                    <div class="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-400 mb-2">
+                                                        <span>Gender Distribution</span>
+                                                    </div>
+                                                    <div class="h-4 bg-gray-100 rounded-full flex overflow-hidden shadow-inner">
+                                                        <div id="analytics-gender-male-fill" class="h-full bg-blue-400" style="width: 55%" title="Male (55%)"></div>
+                                                        <div id="analytics-gender-female-fill" class="h-full bg-pink-400" style="width: 45%" title="Female (45%)"></div>
+                                                    </div>
+                                                    <div class="flex justify-between text-[10px] font-bold uppercase text-gray-500 mt-2">
                                                         <span id="analytics-male-label">Male (25)</span>
                                                         <span id="analytics-female-label">Female (20)</span>
                                                     </div>
-
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <!-- Grades Sub-Tab: Gradebook -->
-                        <div id="grades-content-gradebook"
-                            class="hidden flex-1 flex flex-col overflow-hidden bg-gray-50/30">
-                            <div
-                                class="px-8 py-4 bg-white border-b border-gray-100 flex items-center justify-between flex-shrink-0">
-                                <div class="flex items-center gap-4">
-                                    <div class="relative">
-                                        <select id="gradebook-section-selector"
-                                            class="pl-4 pr-10 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-icc/20 appearance-none cursor-pointer">
-                                            <option value="" disabled selected>Select Section</option>
-                                            <option value="11A">Grade 11 - ICT A</option>
-                                            <option value="11B">Grade 11 - ICT B</option>
-                                        </select>
-                                        <i
-                                            class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none"></i>
+
+                            <!-- Gradebook Sub-Tab Content -->
+                            <div id="grades-content-gradebook" class="hidden flex-1 flex flex-col overflow-hidden">
+                                <!-- Toolbar -->
+                                <div class="flex-shrink-0 flex flex-col gap-0 border-b border-slate-100 bg-white pt-8 pb-0">
+                                    <div class="flex items-center justify-between mb-5 px-8">
+                                        <div class="flex-1">
+                                            <h1 class="text-2xl font-black text-gray-900 tracking-tight">Gradebooks</h1>
+                                        </div>
                                     </div>
-                                    <div class="relative">
-                                        <select id="gradebook-subject-selector" disabled
-                                            class="pl-4 pr-10 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-400 focus:outline-none focus:ring-2 focus:ring-icc/20 appearance-none cursor-not-allowed opacity-50">
-                                            <option value="" disabled selected>Select Subject</option>
-                                        </select>
-                                        <i
-                                            class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none"></i>
+
+                                    <!-- Navigation Row: Tabs + Selectors -->
+                                    <div class="flex items-center justify-between px-8 mb-5">
+                                        <div id="gradebook-quarter-tabs" class="hidden flex gap-1 bg-slate-100 rounded-xl p-1 w-fit">
+                                            <button id="quarter-btn-1" onclick="setGradebookQuarter(1)"
+                                                class="text-[11px] font-bold px-4 py-1.5 rounded-lg transition-all bg-white text-[#FFD000] shadow-sm">1st Quarter</button>
+                                            <button id="quarter-btn-2" onclick="setGradebookQuarter(2)"
+                                                class="text-[11px] font-bold px-4 py-1.5 rounded-lg transition-all text-black">2nd Quarter</button>
+                                            <button id="quarter-btn-3" onclick="setGradebookQuarter(3)"
+                                                class="text-[11px] font-bold px-4 py-1.5 rounded-lg transition-all text-black">3rd Quarter</button>
+                                            <button id="quarter-btn-4" onclick="setGradebookQuarter(4)"
+                                                class="text-[11px] font-bold px-4 py-1.5 rounded-lg transition-all text-black">4th Quarter</button>
+                                        </div>
+                                        
+                                        <div class="flex items-center gap-3 ml-auto">
+                                            <!-- Hidden selectors kept for JS state compatibility -->
+                                            <select id="gradebook-section-selector" class="hidden"></select>
+                                            <select id="gradebook-subject-selector" class="hidden"></select>
+
+                                            <!-- Combined Subject Picker -->
+                                            <div id="gradebook-subject-picker">
+                                                <button
+                                                    id="gradebook-subject-picker-btn"
+                                                    type="button"
+                                                    onclick="window.toggleGradebookSubjectPicker()"
+                                                    class="flex items-center gap-3 min-w-[260px] max-w-[360px] px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50 hover:bg-white hover:border-slate-300 transition-all text-left"
+                                                >
+                                                    <div class="flex-1 min-w-0">
+                                                        <p id="gradebook-picker-subject-label" class="text-[13px] font-bold text-gray-800 leading-tight truncate">Select a Subject</p>
+                                                        <p id="gradebook-picker-section-label" class="text-[10px] font-medium text-gray-400 leading-tight mt-0.5 truncate">No section selected</p>
+                                                    </div>
+                                                    <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 flex-shrink-0 transition-transform" id="gradebook-picker-chevron"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
 
-                                <div id="gradebook-quarter-tabs" class="flex bg-gray-100 p-1 rounded-xl">
-                                    <button id="quarter-btn-1" onclick="setGradebookQuarter(1)"
-                                        class="quarter-tab px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg bg-white text-icc shadow-sm transition-all">Q1</button>
-                                    <button id="quarter-btn-2" onclick="setGradebookQuarter(2)"
-                                        class="quarter-tab px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg text-gray-400 hover:text-gray-600 transition-all">Q2</button>
-                                    <button id="quarter-btn-3" onclick="setGradebookQuarter(3)"
-                                        class="quarter-tab px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg text-gray-400 hover:text-gray-600 transition-all">Q3</button>
-                                    <button id="quarter-btn-4" onclick="setGradebookQuarter(4)"
-                                        class="quarter-tab px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg text-gray-400 hover:text-gray-600 transition-all">Q4</button>
-                                </div>
-                            </div>
-
-                            <div id="gradebook-spreadsheet-container" class="flex-1 overflow-auto p-8">
-                                <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
-                                    <table id="gradebook-spreadsheet" class="w-full text-left border-collapse">
-                                        <thead class="bg-gray-50 border-b border-gray-100">
-                                            <!-- Dynamic Header -->
-                                        </thead>
-                                        <tbody id="gradebook-body">
-                                            <tr>
-                                                <td colspan="10"
-                                                    class="py-20 text-center text-gray-400 text-[10px] font-black uppercase tracking-widest">
-                                                    Please select section and subject to view class records
-                                                </td>
-                                            </tr>
-                                        </tbody>
+                                <!-- Spreadsheet Area -->
+                                <div id="gradebook-spreadsheet-container" class="flex-1 overflow-auto">
+                                    <table id="gradebook-spreadsheet" class="min-w-full border-collapse text-[12px]">
+                                        <thead class="sticky top-0 z-30 bg-white shadow-sm"></thead>
+                                        <tbody id="gradebook-body"></tbody>
                                     </table>
                                 </div>
                             </div>
+
                         </div>
+                    </div>
                 </section>
 
 
                 <!-- ══ ASSESSMENTS ═════════════════════════════════ -->
                 <section id="section-assessments" class="dynamic-section hidden">
-                    <div id="assessments-layout" class="w-full h-full"></div>
+                    <div class="w-full">
+                        <div id="assessments-layout" class="w-full h-full">
+                        </div>
+                    </div>
                 </section>
 
                 <!-- ATTENDANCE SECTION -->
@@ -1658,7 +1453,7 @@
     </div>
 
     <!-- ═══ SIGMA AI ══════════════════════════════════════════════ -->
-    <div id="sigmaAiPanel">
+    <div id="sigmaAiPanel" class="rounded-l-[24px] overflow-hidden">
         <div
             class="px-4 py-3 bg-white text-gray-900 flex items-center justify-between flex-shrink-0 border-b border-gray-100">
             <div class="flex items-center gap-2">
@@ -1693,7 +1488,8 @@
                 <input type="file" id="sigmaAiPhotoInput" class="hidden"
                     accept="image/png,image/jpeg,image/webp,image/gif,image/bmp">
                 <div class="sigma-ai-composer__field">
-                    <input type="text" id="sigmaAiInput" placeholder="Ask..." class="sigma-ai-composer__input">
+                    <textarea id="sigmaAiInput" placeholder="Ask..." class="sigma-ai-composer__input"
+                        rows="1"></textarea>
                 </div>
                 <button id="sigmaAiSendBtn" type="button" class="sigma-ai-send-btn" aria-label="Send message">
                     <i class="fa-solid fa-arrow-up sigma-ai-send-icon"></i>
@@ -1785,7 +1581,6 @@
 
             <div class="mt-8 space-y-6">
                 <div>
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Next Class</h4>
                     <div class="p-4 bg-icc/5 rounded-2xl border border-icc/10">
                         <p class="text-sm font-bold text-slate-800">Web Development 1</p>
                         <p class="text-[11px] text-icc font-black mt-1">TODAY • 1:30 PM - 3:00 PM</p>
@@ -1794,8 +1589,6 @@
                 </div>
 
                 <div>
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Due Submissions
-                    </h4>
                     <div class="p-4 bg-red-50 rounded-2xl border border-red-100">
                         <p class="text-sm font-bold text-slate-800">Logic Gates Exercise</p>
                         <p class="text-[11px] text-red-600 font-black mt-1">DUE TODAY • 11:59 PM</p>
@@ -1803,8 +1596,6 @@
                 </div>
 
                 <div>
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Upcoming
-                        Submissions</h4>
                     <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                         <p class="text-sm font-bold text-slate-800">Final Project Proposal</p>
                         <p class="text-[11px] text-slate-500 font-black mt-1">DUE MAY 15 • 11:59 PM</p>
@@ -1871,19 +1662,18 @@
         class="header-panel hidden fixed right-0 top-[var(--shell-offset)] h-[calc(100vh-var(--shell-offset))] w-[400px] bg-white shadow-[-20px_0_40px_rgba(0,0,0,0.08)] border-l border-slate-200 flex flex-col z-[300] rounded-l-[24px] overflow-y-auto custom-scrollbar font-['Inter']">
         <!-- Header: Removed border-b -->
         <div class="px-8 py-6 bg-gray-50/50 flex-shrink-0">
-            <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center justify-between mb-8 gap-3">
+                <button id="calendarDropdownPrevMonthBtn"
+                    class="w-8 h-8 rounded-full bg-[#15803d] border border-[#15803d] hover:bg-[#166534] flex items-center justify-center text-white flex-shrink-0">
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                </button>
                 <h3 id="calendarDropdownMonthYear"
-                    class="text-[15px] font-black text-black leading-none uppercase tracking-widest">April 2026</h3>
-                <div class="flex gap-1">
-                    <button id="calendarDropdownPrevMonthBtn"
-                        class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 hover:bg-slate-200 flex items-center justify-center text-black transition-all">
-                        <i class="fa-solid fa-chevron-left text-[10px]"></i>
-                    </button>
-                    <button id="calendarDropdownNextMonthBtn"
-                        class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 hover:bg-slate-200 flex items-center justify-center text-black transition-all">
-                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                    </button>
-                </div>
+                    class="text-[15px] font-black text-[#15803d] leading-none tracking-widest text-center flex-1">April
+                    2026</h3>
+                <button id="calendarDropdownNextMonthBtn"
+                    class="w-8 h-8 rounded-full bg-[#15803d] border border-[#15803d] hover:bg-[#166534] flex items-center justify-center text-white flex-shrink-0">
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
             </div>
             <div class="grid grid-cols-7 gap-1 text-center border-t border-slate-100 pt-4 mb-2">
                 <div class="text-[10px] font-normal text-black uppercase tracking-tighter">Sun</div>
@@ -1900,21 +1690,26 @@
 
             <!-- View Calendar Link -->
             <div class="mt-8 mb-4 flex justify-center">
+                <style>
+                    .view-calendar-anchor:hover {
+                        text-decoration: underline !important;
+                        text-decoration-thickness: 1px !important;
+                        text-underline-offset: 4px !important;
+                    }
+                </style>
                 <a href="#"
-                    class="view-calendar-anchor font-['Inter',_sans-serif] text-black text-[11px] font-black uppercase tracking-[0.2em] cursor-pointer no-underline outline-none"
+                    class="view-calendar-anchor font-['Inter',_sans-serif] text-[#15803d] text-[11px] font-black uppercase tracking-[0.2em] cursor-pointer no-underline outline-none"
                     style="font-family: 'Inter', sans-serif !important; pointer-events: auto !important;">
                     View Calendar →
                 </a>
             </div>
         </div>
 
-        <div class="calendar-dropdown-summary flex-1 px-8 py-5 space-y-5 bg-white border-t border-gray-100">
+        <div class="calendar-dropdown-summary flex-1 px-8 py-5 space-y-5 bg-white border-t border-gray-100 hidden">
             <div>
-                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Next Class</h4>
                 <div id="calendarDropdownUpcomingClassList" class="space-y-3"></div>
             </div>
             <div>
-                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Due Submissions</h4>
                 <div id="calendarDropdownAssessmentList" class="space-y-3"></div>
             </div>
         </div>
@@ -1927,7 +1722,7 @@
     <div id="announcement-modal"
         class="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xl hidden transition-all duration-300">
         <div
-            class="bg-white w-[672px] h-[90vh] flex flex-col rounded-[22px] shadow-2xl overflow-hidden animate-slide-up">
+            class="bg-white w-[672px] h-[90vh] flex flex-col rounded-[22px] shadow-2xl standard-panel-shadow overflow-hidden animate-slide-up">
             <!-- Modal Header -->
             <div
                 class="px-10 pt-10 pb-6 border-b border-slate-200 flex items-center justify-between bg-white sticky top-0">
@@ -2088,6 +1883,70 @@
                         <!-- Dynamic content will be injected here -->
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+    <!-- ══ GRADEBOOK OUTER LAYER ════════════════════════════════ -->
+    <div id="gradebook-outer-layer"
+        class="fixed inset-0 z-[1000] hidden flex flex-col justify-end pointer-events-none">
+        <div id="gradebook-outer-panel"
+            class="bg-white w-full h-[88vh] shadow-[0_-20px_60px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden relative pointer-events-auto border-t border-gray-100">
+            
+            <!-- Drag Handle (Green) -->
+            <div id="gradebook-outer-drag-handle" 
+                class="w-full h-4 flex items-center justify-center cursor-ns-resize bg-white hover:bg-slate-50 transition-colors shrink-0">
+                <div class="w-16 h-1.5 bg-[#15803d] rounded-full transition-all"></div>
+            </div>
+
+            <!-- Header (Flush, Sharp) -->
+            <div class="px-8 py-4 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
+                <div class="flex items-center gap-5">
+                    <button onclick="window.closeGradebookOuterLayer()"
+                        class="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 transition-colors">
+                        <i class="fa-solid fa-chevron-down text-lg"></i>
+                    </button>
+                    <div class="flex-1">
+                        <h2 id="gradebook-outer-title" class="text-2xl font-black text-gray-900 tracking-tight leading-none font-['Inter']">Gradebooks</h2>
+                    </div>
+                </div>
+                <div class="flex items-center gap-8">
+                    <!-- Statistics -->
+                    <div class="hidden md:flex items-center gap-6 mr-4">
+                        <div class="text-right">
+                            <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest font-['Inter']">Class Avg</p>
+                            <p id="gradebook-outer-avg" class="text-xl font-black text-black leading-none mt-1 font-['Inter']">-</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest font-['Inter']">Passing Rate</p>
+                            <p id="gradebook-outer-passing" class="text-xl font-black text-[#15803d] leading-none mt-1 font-['Inter']">-</p>
+                        </div>
+                    </div>
+
+                    <!-- Quarter Selector -->
+                    <div id="gradebook-outer-quarter-tabs" class="flex gap-1 bg-slate-100 rounded-xl p-1">
+                        <button onclick="setGradebookOuterQuarter(1)"
+                            class="gradebook-outer-q-btn px-5 py-2 rounded-lg text-[11px] font-black transition-all bg-white text-[#FFD000] shadow-sm font-['Inter']"
+                            data-q="1">1ST QUARTER</button>
+                        <button onclick="setGradebookOuterQuarter(2)"
+                            class="gradebook-outer-q-btn px-5 py-2 rounded-lg text-[11px] font-black transition-all text-black font-['Inter']"
+                            data-q="2">2ND QUARTER</button>
+                        <button onclick="setGradebookOuterQuarter(3)"
+                            class="gradebook-outer-q-btn px-5 py-2 rounded-lg text-[11px] font-black transition-all text-black font-['Inter']"
+                            data-q="3">3RD QUARTER</button>
+                        <button onclick="setGradebookOuterQuarter(4)"
+                            class="gradebook-outer-q-btn px-5 py-2 rounded-lg text-[11px] font-black transition-all text-black font-['Inter']"
+                            data-q="4">4TH QUARTER</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area (NO PADDING, FLUSH TABLE) -->
+            <div id="gradebook-outer-spreadsheet-container" class="flex-1 overflow-auto bg-white" style="scrollbar-width: thin; scrollbar-color: #e2e8f0 transparent;">
+                <table id="gradebook-outer-spreadsheet" class="min-w-full border-collapse text-[12px] font-['Inter']">
+                    <thead id="gradebook-outer-head" class="sticky top-0 z-30 bg-white border-b border-gray-100">
+                    </thead>
+                    <tbody id="gradebook-outer-body"></tbody>
+                </table>
             </div>
         </div>
     </div>

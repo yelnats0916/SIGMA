@@ -35,7 +35,8 @@
 
 <body class="bg-admin-bg min-h-screen flex flex-col overflow-x-hidden sidebar-collapsed">
 
-    <header id="student-header" class="shrink-0 z-[250] fixed top-0 left-0 right-0 flex flex-col bg-white">
+    <header id="student-header"
+        class="shrink-0 z-[250] fixed top-0 left-0 right-0 flex flex-col bg-white standard-panel-shadow">
         <!-- ═══ TOP NAVIGATION BAR ════════════════════════════════════ -->
         <nav class="top-nav justify-between shrink-0">
             <div class="flex items-center gap-3">
@@ -69,11 +70,8 @@
             <div class="absolute left-1/2 -translate-x-1/2 w-full max-w-sm md:block z-[101]">
                 <div
                     class="header-search-shell relative flex items-center group bg-white border border-slate-300 rounded-full focus-within:border-[#FFD000] focus-within:bg-white hover:bg-white focus-within:ring-0 focus-within:outline-none focus-within:shadow-none transition-all overflow-hidden">
-                    <button type="button" id="mobileSearchBackBtn" class="mobile-search-back-btn hidden">
-                        <i class="fa-solid fa-arrow-left"></i>
-                    </button>
                     <span
-                        class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 search-icon-container">
+                        class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none opacity-0 group-focus-within:opacity-100 transition-opacity duration-300">
                         <i class="fa-solid fa-magnifying-glass text-slate-900 text-sm"></i>
                     </span>
                     <input id="searchBar" type="text" placeholder="Search"
@@ -240,15 +238,18 @@
                     <i class="fa-solid fa-chevron-right sidebar-group-chevron"></i>
                 </a>
                 <div id="subjects-submenu" class="sidebar-submenu hidden">
-                    <a href="#" id="nav-subjects-core" class="nav-sublink no-underline" data-program-key="core-subjects">
+                    <a href="#" id="nav-subjects-core" class="nav-sublink no-underline"
+                        data-program-key="core-subjects">
                         <i class="fa-solid fa-layer-group"></i>
                         <span>Core Subjects</span>
                     </a>
-                    <a href="#" id="nav-subjects-applied" class="nav-sublink no-underline" data-program-key="applied-subjects">
+                    <a href="#" id="nav-subjects-applied" class="nav-sublink no-underline"
+                        data-program-key="applied-subjects">
                         <i class="fa-solid fa-book-open"></i>
                         <span>Applied Subjects</span>
                     </a>
-                    <a href="#" id="nav-subjects-specialized" class="nav-sublink no-underline" data-program-key="specialized-subjects">
+                    <a href="#" id="nav-subjects-specialized" class="nav-sublink no-underline"
+                        data-program-key="specialized-subjects">
                         <i class="fa-solid fa-briefcase"></i>
                         <span>Specialized Subjects</span>
                     </a>
@@ -294,20 +295,20 @@
             <div id="content-sections" class="w-full h-full">
 
                 <!-- ══ HOME ════════════════════════════════════════ -->
-                <section id="section-home" class="dynamic-section">
+                <section id="section-home" class="dynamic-section hidden">
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 p-4 pt-4 items-start">
                         <!-- 1. Left Section (3/12) - Match admin panel sizing -->
-                        <div class="lg:col-span-3 mt-2 sticky top-[106px] h-fit">
-                            <div id="sigma-panels-container"
-                                class="space-y-4 max-h-[calc(100vh-106px)] overflow-y-auto custom-scrollbar pr-2">
+                        <div class="lg:col-span-3 mt-2 home-sticky-rail home-sticky-rail--left">
+                            <div id="sigma-panels-container" class="space-y-4 custom-scrollbar pr-2">
                                 <!-- SIGMA Panel 1: Descriptive (Progress) -->
                                 <div data-id="sigma-descriptive-yellow"
-                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] standard-panel-shadow flex flex-col overflow-hidden relative cursor-grab select-none">
                                     <div class="bg-[#FFD000] px-5 py-4 flex items-center">
                                         <div class="flex items-center gap-2">
                                             <i class="fa-solid fa-bolt text-black text-[12px]"></i>
-                                            <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
+                                            <h4 class="text-[11px] font-black text-black tracking-widest">SIGMA</h4>
                                         </div>
+                                        <span class="ml-auto text-[10px] text-black/60 font-normal">05/05/2026</span>
                                     </div>
                                     <div class="p-5">
                                         <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
@@ -321,12 +322,13 @@
 
                                 <!-- SIGMA Panel 2: Predictive (Excellence) -->
                                 <div data-id="sigma-predictive-black"
-                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
-                                    <div class="bg-[#000000] px-5 py-4 flex items-center">
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] standard-panel-shadow flex flex-col overflow-hidden relative cursor-grab select-none">
+                                    <div class="bg-black px-5 py-4 flex items-center">
                                         <div class="flex items-center gap-2">
                                             <i class="fa-solid fa-bolt text-[#FFD000] text-[12px]"></i>
                                             <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
                                         </div>
+                                        <span class="ml-auto text-[10px] text-white/80 font-normal">05/05/2026</span>
                                     </div>
                                     <div class="p-5">
                                         <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
@@ -340,12 +342,13 @@
 
                                 <!-- SIGMA Panel 3: Prescriptive (Review) -->
                                 <div data-id="sigma-prescriptive-green"
-                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] standard-panel-shadow flex flex-col overflow-hidden relative cursor-grab select-none">
                                     <div class="bg-[#15803d] px-5 py-4 flex items-center">
                                         <div class="flex items-center gap-2">
                                             <i class="fa-solid fa-bolt text-white text-[12px]"></i>
                                             <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
                                         </div>
+                                        <span class="ml-auto text-[10px] text-white/80 font-normal">05/05/2026</span>
                                     </div>
                                     <div class="p-5">
                                         <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
@@ -359,12 +362,13 @@
 
                                 <!-- SIGMA Panel 4: Descriptive (Attendance) -->
                                 <div data-id="sigma-descriptive-attendance"
-                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] standard-panel-shadow flex flex-col overflow-hidden relative cursor-grab select-none">
                                     <div class="bg-[#FFD000] px-5 py-4 flex items-center">
                                         <div class="flex items-center gap-2">
                                             <i class="fa-solid fa-bolt text-black text-[12px]"></i>
-                                            <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
+                                            <h4 class="text-[11px] font-black text-black tracking-widest">SIGMA</h4>
                                         </div>
+                                        <span class="ml-auto text-[10px] text-black/60 font-normal">05/05/2026</span>
                                     </div>
                                     <div class="p-5">
                                         <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
@@ -378,12 +382,13 @@
 
                                 <!-- SIGMA Panel 5: Predictive (Deadlines) -->
                                 <div data-id="sigma-predictive-ai"
-                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
-                                    <div class="bg-[#000000] px-5 py-4 flex items-center">
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] standard-panel-shadow flex flex-col overflow-hidden relative cursor-grab select-none">
+                                    <div class="bg-black px-5 py-4 flex items-center">
                                         <div class="flex items-center gap-2">
                                             <i class="fa-solid fa-bolt text-[#FFD000] text-[12px]"></i>
                                             <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
                                         </div>
+                                        <span class="ml-auto text-[10px] text-white/80 font-normal">05/05/2026</span>
                                     </div>
                                     <div class="p-5">
                                         <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
@@ -397,12 +402,13 @@
 
                                 <!-- SIGMA Panel 6: Prescriptive (Study Group) -->
                                 <div data-id="sigma-prescriptive-curriculum"
-                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md relative cursor-grab select-none">
+                                    class="bg-white border border-gray-100 h-[180px] rounded-[22px] standard-panel-shadow flex flex-col overflow-hidden relative cursor-grab select-none">
                                     <div class="bg-[#15803d] px-5 py-4 flex items-center">
                                         <div class="flex items-center gap-2">
                                             <i class="fa-solid fa-bolt text-white text-[12px]"></i>
                                             <h4 class="text-[11px] font-black text-white tracking-widest">SIGMA</h4>
                                         </div>
+                                        <span class="ml-auto text-[10px] text-white/80 font-normal">05/05/2026</span>
                                     </div>
                                     <div class="p-5">
                                         <p class="text-[12px] font-normal text-slate-700 text-justify leading-relaxed">
@@ -423,7 +429,7 @@
 
                             <!-- Welcome Panel -->
                             <div
-                                class="welcome-panel relative h-[220px] rounded-[22px] overflow-hidden shadow-lg border border-slate-200 flex items-center px-12 group">
+                                class="welcome-panel relative h-[220px] rounded-[22px] overflow-hidden standard-panel-shadow border border-slate-200 flex items-center px-12 group">
                                 <img id="welcome-panel-student-img" src="image/Welcome.jpg" alt="Welcome to ICC"
                                     class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                                 <div class="absolute inset-0 bg-gradient-to-r from-icc/90 via-icc/40 to-transparent">
@@ -434,12 +440,11 @@
                                     <h2 class="text-white text-4xl font-black leading-tight drop-shadow-md uppercase">
                                         INTERFACE COMPUTER COLLEGE</h2>
                                 </div>
-
                             </div>
 
                             <!-- Announcement Tabs -->
                             <div
-                                class="bg-white border border-slate-200 shadow-sm rounded-full p-2 flex items-center gap-2 mb-6">
+                                class="bg-white border border-slate-200 standard-panel-shadow rounded-full p-2 flex items-center gap-2 mb-6">
                                 <button id="announcement-tab-all"
                                     class="px-8 py-3 rounded-full text-[11px] font-black uppercase tracking-widest bg-[#15803d] text-white transition-all shadow-sm">
                                     Announcements
@@ -457,96 +462,33 @@
                         </div>
 
                         <!-- 3. Right Section (3/12) -->
-                        <div class="lg:col-span-3 space-y-8 mt-2 home-right-stack">
-                            <div class="home-subject-rail" id="home-subject-rail">
-                                <div
-                                    class="home-subject-rail__head flex flex-row items-center justify-between pb-3 border-b border-slate-200">
-                                    <button type="button"
-                                        class="home-subject-rail__title home-subject-rail__title-btn font-black"
-                                        data-home-subjects-nav="landing">Subjects</button>
-                                    <div class="home-subject-rail__tools">
-                                        <button type="button" id="home-subject-search-toggle"
-                                            class="home-subject-rail__icon-btn" aria-label="Search subjects"
-                                            title="Search subjects">
-                                            <i class="fa-solid fa-magnifying-glass"></i>
-                                        </button>
-                                        <div class="home-subject-rail__settings-wrap">
-                                            <button type="button" id="home-subject-settings-toggle"
-                                                class="home-subject-rail__icon-btn" aria-label="Subjects settings"
-                                                title="Subjects settings">
-                                                <i class="fa-solid fa-sliders"></i>
-                                            </button>
-                                            <div id="home-subject-settings-menu"
-                                                class="home-subject-settings-menu hidden">
-                                                <p class="home-subject-settings-menu__label">View Options</p>
-                                                <label class="home-subject-settings-menu__option">
-                                                    <input type="checkbox" id="home-subject-hide-completed-toggle">
-                                                    <span>Hide completed subjects</span>
-                                                </label>
-                                                <p
-                                                    class="home-subject-settings-menu__label home-subject-settings-menu__label--spaced">
-                                                    Show
-                                                </p>
-                                                <label class="home-subject-settings-menu__option">
-                                                    <input type="radio" name="home-subject-filter" value="all" checked>
-                                                    <span>All subjects</span>
-                                                </label>
-                                                <label class="home-subject-settings-menu__option">
-                                                    <input type="radio" name="home-subject-filter" value="core">
-                                                    <span>Core subjects</span>
-                                                </label>
-                                                <label class="home-subject-settings-menu__option">
-                                                    <input type="radio" name="home-subject-filter" value="applied">
-                                                    <span>Applied subjects</span>
-                                                </label>
-                                                <label class="home-subject-settings-menu__option">
-                                                    <input type="radio" name="home-subject-filter" value="specialized">
-                                                    <span>Specialized subjects</span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div id="home-subject-search-box" class="home-subject-rail__search hidden">
-                                    <input id="home-subject-search-input" type="text"
-                                        class="home-subject-rail__search-input" placeholder="Search subjects..."
-                                        autocomplete="off">
-                                </div>
-
-                                <div class="home-subject-rail__section">
-                                    <p class="home-subject-rail__section-title">Enrolled Subjects</p>
-                                    <div id="home-enrolled-subject-list" class="home-subject-rail__list"></div>
-                                </div>
-
-                                <div id="home-completed-subject-block" class="home-subject-rail__section">
-                                    <p class="home-subject-rail__section-title">Completed Subjects</p>
-                                    <div id="home-completed-subject-list" class="home-subject-rail__list"></div>
-                                </div>
-                            </div> <!-- End home-subject-rail -->
+                        <div
+                            class="lg:col-span-3 space-y-8 mt-2 home-right-stack home-sticky-rail home-sticky-rail--right">
+                            <div class="home-dashboard-panels">
+                                <section class="home-dashboard-group">
+                                    <div id="student-home-next-class-list" class="home-dashboard-list"></div>
+                                </section>
+                                <section class="home-dashboard-group">
+                                    <div id="student-home-due-submission-list" class="home-dashboard-list"></div>
+                                </section>
+                            </div>
                         </div> <!-- End lg:col-span-3 -->
                     </div> <!-- End grid -->
                 </section>
 
-                <!-- ══ SUBJECTS ════════════════════════════════════ -->
-                <!-- ══ SUBJECTS ════════════════════════════════════ -->
-                <section id="section-courses" class="dynamic-section hidden p-0">
-                    <!-- Content will be added here later -->
-                </section>
 
                 <!-- ══ ASSESSMENTS ═════════════════════════════════ -->
                 <section id="section-assignments" class="dynamic-section hidden">
-                    <div class="mx-auto max-w-[1024px] w-full">
-                        <div class="bg-white min-h-[calc(100vh-var(--shell-offset))] p-0 relative flex flex-col">
-                            <div id="assessments-layout" class="px-10 py-8"></div>
-                        </div>
+                    <div class="w-full">
+                        <div id="assessments-layout" class="w-full h-full"></div>
                     </div>
                 </section>
 
                 <!-- ══ GRADES ══════════════════════════════════════ -->
-                <section id="section-grades" class="dynamic-section hidden">
-                    <div class="mx-auto max-w-[1024px] w-full">
-                        <div class="bg-white min-h-[calc(100vh-var(--shell-offset))] p-0 relative flex flex-col">
+                <section id="section-grades" class="dynamic-section hidden overflow-x-auto">
+                    <div class="mx-auto min-w-[1024px] w-full standard-panel-shadow">
+                        <div
+                            class="bg-white border-x border-slate-200 min-h-[calc(100vh-var(--shell-offset))] p-0 relative flex flex-col">
                             <div id="grades-layout" class="px-10 py-8"></div>
                         </div>
                     </div>
@@ -554,10 +496,11 @@
 
                 <!-- ══ ATTENDANCE ══════════════════════════════════ -->
                 <section id="section-attendance" class="dynamic-section hidden">
-                    <div class="mx-auto max-w-[1024px] w-full">
-                        <div class="bg-white min-h-[calc(100vh-var(--shell-offset))] p-0 relative flex flex-col">
+                    <div class="mx-auto max-w-[1024px] w-full standard-panel-shadow">
+                        <div
+                            class="bg-white border-x border-slate-200 min-h-[calc(100vh-var(--shell-offset))] p-0 relative flex flex-col">
                             <!-- Title Section -->
-                            <div class="px-10 py-8">
+                            <div class="px-10 pt-4 pb-4">
                                 <h2 class="text-3xl font-bold text-gray-800">Attendance</h2>
                                 <p class="text-sm text-gray-500 mt-1">Your attendance records and weekly schedule</p>
                             </div>
@@ -587,7 +530,7 @@
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-2">
                                     <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                                         <div class="flex items-center gap-4">
                                             <div
@@ -634,52 +577,31 @@
                                 </div>
 
                                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                                    <div class="p-6 border-b border-gray-50 flex items-center justify-between">
-                                        <h3 class="text-sm font-bold text-gray-800 uppercase tracking-widest">Recent
-                                            Activity</h3>
-                                        <button
-                                            class="text-[10px] font-black text-icc uppercase tracking-widest hover:underline">View
-                                            Calendar</button>
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-center border-collapse">
+                                            <thead>
+                                                <tr class="bg-gray-50/50">
+                                                    <th
+                                                        class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                        Date</th>
+                                                    <th
+                                                        class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                        Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="student-attendance-history-body" class="divide-y divide-gray-50">
+                                                <!-- Injected by JS -->
+                                            </tbody>
+                                        </table>
                                     </div>
-                                    <div class="divide-y divide-gray-50">
-                                        <div class="p-4 flex items-center justify-between hover:bg-gray-50">
-                                            <div class="flex items-center gap-4">
-                                                <div class="w-2 h-2 rounded-full bg-green-500"></div>
-                                                <div>
-                                                    <p class="text-sm font-bold text-gray-800">Computer Programming 1
-                                                    </p>
-                                                    <p class="text-[10px] text-gray-400 font-medium">March 24, 2026 •
-                                                        8:00 AM</p>
-                                                </div>
-                                            </div>
-                                            <span
-                                                class="px-2 py-1 bg-green-50 text-green-600 text-[9px] font-black rounded uppercase">Present</span>
-                                        </div>
-                                        <div class="p-4 flex items-center justify-between hover:bg-gray-50">
-                                            <div class="flex items-center gap-4">
-                                                <div class="w-2 h-2 rounded-full bg-green-500"></div>
-                                                <div>
-                                                    <p class="text-sm font-bold text-gray-800">Web Development 1</p>
-                                                    <p class="text-[10px] text-gray-400 font-medium">March 24, 2026 •
-                                                        9:45 AM</p>
-                                                </div>
-                                            </div>
-                                            <span
-                                                class="px-2 py-1 bg-green-50 text-green-600 text-[9px] font-black rounded uppercase">Present</span>
-                                        </div>
-                                        <div class="p-4 flex items-center justify-between hover:bg-gray-50">
-                                            <div class="flex items-center gap-4">
-                                                <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
-                                                <div>
-                                                    <p class="text-sm font-bold text-gray-800">Oral Communication</p>
-                                                    <p class="text-[10px] text-gray-400 font-medium">March 23, 2026 •
-                                                        1:30 PM</p>
-                                                </div>
-                                            </div>
-                                            <span
-                                                class="px-2 py-1 bg-yellow-50 text-yellow-600 text-[9px] font-black rounded uppercase">Late</span>
-                                        </div>
+                                    <div id="student-attendance-empty-state" class="hidden p-20 text-center">
+                                        <i class="fa-solid fa-calendar-xmark text-4xl text-gray-200 mb-4 block"></i>
+                                        <p class="text-sm font-medium text-gray-400 italic">No attendance records found.
+                                        </p>
                                     </div>
+                                </div>
+                                <div class="flex items-center justify-center mt-6">
+                                    <div id="student-attendance-pagination-controls" class="flex items-center gap-2"></div>
                                 </div>
                             </div>
                         </div>
@@ -688,17 +610,17 @@
 
                 <!-- ══ CLASSROOMS ══════════════════════════════════ -->
                 <section id="section-classrooms" class="dynamic-section hidden">
-                    <div class="mx-auto max-w-[1024px] w-full">
+                    <div class="w-full standard-panel-shadow">
                         <div
                             class="bg-white border-x border-slate-200 min-h-[calc(100vh-var(--shell-offset))] p-0 relative flex flex-col">
                             <!-- Page Title -->
-                            <div class="px-10 pt-6 pb-2">
-                                <h1 class="text-2xl font-bold text-black tracking-tight">Classrooms</h1>
+                            <div class="px-10 py-8">
+                                <h1 id="classes-section-title" class="text-2xl font-bold text-black tracking-tight">Classrooms</h1>
                             </div>
 
                             <!-- Classroom cards grid -->
-                            <div class="px-6 md:px-10 pb-10">
-                                <div id="classrooms-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div id="classrooms-grid-wrapper" class="px-6 md:px-10 pb-10">
+                                <div id="classrooms-grid">
                                     <!-- Dynamic cards from student.js -->
                                 </div>
                             </div>
@@ -708,7 +630,7 @@
 
                 <!-- ══ CLASSROOM DETAIL ════════════════════════════════ -->
                 <section id="section-classroom-detail" class="dynamic-section hidden">
-                    <div class="mx-auto max-w-[1024px] w-full">
+                    <div class="mx-auto max-w-[1024px] w-full standard-panel-shadow">
                         <div
                             class="bg-white border-x border-slate-200 min-h-[calc(100vh-var(--shell-offset))] p-0 relative flex flex-col">
                             <div id="classroom-detail-content"></div>
@@ -718,18 +640,26 @@
 
                 <!-- ══ TOPIC DETAIL (no built-in left sidebar — uses #sub-sidebar) ══ -->
                 <section id="section-topic-detail" class="dynamic-section hidden">
-                    <!-- buildTopicPage() fills this with just the main content + right panel.
-                             The left sidebar is #sub-sidebar, swapped to topic mode instantly. -->
+                    <div class="mx-auto max-w-[1024px] w-full standard-panel-shadow">
+                        <div class="bg-white border-x border-slate-200 min-h-screen">
+                            The left sidebar is #sub-sidebar, swapped to topic mode instantly. -->
+                        </div>
                 </section>
 
                 <!-- ══ SUBJECT PROGRAM PAGE ════════════════════════ -->
                 <section id="section-curriculum-page" class="dynamic-section hidden">
-                    <div id="curriculum-page-shell"></div>
+                    <div class="mx-auto max-w-[1024px] w-full standard-panel-shadow">
+                        <div id="curriculum-page-shell"
+                            class="bg-white border-x border-slate-200 min-h-screen standard-panel-shadow shadow-slate-200/50">
+                        </div>
+                    </div>
                 </section>
 
                 <!-- ══ TOPIC CONTENT (videos, handouts, assessments) ══ -->
                 <section id="section-topic-content" class="dynamic-section hidden">
-                    <!-- buildTopicContentPage() fills this dynamically -->
+                    <div class="mx-auto max-w-[1304px] w-full">
+                        <!-- buildTopicContentPage() fills this -->
+                    </div>
                 </section>
 
 
@@ -737,7 +667,7 @@
                 <section id="user-profile-view" class="dynamic-section hidden">
                     <div class="w-full bg-white border-b border-slate-200">
                         <div class="mx-auto max-w-[1024px] w-full">
-                            <div class="bg-white border-x border-slate-200 p-0 shadow-sm relative flex flex-col">
+                            <div class="p-0 relative flex flex-col">
                                 <div class="relative min-h-[220px] md:min-h-[310px]">
                                     <div class="absolute inset-0 overflow-hidden rounded-b-[44px] bg-[#15803d]">
                                         <div
@@ -789,7 +719,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="mx-auto max-w-[1024px] w-full">
+                    <div class="mx-auto max-w-[1024px] w-full standard-panel-shadow">
                         <div
                             class="bg-white border-x border-b border-slate-200 min-h-screen p-0 shadow-sm relative flex flex-col">
                             <div class="pt-4 md:pt-2 pb-10 space-y-1">
@@ -920,19 +850,18 @@
         class="header-panel hidden fixed right-0 top-[var(--shell-offset)] h-[calc(100vh-var(--shell-offset))] w-[400px] bg-white shadow-[-20px_0_40px_rgba(0,0,0,0.08)] border-l border-slate-200 flex flex-col z-[300] rounded-l-[24px] overflow-y-auto custom-scrollbar font-['Inter']">
         <!-- Header: Removed border-b -->
         <div class="px-8 py-6 bg-gray-50/50 flex-shrink-0">
-            <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center justify-between mb-8 gap-3">
+                <button id="calendarDropdownPrevMonthBtn"
+                    class="w-8 h-8 rounded-full bg-[#15803d] border border-[#15803d] hover:bg-[#166534] flex items-center justify-center text-white flex-shrink-0">
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                </button>
                 <h3 id="calendarDropdownMonthYear"
-                    class="text-[15px] font-black text-black leading-none uppercase tracking-widest">April 2026</h3>
-                <div class="flex gap-1">
-                    <button id="calendarDropdownPrevMonthBtn"
-                        class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 hover:bg-slate-200 flex items-center justify-center text-black transition-all">
-                        <i class="fa-solid fa-chevron-left text-[10px]"></i>
-                    </button>
-                    <button id="calendarDropdownNextMonthBtn"
-                        class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 hover:bg-slate-200 flex items-center justify-center text-black transition-all">
-                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                    </button>
-                </div>
+                    class="text-[15px] font-black text-[#15803d] leading-none tracking-widest text-center flex-1">April
+                    2026</h3>
+                <button id="calendarDropdownNextMonthBtn"
+                    class="w-8 h-8 rounded-full bg-[#15803d] border border-[#15803d] hover:bg-[#166534] flex items-center justify-center text-white flex-shrink-0">
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
             </div>
             <div class="grid grid-cols-7 gap-1 text-center border-t border-slate-100 pt-4 mb-2">
                 <div class="text-[10px] font-normal text-black uppercase tracking-tighter">Sun</div>
@@ -949,21 +878,26 @@
 
             <!-- View Calendar Link -->
             <div class="mt-8 mb-4 flex justify-center">
+                <style>
+                    .view-calendar-anchor:hover {
+                        text-decoration: underline !important;
+                        text-decoration-thickness: 1px !important;
+                        text-underline-offset: 4px !important;
+                    }
+                </style>
                 <a href="#"
-                    class="view-calendar-anchor font-['Inter',_sans-serif] text-black text-[11px] font-black uppercase tracking-[0.2em] cursor-pointer no-underline outline-none"
+                    class="view-calendar-anchor font-['Inter',_sans-serif] text-[#15803d] text-[11px] font-black uppercase tracking-[0.2em] cursor-pointer no-underline outline-none"
                     style="font-family: 'Inter', sans-serif !important; pointer-events: auto !important;">
                     View Calendar →
                 </a>
             </div>
         </div>
 
-        <div class="calendar-dropdown-summary flex-1 px-8 py-5 space-y-5 bg-white border-t border-gray-100">
+        <div class="calendar-dropdown-summary flex-1 px-8 py-5 space-y-5 bg-white border-t border-gray-100 hidden">
             <div>
-                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Next Class</h4>
                 <div id="calendarDropdownUpcomingClassList" class="space-y-3"></div>
             </div>
             <div>
-                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Due Submissions</h4>
                 <div id="calendarDropdownAssessmentList" class="space-y-3"></div>
             </div>
         </div>
@@ -972,7 +906,7 @@
         <div class="border-t border-gray-100 w-full mt-auto"></div>
     </div>
 
-    <div id="sigmaAiPanel">
+    <div id="sigmaAiPanel" class="rounded-l-[24px] overflow-hidden">
         <div
             class="px-4 py-3 bg-white text-gray-900 flex items-center justify-between flex-shrink-0 border-b border-gray-100">
             <div class="flex items-center gap-2">
@@ -1007,7 +941,8 @@
                 <input type="file" id="sigmaAiPhotoInput" class="hidden"
                     accept="image/png,image/jpeg,image/webp,image/gif,image/bmp">
                 <div class="sigma-ai-composer__field">
-                    <input type="text" id="sigmaAiInput" placeholder="Ask..." class="sigma-ai-composer__input">
+                    <textarea id="sigmaAiInput" placeholder="Ask..." class="sigma-ai-composer__input"
+                        rows="1"></textarea>
                 </div>
                 <button id="sigmaAiSendBtn" type="button" class="sigma-ai-send-btn" aria-label="Send message">
                     <i class="fa-solid fa-arrow-up sigma-ai-send-icon"></i>
@@ -1101,7 +1036,6 @@
 
             <div class="mt-8 space-y-6">
                 <div>
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Next Class</h4>
                     <div class="p-4 bg-icc/5 rounded-2xl border border-icc/10">
                         <p class="text-sm font-bold text-slate-800">Web Development 1</p>
                         <p class="text-[11px] text-icc font-black mt-1">TODAY • 1:30 PM - 3:00 PM</p>
@@ -1110,8 +1044,6 @@
                 </div>
 
                 <div>
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Due Submissions
-                    </h4>
                     <div class="p-4 bg-red-50 rounded-2xl border border-red-100">
                         <p class="text-sm font-bold text-slate-800">Logic Gates Exercise</p>
                         <p class="text-[11px] text-red-600 font-black mt-1">DUE TODAY • 11:59 PM</p>
@@ -1119,8 +1051,6 @@
                 </div>
 
                 <div>
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Upcoming
-                        Submissions</h4>
                     <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                         <p class="text-sm font-bold text-slate-800">E-Portfolio Draft</p>
                         <p class="text-[11px] text-slate-500 font-black mt-1">DUE MAY 10 • 11:59 PM</p>

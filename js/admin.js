@@ -7,8 +7,26 @@ const LOGIN_SECURITY_KEY = 'sigma-login-security-config';
 window.sectionSearchState = window.sectionSearchState || {
     name: '',
     room: '',
-    grade: ''
+    grade: '',
+    hasSearched: false
 };
+
+window.subjectSearchState = window.subjectSearchState || {
+    code: '',
+    name: '',
+    type: '',
+    hasSearched: false
+};
+
+window.userPaginationState = { currentPage: 1, itemsPerPage: 20 };
+window.sectionPaginationState = { currentPage: 1, itemsPerPage: 20 };
+window.subjectPaginationState = { currentPage: 1, itemsPerPage: 20 };
+
+// Users Overview Pagination state
+let currentOverviewPage = 1;
+const totalOverviewPages = 3;
+
+
 
 // MASTER RESET SCRIPT: Clear all created accounts and reset sequence counters
 (function masterResetUsers() {
@@ -34,70 +52,53 @@ window.sectionSearchState = window.sectionSearchState || {
     }
 })();
 
-// SEED MASTER ADMIN: Ensure Stanley Vargas Garcia exists
-(function seedMasterAdmin() {
+// SEED MASTER ADMIN & REPAIR SEQUENCES: Ensure Stanley Garcia exists and all users have a No.
+(function initializeUserSequences() {
     const USER_STORAGE_KEY = 'sigma-admin-users';
     const masterAdmin = {
         id: "0000000",
         uid: "0000000",
         firstName: "Stanley",
-        middleName: "Vargas",
         lastName: "Garcia",
         email: "stanley@gmail.com",
         password: "garcia0000000",
         role: "Master Admin",
         type: "Master Admin",
         status: "Active",
+        seq: 0,
         createdVia: "system-seed"
     };
 
     try {
-        const users = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || '[]');
-        const exists = users.some(u => String(u.uid || u.id) === masterAdmin.id);
-        if (!exists) {
+        let users = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || '[]');
+        
+        // 1. Ensure Master Admin exists
+        const masterExists = users.some(u => String(u.uid || u.id) === masterAdmin.id);
+        if (!masterExists) {
             users.push(masterAdmin);
-            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(users));
-            console.log('Master Admin "Stanley" seeded successfully.');
         }
+
+        // 2. REPAIR SCRIPT: If any users are missing the 'seq' property, assign them based on ID order
+        const needsRepair = users.some(u => u.seq === undefined);
+        if (needsRepair) {
+            console.log('Institutional Repair: Assigning sequential numbers to existing accounts...');
+            // Sort by ID ascending to find original creation order
+            users.sort((a, b) => {
+                const idA = String(a.uid || a.id || '0');
+                const idB = String(b.uid || b.id || '0');
+                return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
+            });
+            // Assign seq based on sorted index
+            users = users.map((u, index) => ({ ...u, seq: index }));
+        }
+
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(users));
     } catch (e) {
-        console.error('Failed to seed Master Admin:', e);
+        console.error('Failed to initialize user sequences:', e);
     }
 })();
 
-window.passMasterAdmin = function (targetUserId) {
-    const authUser = JSON.parse(sessionStorage.getItem('sigma-authenticated-user') || '{}');
-    const currentUserId = String(authUser.uid || authUser.id || '');
 
-    if (!targetUserId || targetUserId === currentUserId) return;
-
-    window.showUserConfirm(
-        "Transfer Master Ownership",
-        "Are you sure you want to pass your Master Admin status to this user? You will be demoted to a regular Admin.",
-        () => {
-            const users = JSON.parse(localStorage.getItem('sigma-admin-users') || '[]');
-            const currentIndex = users.findIndex(u => String(u.uid || u.id) === currentUserId);
-            const targetIndex = users.findIndex(u => String(u.uid || u.id) === targetUserId);
-
-            if (currentIndex !== -1 && targetIndex !== -1) {
-                // Transfer roles
-                users[targetIndex].role = "Master Admin";
-                users[targetIndex].type = "Master Admin";
-                
-                users[currentIndex].role = "Admin";
-                users[currentIndex].type = "Admin";
-
-                localStorage.setItem('sigma-admin-users', JSON.stringify(users));
-
-                // Update session for the current user
-                authUser.role = "Admin";
-                sessionStorage.setItem('sigma-authenticated-user', JSON.stringify(authUser));
-
-                alert("Master Admin ownership has been transferred. Your session will now reflect your new role.");
-                window.location.reload();
-            }
-        }
-    );
-};
 
 // Global Input Capitalization Logic
 document.addEventListener('input', function (e) {
@@ -154,6 +155,80 @@ function escapeHtml(value) {
 }
 
 const escapeSigmaAiText = escapeHtml;
+
+window.renderPaginationControls = function (containerId, totalItems, state, onPageChange) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    if (totalItems === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    const totalPages = Math.ceil(totalItems / state.itemsPerPage);
+    const startItem = (state.currentPage - 1) * state.itemsPerPage + 1;
+    const endItem = Math.min(state.currentPage * state.itemsPerPage, totalItems);
+
+    let pagesHtml = '';
+
+    // Previous Button
+    pagesHtml += `
+        <button onclick="window.${onPageChange}(${state.currentPage - 1})" 
+            ${state.currentPage === 1 ? 'disabled' : ''}
+            class="w-10 h-10 flex items-center justify-center rounded-full bg-[#15803d] border border-[#15803d] text-white hover:bg-[#166534] transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+            <i class="fa-solid fa-chevron-left text-[10px]"></i>
+        </button>
+    `;
+
+    // Dynamic Page Numbers (Window of 5)
+    let startPage = Math.max(1, state.currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + 4);
+
+    if (endPage - startPage < 4) {
+        startPage = Math.max(1, endPage - 4);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        const isActive = i === state.currentPage;
+        pagesHtml += `
+            <button onclick="window.${onPageChange}(${i})" 
+                class="w-10 h-10 flex items-center justify-center rounded-full border ${isActive ? 'bg-[#15803d] border-[#15803d] text-white font-bold' : 'border-slate-200 text-black hover:bg-slate-50'} transition-all text-xs">
+                ${i}
+            </button>
+        `;
+    }
+
+    // Next Button
+    pagesHtml += `
+        <button onclick="window.${onPageChange}(${state.currentPage + 1})" 
+            ${state.currentPage === totalPages ? 'disabled' : ''}
+            class="w-10 h-10 flex items-center justify-center rounded-full bg-[#15803d] border border-[#15803d] text-white hover:bg-[#166534] transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+    `;
+
+    container.innerHTML = `
+        <div class="flex items-center justify-center gap-2">
+            ${pagesHtml}
+        </div>
+    `;
+};
+
+window.onUserPageChange = function (page) {
+    window.userPaginationState.currentPage = page;
+    renderUserAccountsTable();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+window.onSectionPageChange = function (page) {
+    window.sectionPaginationState.currentPage = page;
+    renderSectionsTable();
+};
+window.onSubjectPageChange = function (page) {
+    window.subjectPaginationState.currentPage = page;
+    renderSubjectsTable();
+};
+
+
 
 window.selectTableRow = function (row) {
     const table = row.closest('table');
@@ -376,40 +451,11 @@ function renderUserAccountsTable() {
     const roleQuery = String(window.userAccountSearchState?.role || '').trim().toLowerCase();
     const statusQuery = String(window.userAccountSearchState?.status || '').trim().toLowerCase();
     const displayUsers = getFilteredUsersBySearch({ id: idQuery, name: nameQuery, role: roleQuery, status: statusQuery });
-    const hasActiveFilters = Boolean(idQuery || nameQuery || roleQuery || statusQuery);
-
-    if (!hasActiveFilters) {
-        tableBody.innerHTML = `
-            <tr id="user-empty-state" class="bg-white">
-                <td colspan="6" class="py-32 text-center">
-                    <div class="flex flex-col items-center justify-center space-y-4 opacity-25">
-                        <i class="fa-solid fa-users text-6xl text-black"></i>
-                        <p class="text-base font-bold text-black font-['Inter']">Search Accounts</p>
-                    </div>
-                </td>
-            </tr>
-        `;
-        return;
-    }
 
     if (displayUsers.length === 0) {
         tableBody.innerHTML = `
             <tr id="user-empty-state" class="bg-white">
-                <td colspan="6" class="py-32 text-center">
-                    <div class="flex flex-col items-center justify-center space-y-4 opacity-25">
-                        <i class="fa-solid fa-magnifying-glass text-6xl text-black"></i>
-                        <p class="text-base font-bold text-black font-['Inter']">No matching accounts found</p>
-                    </div>
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    if (displayUsers.length === 0) {
-        tableBody.innerHTML = `
-            <tr id="user-empty-state" class="bg-white">
-                <td colspan="6" class="py-32 text-center">
+                <td colspan="7" class="py-32 text-center">
                     <div class="flex flex-col items-center justify-center space-y-4 opacity-25">
                         <i class="fa-solid fa-users-viewfinder text-6xl text-black"></i>
                         <p class="text-base font-bold text-black font-['Inter']">No matching accounts found</p>
@@ -417,10 +463,18 @@ function renderUserAccountsTable() {
                 </td>
             </tr>
         `;
+        document.getElementById('user-pagination-container').innerHTML = '';
         return;
     }
 
-    tableBody.innerHTML = displayUsers.map(user => {
+
+
+    const totalItems = displayUsers.length;
+    const startIndex = (window.userPaginationState.currentPage - 1) * window.userPaginationState.itemsPerPage;
+    const paginatedUsers = displayUsers.slice(startIndex, startIndex + window.userPaginationState.itemsPerPage);
+
+    tableBody.innerHTML = paginatedUsers.map((user) => {
+        const rowNumber = user.seq !== undefined ? user.seq : 'N/A';
         const fullName = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim();
         const firstName = user.firstName || fullName.split(' ').filter(Boolean)[0] || 'N/A';
         const lastName = user.lastName || fullName.split(' ').filter(Boolean).slice(1).join(' ') || 'N/A';
@@ -437,6 +491,9 @@ function renderUserAccountsTable() {
 
         return `
             <tr class="transition-colors">
+                <td class="px-8 py-6 text-center">
+                    <div class="text-sm font-medium text-black text-center tracking-wide">${rowNumber}</div>
+                </td>
                 <td class="px-8 py-6 text-center">
                     <div class="text-sm font-medium text-black text-center tracking-wide">${id}</div>
                 </td>
@@ -493,6 +550,27 @@ function renderUserAccountsTable() {
             </tr>
         `;
     }).join('');
+
+    // Fill remaining rows to reach itemsPerPage (20) to keep the table height fixed
+    const itemsPerPage = window.userPaginationState.itemsPerPage;
+    const remainingRows = itemsPerPage - paginatedUsers.length;
+    if (remainingRows > 0) {
+        for (let i = 0; i < remainingRows; i++) {
+            const emptyRow = `
+                <tr class="border-transparent">
+                    <td class="px-8 py-6 text-center"><div class="text-sm">&nbsp;</div></td>
+                    <td class="px-8 py-6 text-center"><div class="text-sm">&nbsp;</div></td>
+                    <td class="px-8 py-6 text-center"><div class="text-sm">&nbsp;</div></td>
+                    <td class="px-8 py-6 text-center"><div class="text-sm">&nbsp;</div></td>
+                    <td class="px-8 py-6 text-center"><div class="text-sm">&nbsp;</div></td>
+                    <td class="px-8 py-6 text-center"><div class="text-sm">&nbsp;</div></td>
+                </tr>
+            `;
+            tableBody.innerHTML += emptyRow;
+        }
+    }
+
+    renderPaginationControls('user-pagination-container', totalItems, window.userPaginationState, 'onUserPageChange');
 }
 
 window.toggleUserActionDropdown = function (userId, event) {
@@ -517,6 +595,49 @@ window.toggleUserActionDropdown = function (userId, event) {
         btn.classList.toggle('active', !isShowing);
     }
 };
+
+window.toggleSectionActionDropdown = function (index, event) {
+    if (event) event.stopPropagation();
+    const menuId = `section-action-menu-${index}`;
+    const btnId = `section-dots-btn-${index}`;
+    const menu = document.getElementById(menuId);
+    const btn = document.getElementById(btnId);
+
+    document.querySelectorAll('.action-dropdown-menu').forEach(m => {
+        if (m.id !== menuId) m.classList.remove('show');
+    });
+    document.querySelectorAll('.action-dots-btn').forEach(b => {
+        if (b.id !== btnId) b.classList.remove('active');
+    });
+
+    if (menu && btn) {
+        const isShowing = menu.classList.contains('show');
+        menu.classList.toggle('show', !isShowing);
+        btn.classList.toggle('active', !isShowing);
+    }
+};
+
+window.toggleSubjectActionDropdown = function (index, event) {
+    if (event) event.stopPropagation();
+    const menuId = `subject-action-menu-${index}`;
+    const btnId = `subject-dots-btn-${index}`;
+    const menu = document.getElementById(menuId);
+    const btn = document.getElementById(btnId);
+
+    document.querySelectorAll('.action-dropdown-menu').forEach(m => {
+        if (m.id !== menuId) m.classList.remove('show');
+    });
+    document.querySelectorAll('.action-dots-btn').forEach(b => {
+        if (b.id !== btnId) b.classList.remove('active');
+    });
+
+    if (menu && btn) {
+        const isShowing = menu.classList.contains('show');
+        menu.classList.toggle('show', !isShowing);
+        btn.classList.toggle('active', !isShowing);
+    }
+};
+
 
 window.editUserPermissions = function (userId) {
     // Set current editing user
@@ -563,9 +684,12 @@ window.editUserPermissions = function (userId) {
             // LOCK LOGIC: 
             // 1. If editing self: lock it.
             // 2. If NOT a Master Admin: lock it.
-            // 3. Only an external Master Admin can toggle someone else's Master status.
+            // 3. Last Standing Rule: If target is Master Admin and only 1 exists, lock it to prevent 0 Master Admins.
             const isSelf = String(authUser.uid || authUser.id || '') === String(userId);
-            const isDisabled = isSelf || !isMaster;
+            const totalMasterAdmins = users.filter(u => normalizeUserRole(u.role) === 'Master Admin').length;
+            const isLastMaster = isTargetMaster && totalMasterAdmins <= 1;
+
+            const isDisabled = isSelf || !isMaster || isLastMaster;
             masterToggle.disabled = isDisabled;
 
             // Update Lock Icon and Design
@@ -579,13 +703,17 @@ window.editUserPermissions = function (userId) {
                 row.style.cursor = isDisabled ? 'not-allowed' : 'pointer';
             }
 
-            // Pass Master Admin logic
-            const passContainer = document.getElementById('perm-role-pass-container');
-            if (passContainer) {
-                // Show only if I'm a Master Admin, editing someone else who is an Admin
-                const canPass = isMaster && !isSelf && targetRole === 'Admin';
-                passContainer.classList.toggle('hidden', !canPass);
+            // Update description based on state
+            const roleDesc = masterToggle.closest('.flex-1')?.querySelector('p');
+            if (roleDesc && isLastMaster) {
+                roleDesc.textContent = "Last remaining Master Admin. Role cannot be revoked.";
+                roleDesc.classList.add('text-red-500');
+            } else if (roleDesc) {
+                roleDesc.textContent = "Full system access with the ability to manage other administrative accounts.";
+                roleDesc.classList.remove('text-red-500');
             }
+
+
         }
     }
 
@@ -597,6 +725,7 @@ window.editUserPermissions = function (userId) {
     const overlay = document.getElementById('user-permissions-overlay');
     if (overlay) {
         overlay.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
         overlay.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -605,6 +734,15 @@ window.editUserPermissions = function (userId) {
 
 window.handleMasterAdminToggle = function (checkbox) {
     const isPromoting = checkbox.checked;
+    const users = getStoredJson(USER_STORAGE_KEY, []);
+    const totalMasterAdmins = users.filter(u => normalizeUserRole(u.role) === 'Master Admin').length;
+
+    // PRE-BLOCK: If demoting and only 1 exists, block it
+    if (!isPromoting && totalMasterAdmins <= 1) {
+        window.showUserConfirm('Action Denied', 'There must be at least one Master Admin in the system. Role revocation denied.', null, true);
+        checkbox.checked = true;
+        return;
+    }
 
     const title = isPromoting ? 'Master Admin Elevation' : 'Master Admin Revocation';
     const desc = isPromoting
@@ -651,7 +789,10 @@ window.handlePermissionsExit = function () {
         if (modal) modal.classList.remove('hidden');
     } else {
         const overlay = document.getElementById('user-permissions-overlay');
-        if (overlay) overlay.classList.add('hidden');
+        if (overlay) {
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
     }
 };
 
@@ -660,7 +801,10 @@ window.confirmPermissionsDiscard = function () {
     const modal = document.getElementById('permissions-discard-modal');
     const overlay = document.getElementById('user-permissions-overlay');
     if (modal) modal.classList.add('hidden');
-    if (overlay) overlay.classList.add('hidden');
+    if (overlay) {
+        overlay.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
 };
 
 window.cancelPermissionsDiscard = function () {
@@ -765,10 +909,7 @@ window.executeDeleteAccount = function () {
 
     // Hide modals and exit profile view
     document.getElementById('delete-account-modal-2').classList.add('hidden');
-    window.switchTab('nav-users-accounts');
-    renderUserAccountsTable();
-
-    alert('Account successfully deleted');
+    window.location.reload();
 };
 
 window.toggleUserLock = function (userId) {
@@ -819,12 +960,13 @@ function getFilteredUsersBySearch(searchState) {
     const idQuery = String(searchState?.id || '').trim().toLowerCase();
     const nameQuery = String(searchState?.name || '').trim().toLowerCase();
     const roleQuery = String(searchState?.role || '').trim().toLowerCase();
+    const statusQuery = String(searchState?.status || '').trim().toLowerCase();
 
     // Get current authenticated user ID to exclude
     const authUser = JSON.parse(sessionStorage.getItem('sigma-authenticated-user') || '{}');
     const authUserId = String(authUser.uid || authUser.id || '');
 
-    return users.filter(user => {
+    const filtered = users.filter(user => {
         const id = String(user.uid || user.id || '');
         const idLower = id.toLowerCase();
 
@@ -838,6 +980,7 @@ function getFilteredUsersBySearch(searchState) {
             user.fullName || [firstName, middleName, lastName].filter(Boolean).join(' ')
         ).trim().toLowerCase();
         const normalizedRole = normalizeUserRole(user.type || user.role || '').toLowerCase();
+        const userStatus = String(user.status || 'Active').toLowerCase();
 
         const matchesId = !idQuery || idLower.includes(idQuery);
         const matchesName = !nameQuery
@@ -845,8 +988,17 @@ function getFilteredUsersBySearch(searchState) {
             || firstName.toLowerCase().includes(nameQuery)
             || lastName.toLowerCase().includes(nameQuery);
         const matchesRole = !roleQuery || normalizedRole === roleQuery;
+        const matchesStatus = !statusQuery || userStatus === statusQuery;
 
-        return matchesId && matchesName && matchesRole;
+        return matchesId && matchesName && matchesRole && matchesStatus;
+    });
+
+    // NEWEST-FIRST SORTING: 
+    // Higher IDs (newest users) always appear at the top as No. 1
+    return filtered.sort((a, b) => {
+        const idA = String(a.uid || a.id || '');
+        const idB = String(b.uid || b.id || '');
+        return idB.localeCompare(idA, undefined, { numeric: true, sensitivity: 'base' });
     });
 }
 
@@ -854,17 +1006,92 @@ window.userAccountSearchState = window.userAccountSearchState || {
     id: '',
     name: '',
     role: '',
-    status: ''
+    status: '',
+    hasSearched: false
 };
 
-window.applyUserAccountSearch = function () {
-    window.userAccountSearchState = {
-        id: String(document.getElementById('user-search-id')?.value || '').trim(),
-        name: String(document.getElementById('user-search-name')?.value || '').trim(),
-        role: normalizeUserRole(document.getElementById('user-search-role')?.value || '')
-    };
-    renderUserAccountsTable();
+window.applyUserAccountSearch = function (isFromButton = false) {
+    const searchBtn = document.querySelector('button[onclick="window.applyUserAccountSearch(true)"]');
+    const tableBody = document.getElementById('userTableBody');
+    const originalContent = searchBtn ? searchBtn.innerHTML : 'Search';
+    
+    // Clear table and show loading to mimic browser "refresh"
+    if (tableBody) {
+        tableBody.innerHTML = `
+            <tr class="bg-white border-none no-stripe">
+                <td colspan="7" class="py-[300px] text-center align-middle">
+                    <div class="flex flex-col items-center justify-center space-y-4">
+                        <i class="fa-solid fa-circle-notch fa-spin text-5xl text-[#15803d]"></i>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Refreshing Workstation...</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    if (searchBtn) {
+        searchBtn.disabled = true;
+        searchBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+    }
+
+    const statusRadio = document.querySelector('input[name="user-status-filter"]:checked');
+    
+    // Simulate refresh delay
+    setTimeout(() => {
+        window.userAccountSearchState = {
+            id: String(document.getElementById('user-search-id')?.value || '').trim(),
+            name: String(document.getElementById('user-search-name')?.value || '').trim(),
+            role: normalizeUserRole(document.getElementById('user-search-role')?.value || ''),
+            status: statusRadio ? statusRadio.value : '',
+            hasSearched: isFromButton ? true : window.userAccountSearchState.hasSearched
+        };
+        window.userPaginationState.currentPage = 1;
+        renderUserAccountsTable();
+        
+        if (searchBtn) {
+            searchBtn.disabled = false;
+            searchBtn.innerHTML = originalContent;
+        }
+
+        if (isFromButton) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, 600);
 };
+
+window.toggleUserFilterDropdown = function (event) {
+    if (event) event.stopPropagation();
+    const dropdown = document.getElementById('user-filter-dropdown');
+    if (!dropdown) return;
+
+    const isShowing = !dropdown.classList.contains('hidden');
+    dropdown.classList.toggle('hidden', isShowing);
+};
+
+window.resetUserFilters = function () {
+    const idInput = document.getElementById('user-search-id');
+    const nameInput = document.getElementById('user-search-name');
+    const roleSelect = document.getElementById('user-search-role');
+    const statusRadios = document.querySelectorAll('input[name="user-status-filter"]');
+
+    if (idInput) idInput.value = '';
+    if (nameInput) nameInput.value = '';
+    if (roleSelect) roleSelect.value = '';
+    if (statusRadios.length > 0) statusRadios[0].checked = true;
+
+    window.applyUserAccountSearch();
+};
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('user-filter-dropdown');
+    if (dropdown && !dropdown.classList.contains('hidden')) {
+        const btn = document.querySelector('[onclick*="toggleUserFilterDropdown"]');
+        if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    }
+});
 
 function bindUserAccountSearch() {
     const idInput = document.getElementById('user-search-id');
@@ -874,6 +1101,12 @@ function bindUserAccountSearch() {
 
     [idInput, nameInput].forEach((input) => {
         if (!input || input.dataset.enterBound === 'true') return;
+
+        // Removed auto-refresh on input as requested
+        // input.addEventListener('input', () => {
+        //     window.applyUserAccountSearch();
+        // });
+
         input.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault();
@@ -882,6 +1115,11 @@ function bindUserAccountSearch() {
         });
         input.dataset.enterBound = 'true';
     });
+
+    if (roleSelect && roleSelect.dataset.changeBound !== 'true') {
+        // roleSelect.addEventListener('change', window.applyUserAccountSearch);
+        roleSelect.dataset.changeBound = 'true';
+    }
 
     if (searchBtn && searchBtn.dataset.searchBound !== 'true') {
         searchBtn.addEventListener('click', window.applyUserAccountSearch);
@@ -1188,9 +1426,9 @@ function updateGlobalSYDisplay() {
             display.textContent = '';
         } else if (anyQuarterStarted && !allQuartersEnded) {
             const quarterText = currentQuarter ? currentQuarter.toUpperCase() : 'TRANSITION';
-            display.textContent = `SY ${yearRange} • ${quarterText}`;
+            display.textContent = `SY ${yearRange}   ${quarterText}`;
         } else if (!anyQuarterStarted) {
-            display.textContent = `SY ${yearRange} • UPCOMING`;
+            display.textContent = `SY ${yearRange}   UPCOMING`;
         } else {
             display.textContent = '';
         }
@@ -1580,7 +1818,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Welcome Banner
     const welcomeName = document.getElementById('welcome-user-firstName');
+    const welcomeRole = document.getElementById('welcome-user-role');
     if (welcomeName) welcomeName.textContent = loggedUser.firstName || 'Firstname';
+    if (welcomeRole) welcomeRole.textContent = normalizeUserRole(loggedUser.role || loggedUser.type || 'Admin');
 
     // Initialize logged-in user avatar in global locations
     const loggedInAvatar = loggedUser.avatar || '';
@@ -2513,8 +2753,18 @@ document.addEventListener('DOMContentLoaded', () => {
             section.classList.add('hidden');
         });
 
+        // Clear new user toast if navigating away from user accounts
+        if (sectionId !== 'users-view') {
+            sessionStorage.removeItem('sigma-new-user-toast');
+            const toast = document.getElementById('new-user-toast-bar');
+            if (toast) toast.remove();
+        }
+
         const targetSection = document.getElementById(sectionId);
         if (targetSection) {
+            // Save tab state for reloads
+            sessionStorage.setItem('sigma-admin-active-tab', JSON.stringify({ sectionId, navId }));
+
             // Reset page residue (clear search inputs and filters)
             const inputs = targetSection.querySelectorAll('input:not([readonly])');
             inputs.forEach(input => {
@@ -2567,6 +2817,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
 
+        if (sectionId === 'dashboard-view') {
+            if (typeof window.updateDashboardUserStats === 'function') {
+                window.updateDashboardUserStats('all');
+            }
+        }
+
         if (headerBrandTitle) {
             if (navId === 'nav-dashboard') {
                 headerBrandTitle.textContent = 'Interface Computer College';
@@ -2598,6 +2854,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tabId === 'nav-users-accounts') sectionId = 'users-view';
         else if (tabId === 'nav-school-profile') sectionId = 'school-profile-view';
         else if (tabId === 'nav-school-year') sectionId = 'school-year-view';
+        else if (tabId === 'nav-settings') {
+            window.showMyProfile();
+            return;
+        }
         else if (tabId.startsWith('nav-settings-')) sectionId = 'settings-view';
         else sectionId = tabId.replace('nav-', '') + '-view';
 
@@ -3394,8 +3654,24 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    window.switchSchoolProfileTab = function () {
-        renderSchoolProfileTab('bio');
+    window.switchSchoolProfileTab = function (tab) {
+        const tabs = ['bio']; // Add more tabs here if needed
+
+        tabs.forEach(t => {
+            const el = document.getElementById('school-tab-' + t);
+            if (!el) return;
+            if (t === tab) {
+                // Active: yellow text, green border, bold
+                el.classList.remove('border-transparent', 'text-slate-400', 'font-normal');
+                el.classList.add('border-[#15803d]', 'text-[#FFD000]', 'font-bold');
+            } else {
+                // Inactive
+                el.classList.remove('border-[#15803d]', 'text-[#FFD000]', 'font-bold');
+                el.classList.add('border-transparent', 'text-slate-400', 'font-normal');
+            }
+        });
+
+        renderSchoolProfileTab(tab);
     };
 
 
@@ -3739,26 +4015,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const userChartCtx = document.getElementById('userDistributionChart');
     let userChart;
 
-    function renderUserChart(data) {
+    function renderUserChart(countsArray) {
         if (!userChartCtx) return;
         if (userChart) userChart.destroy();
+
+        const total = countsArray.reduce((a, b) => a + b, 0);
+        const isEmpty = total === 0;
 
         userChart = new Chart(userChartCtx, {
             type: 'pie',
             data: {
-                labels: ['Students', 'Teachers', 'Admins'],
+                labels: isEmpty ? ['No users yet'] : ['Students', 'Teachers', 'Admins'],
                 datasets: [{
-                    data: data,
-                    backgroundColor: ['#15803d', '#FFD000', '#0f172a'],
+                    data: isEmpty ? [1] : countsArray,
+                    backgroundColor: isEmpty ? ['#e2e8f0'] : ['#15803d', '#FFD000', '#0f172a'],
                     borderWidth: 0,
-                    hoverOffset: 15
+                    hoverOffset: isEmpty ? 0 : 10
                 }]
             },
             options: {
                 layout: { padding: 20 },
                 plugins: {
                     legend: { display: false },
-                    tooltip: { enabled: true }
+                    tooltip: { enabled: !isEmpty }
                 }
             }
         });
@@ -3771,22 +4050,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!subjectChartCtx) return;
         if (subjectChart) subjectChart.destroy();
 
+        const total = data.reduce((a, b) => a + b, 0);
+        const isEmpty = total === 0;
+
         subjectChart = new Chart(subjectChartCtx, {
             type: 'pie',
             data: {
-                labels: ['Core', 'Applied', 'Specialized'],
+                labels: isEmpty ? ['No subjects yet'] : ['Core', 'Applied', 'Specialized'],
                 datasets: [{
-                    data: data,
-                    backgroundColor: ['#15803d', '#FFD000', '#0f172a'],
+                    data: isEmpty ? [1] : data,
+                    backgroundColor: isEmpty ? ['#e2e8f0'] : ['#15803d', '#FFD000', '#0f172a'],
                     borderWidth: 0,
-                    hoverOffset: 15
+                    hoverOffset: isEmpty ? 0 : 15
                 }]
             },
             options: {
                 layout: { padding: 20 },
                 plugins: {
                     legend: { display: false },
-                    tooltip: { enabled: true }
+                    tooltip: { enabled: !isEmpty }
                 }
             }
         });
@@ -3799,22 +4081,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!sectionChartCtx) return;
         if (sectionChart) sectionChart.destroy();
 
+        const total = data.reduce((a, b) => a + b, 0);
+        const isEmpty = total === 0;
+
         sectionChart = new Chart(sectionChartCtx, {
             type: 'pie',
             data: {
-                labels: ['Grade 11', 'Grade 12', 'Specialized'],
+                labels: isEmpty ? ['No sections yet'] : ['Grade 11', 'Grade 12'],
                 datasets: [{
-                    data: data,
-                    backgroundColor: ['#15803d', '#FFD000', '#0f172a'],
+                    data: isEmpty ? [1] : data,
+                    backgroundColor: isEmpty ? ['#e2e8f0'] : ['#15803d', '#FFD000'],
                     borderWidth: 0,
-                    hoverOffset: 15
+                    hoverOffset: isEmpty ? 0 : 15
                 }]
             },
             options: {
                 layout: { padding: 20 },
                 plugins: {
                     legend: { display: false },
-                    tooltip: { enabled: true }
+                    tooltip: { enabled: !isEmpty }
                 }
             }
         });
@@ -3837,45 +4122,61 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    window.updateDashboardUserStats = function (statusFilter = 'all') {
+        if (currentOverviewPage !== 1) return;
+
+        const users = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || '[]');
+        
+        let filteredUsers = users;
+        if (statusFilter === 'active') {
+            filteredUsers = users.filter(u => u.status === 'Active');
+        } else if (statusFilter === 'inactive') {
+            filteredUsers = users.filter(u => u.status === 'Inactive');
+        }
+
+        const counts = {
+            admin: filteredUsers.filter(u => normalizeUserRole(u.role) === 'Admin').length,
+            teacher: filteredUsers.filter(u => normalizeUserRole(u.role) === 'Teacher').length,
+            student: filteredUsers.filter(u => normalizeUserRole(u.role) === 'Student').length
+        };
+
+
+        const adminEl = document.getElementById('count-admins');
+        const teacherEl = document.getElementById('count-teachers');
+        const studentEl = document.getElementById('count-students');
+
+        if (adminEl) adminEl.textContent = counts.admin;
+        if (teacherEl) teacherEl.textContent = counts.teacher;
+        if (studentEl) studentEl.textContent = counts.student;
+
+
+        renderUserChart([counts.student, counts.teacher, counts.admin]);
+
+    };
+
     if (tabOverall) {
         tabOverall.addEventListener('click', () => {
             setActiveTab(tabOverall);
-            if (currentOverviewPage === 1) {
-                document.getElementById('count-students').textContent = '366';
-                document.getElementById('count-teachers').textContent = '47';
-                document.getElementById('count-admins').textContent = '9';
-                renderUserChart([366, 47, 9]);
-            }
+            window.updateDashboardUserStats('all');
         });
     }
 
     if (tabActive) {
         tabActive.addEventListener('click', () => {
             setActiveTab(tabActive);
-            if (currentOverviewPage === 1) {
-                document.getElementById('count-students').textContent = '342';
-                document.getElementById('count-teachers').textContent = '42';
-                document.getElementById('count-admins').textContent = '8';
-                renderUserChart([342, 42, 8]);
-            }
+            window.updateDashboardUserStats('active');
         });
     }
 
     if (tabInactive) {
         tabInactive.addEventListener('click', () => {
             setActiveTab(tabInactive);
-            if (currentOverviewPage === 1) {
-                document.getElementById('count-students').textContent = '24';
-                document.getElementById('count-teachers').textContent = '5';
-                document.getElementById('count-admins').textContent = '1';
-                renderUserChart([24, 5, 1]);
-            }
+            window.updateDashboardUserStats('inactive');
         });
     }
 
-    // ─── USERS OVERVIEW PAGINATION ───────────────────────────────────────
-    let currentOverviewPage = 1;
-    const totalOverviewPages = 3;
+    // Initial call
+    window.updateDashboardUserStats('all');
 
     function updateOverviewPageUI() {
         const titleEl = document.getElementById('overview-header-title');
@@ -3917,11 +4218,13 @@ document.addEventListener('DOMContentLoaded', () => {
         btnPrevPage.addEventListener('click', () => {
             currentOverviewPage = currentOverviewPage > 1 ? currentOverviewPage - 1 : totalOverviewPages;
             updateOverviewPageUI();
+            if (typeof updateOverviewCharts === 'function') updateOverviewCharts();
         });
 
         btnNextPage.addEventListener('click', () => {
             currentOverviewPage = currentOverviewPage < totalOverviewPages ? currentOverviewPage + 1 : 1;
             updateOverviewPageUI();
+            if (typeof updateOverviewCharts === 'function') updateOverviewCharts();
         });
     }
 
@@ -4190,7 +4493,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!filtered.length) {
             feed.innerHTML = `
-                <div class="py-20 flex flex-col items-center justify-center gap-4 bg-white border border-slate-100 rounded-[32px] opacity-40">
+                <div class="py-20 flex flex-col items-center justify-center gap-4 bg-white border border-slate-100 rounded-[32px] standard-panel-shadow opacity-40">
                     <i class="fa-solid fa-bullhorn text-5xl text-black"></i>
                     <p class="text-[10px] font-black uppercase tracking-widest text-black">No active announcements</p>
                 </div>
@@ -4231,7 +4534,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `
                 <article id="${post.id}" 
                          data-original-height="${cardHeight}"
-                         class="bg-white border border-slate-200 rounded-[22px] relative w-full ${cardHeight} overflow-hidden transition-all duration-500 group">
+                         class="bg-white border border-slate-200 rounded-[22px] standard-panel-shadow relative w-full ${cardHeight} overflow-hidden transition-all duration-500 group">
                     
                     <!-- Content Area -->
                     <div class="p-6 pb-[60px] flex flex-col min-w-0">
@@ -4386,9 +4689,41 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     renderAdminAnnouncements();
-    renderUserChart([342, 42, 8]);
-    renderSubjectChart([15, 12, 4]);
-    renderSectionChart([10, 12, 4]);
+
+    // ─── Wire all 3 overview panels to live localStorage data ───────────────
+    function updateOverviewCharts() {
+        // --- Users ---
+        window.updateDashboardUserStats('all');
+
+        // --- Subjects ---
+        const subjects = getStoredJson(SUBJECTS_STORAGE_KEY, []);
+        const coreCount       = subjects.filter(s => (s.type || s.category || '').toLowerCase() === 'core').length;
+        const appliedCount    = subjects.filter(s => (s.type || s.category || '').toLowerCase() === 'applied').length;
+        const specializedCount = subjects.filter(s => (s.type || s.category || '').toLowerCase() === 'specialized').length;
+
+        const coreEl         = document.getElementById('count-core-subjects');
+        const appliedEl      = document.getElementById('count-applied-subjects');
+        const specializedEl  = document.getElementById('count-specialized-subjects');
+        if (coreEl)        coreEl.textContent        = coreCount;
+        if (appliedEl)     appliedEl.textContent     = appliedCount;
+        if (specializedEl) specializedEl.textContent = specializedCount;
+
+        renderSubjectChart([coreCount, appliedCount, specializedCount]);
+
+        // --- Sections ---
+        const sections = getStoredJson(SECTIONS_STORAGE_KEY, []);
+        const grade11Count = sections.filter(s => String(s.gradeLevel || s.grade || '').includes('11')).length;
+        const grade12Count = sections.filter(s => String(s.gradeLevel || s.grade || '').includes('12')).length;
+
+        const g11El = document.getElementById('count-grade11-sections');
+        const g12El = document.getElementById('count-grade12-sections');
+        if (g11El) g11El.textContent = grade11Count;
+        if (g12El) g12El.textContent = grade12Count;
+
+        renderSectionChart([grade11Count, grade12Count]);
+    }
+
+    updateOverviewCharts();
 
     // AI Model Switcher Listeners
     const geminiBtn = document.getElementById('btn-ai-gemini');
@@ -4724,6 +5059,14 @@ const schoolYearSemesterOrder = {
 };
 
 let schoolYearRecords = [];
+let schoolYearPaginationState = { currentPage: 1, itemsPerPage: 20 };
+
+window.onSchoolYearPageChange = function (page) {
+    schoolYearPaginationState.currentPage = page;
+    renderSchoolYearTable();
+    const adminMain = document.getElementById('admin-main');
+    if (adminMain) adminMain.scrollTop = 0;
+};
 
 // Persistence Helpers
 const saveSYToStorage = () => {
@@ -5024,7 +5367,11 @@ const renderSchoolYearTable = () => {
     // Sort by startDate DESCENDING so the latest quarters are on top
     allQuarters.sort((a, b) => new Date(b.start) - new Date(a.start));
 
-    const rows = allQuarters.map((q) => {
+    const totalItems = allQuarters.length;
+    const startIndex = (schoolYearPaginationState.currentPage - 1) * schoolYearPaginationState.itemsPerPage;
+    const paginatedQuarters = allQuarters.slice(startIndex, startIndex + schoolYearPaginationState.itemsPerPage);
+
+    let html = paginatedQuarters.map((q, idx) => {
         let status = 'InActive';
         let statusClass = 'text-red-500';
         let rowClass = '';
@@ -5042,50 +5389,66 @@ const renderSchoolYearTable = () => {
             statusClass = 'text-[#15803d]';
             rowClass = 'bg-green-50/20';
         } else {
-            // Future dates
             status = 'InActive';
             statusClass = 'text-red-500';
             rowClass = '';
         }
 
         return `
-            <tr class="transition-colors border-b border-slate-50 ${rowClass}">
-                <td class="px-4 py-6 text-center">
-                    <div class="text-sm font-medium text-black">${q.yearStart}</div>
+            <tr class="transition-all group cursor-pointer hover:bg-slate-50 ${rowClass}">
+                <td class="px-8 py-6 text-center">
+                    <div class="text-sm font-medium text-black font-['Inter'] tracking-wide">${totalItems - (startIndex + idx)}</div>
                 </td>
-                <td class="px-4 py-6 text-center">
-                    <div class="text-sm font-medium text-black">${q.yearEnd}</div>
+                <td class="px-8 py-6 text-center">
+                    <div class="text-sm font-medium text-black font-['Inter'] tracking-wide">${q.yearStart}</div>
                 </td>
-                <td class="px-4 py-6 text-center">
-                    <div class="text-sm font-medium text-black">${q.name}</div>
+                <td class="px-8 py-6 text-center">
+                    <div class="text-sm font-medium text-black font-['Inter'] tracking-wide">${q.yearEnd}</div>
                 </td>
-                <td class="px-4 py-6 text-center">
-                    <div class="text-sm font-medium text-black">${formatSchoolYearDate(q.start)}</div>
+                <td class="px-8 py-6 text-center">
+                    <div class="text-sm font-medium text-black font-['Inter'] tracking-tight">${q.name}</div>
                 </td>
-                <td class="px-4 py-6 text-center">
-                    <div class="text-sm font-medium text-black">${formatSchoolYearDate(q.end)}</div>
+                <td class="px-8 py-6 text-center">
+                    <div class="text-sm font-medium text-black font-['Inter'] tracking-wide">${formatSchoolYearDate(q.start)}</div>
                 </td>
-                <td class="px-4 py-6 text-center">
-                    <div class="text-sm font-medium ${statusClass}">${status}</div>
+                <td class="px-8 py-6 text-center">
+                    <div class="text-sm font-medium text-black font-['Inter'] tracking-wide">${formatSchoolYearDate(q.end)}</div>
                 </td>
-                <td class="px-4 py-6 text-center">
-                    <div class="flex justify-center items-center">
-                        <button onclick="window.openSYEditor(${q.id})" 
-                            class="w-10 h-10 rounded-full flex items-center justify-center text-black transition-colors group" 
-                            title="Edit School Year">
-                            <i class="fa-regular fa-pen-to-square text-lg group-hover:text-[#FFD000]"></i>
+                <td class="px-8 py-6 text-center">
+                    <div class="text-sm font-medium ${statusClass} font-['Inter'] tracking-wide">${status}</div>
+                </td>
+                <td class="px-8 py-6 text-center">
+                    <div class="flex justify-center">
+                        <button onclick="window.openSYEditor('${q.id}')" class="w-9 h-9 flex items-center justify-center text-black hover:bg-slate-100 rounded-xl transition-all">
+                            <i class="fa-solid fa-pen-to-square"></i>
                         </button>
                     </div>
                 </td>
             </tr>
         `;
-    });
+    }).join('');
 
-    const fillerRows = Array.from({ length: Math.max(0, 8 - rows.length) }, () => (
-        '<tr class="h-16"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'
-    ));
+    // Fill remaining rows to reach itemsPerPage (20) to keep the table height fixed
+    const remainingRows = schoolYearPaginationState.itemsPerPage - paginatedQuarters.length;
+    if (remainingRows > 0) {
+        for (let i = 0; i < remainingRows; i++) {
+            html += `
+                <tr class="border-transparent">
+                    <td class="px-8 py-6 text-center"><div class="text-sm">&nbsp;</div></td>
+                    <td class="px-8 py-6 text-center"><div class="text-sm">&nbsp;</div></td>
+                    <td class="px-8 py-6 text-center"><div class="text-sm">&nbsp;</div></td>
+                    <td class="px-8 py-6 text-center"><div class="text-sm">&nbsp;</div></td>
+                    <td class="px-8 py-6 text-center"><div class="text-sm">&nbsp;</div></td>
+                    <td class="px-8 py-6 text-center"><div class="text-sm">&nbsp;</div></td>
+                    <td class="px-8 py-6 text-center"><div class="text-sm">&nbsp;</div></td>
+                    <td class="px-8 py-6 text-center"><div class="text-sm">&nbsp;</div></td>
+                </tr>
+            `;
+        }
+    }
 
-    tableBody.innerHTML = [...rows, ...fillerRows].join('');
+    tableBody.innerHTML = html;
+    renderPaginationControls('school-year-pagination-container', totalItems, schoolYearPaginationState, 'onSchoolYearPageChange');
     renderSchoolYearSummaryBar();
 };
 
@@ -5627,9 +5990,7 @@ window.deleteSection = function () {
             saveStoredJson(SECTIONS_STORAGE_KEY, newSections);
 
             window.toggleSectionOverlay(false);
-            if (typeof renderSectionsTable === 'function') {
-                renderSectionsTable();
-            }
+            window.location.reload();
         }
     );
 };
@@ -5745,10 +6106,7 @@ window.handleSectionSave = function (status) {
                 saveBtn.disabled = false;
                 loading.classList.add('hidden');
                 window.toggleSectionOverlay(false);
-
-                if (typeof renderSectionsTable === 'function') {
-                    renderSectionsTable();
-                }
+                window.location.reload();
             }, 1500);
         }
     });
@@ -6314,8 +6672,8 @@ window.deleteSubject = function () {
             const subjects = getStoredJson(SUBJECTS_STORAGE_KEY, []);
             const newSubjects = subjects.filter(s => s.code !== code);
             saveStoredJson(SUBJECTS_STORAGE_KEY, newSubjects);
-            renderSubjectsTable();
             window.toggleSubjectOverlay(false);
+            window.location.reload();
         }
     );
 };
@@ -6580,7 +6938,7 @@ window.addSubjectMaterial = function (type, preserveFields = false, editIndex = 
                     </div>
                 </div>
                 
-                <div class="bg-white border border-slate-100 rounded-[40px] p-10 shadow-2xl shadow-slate-200/40 space-y-10">
+                <div class="bg-white border border-slate-100 rounded-[40px] p-10 standard-panel-shadow space-y-10">
                     <div class="grid gap-8">
                         ${topicDropdownHtml}
                         
@@ -6687,7 +7045,7 @@ window.addSubjectMaterial = function (type, preserveFields = false, editIndex = 
                     </div>
                 </div>
                 
-                <div class="bg-white border border-slate-100 rounded-[40px] p-10 shadow-2xl shadow-slate-200/40 space-y-10">
+                <div class="bg-white border border-slate-100 rounded-[40px] p-10 standard-panel-shadow space-y-10">
                     <div class="grid gap-8">
                         ${topicDropdownHtml}
                         
@@ -6815,7 +7173,7 @@ window.addSubjectMaterial = function (type, preserveFields = false, editIndex = 
                     </div>
                 </div>
                 
-                <div class="bg-white border border-slate-100 rounded-[40px] p-10 shadow-2xl shadow-slate-200/40 space-y-10">
+                <div class="bg-white border border-slate-100 rounded-[40px] p-10 standard-panel-shadow space-y-10">
                     <div class="grid gap-8">
                         ${topicDropdownHtml}
                         
@@ -7406,7 +7764,7 @@ window.performQuizMethodSwitch = function (method) {
             const quiz = window.pendingQuizData;
             container.innerHTML = `
                 <div class="space-y-6">
-                    <div class="p-8 bg-white border border-slate-100 rounded-[32px] shadow-xl shadow-slate-200/20 flex items-center gap-6">
+                    <div class="p-8 bg-white border border-slate-100 rounded-[32px] standard-panel-shadow flex items-center gap-6">
                         <div class="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-icc">
                             <i class="fa-solid fa-file-signature text-2xl"></i>
                         </div>
@@ -7462,7 +7820,7 @@ window.performQuizMethodSwitch = function (method) {
             const quiz = window.pendingQuizData;
             container.innerHTML = `
                 <div class="space-y-6">
-                    <div class="p-8 bg-white border border-slate-100 rounded-[32px] shadow-xl shadow-slate-200/20 flex items-center gap-6">
+                    <div class="p-8 bg-white border border-slate-100 rounded-[32px] standard-panel-shadow flex items-center gap-6">
                         <div class="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-icc">
                             <i class="fa-solid fa-bolt-lightning text-2xl"></i>
                         </div>
@@ -7761,7 +8119,7 @@ window.removeQuizChoice = function (qIdx, cIdx) {
 
 window.renderQuizQuestionItem = function (q, idx) {
     return `
-        <div class="bg-white border border-slate-100 rounded-[40px] p-10 shadow-2xl shadow-slate-200/40 space-y-10 relative group">
+        <div class="bg-white border border-slate-100 rounded-[40px] p-10 standard-panel-shadow space-y-10 relative group">
             <button onclick="window.removeQuizQuestion(${idx})" class="absolute top-8 right-8 w-10 h-10 rounded-xl bg-slate-50 text-slate-300 hover:bg-red-50 hover:text-red-500 transition-all flex items-center justify-center">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
@@ -8110,6 +8468,10 @@ window.closeMaterialEditor = function () {
     const editorView = document.getElementById('subject-material-editor-view');
     const globalFooter = document.getElementById('subject-global-footer');
 
+    // Clear video previews to stop audio leaks
+    const videoPreview = document.getElementById('mat-video-preview-container');
+    if (videoPreview) videoPreview.innerHTML = '';
+
     if (mainView && editorView) {
         editorView.classList.add('hidden');
         mainView.classList.remove('hidden');
@@ -8222,7 +8584,7 @@ window.renderSubjectMaterials = function () {
         const cleanTimestamp = material.timestamp.replace(/:\d{2} /, ' ');
 
         return `
-            <div id="material-item-${material.id}" class="group relative bg-white border border-slate-100 rounded-[32px] p-8 shadow-xl shadow-slate-200/20 transition-all hover:shadow-2xl hover:shadow-slate-200/40">
+            <div id="material-item-${material.id}" class="group relative bg-white border border-slate-100 rounded-[32px] p-8 standard-panel-shadow transition-all hover:shadow-2xl hover:shadow-slate-200/40">
                 <!-- Kebab Menu -->
                 <div class="absolute top-6 right-6 z-10">
                     <button onclick="window.toggleMaterialOptions(event, ${idx})" class="w-8 h-8 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-300 hover:text-black transition-all">
@@ -8398,7 +8760,7 @@ window.renderSubjectTopics = function () {
         } else {
             // Saved State: Optimized for wrapping and stretching
             return `
-                <div id="topic-item-${topic.id}" data-id="${topic.id}" class="group relative bg-white border border-slate-100 rounded-[40px] overflow-hidden shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:shadow-slate-300/50 transition-all duration-500 min-h-[180px] cursor-move">
+                <div id="topic-item-${topic.id}" data-id="${topic.id}" class="group relative bg-white border border-slate-100 rounded-[40px] overflow-hidden standard-panel-shadow hover:shadow-2xl hover:shadow-slate-300/50 transition-all duration-500 min-h-[180px] cursor-move">
                     <div class="flex flex-col md:flex-row h-full">
                         <!-- Left: Topic Image -->
                         <div class="md:w-64 shrink-0 overflow-hidden bg-slate-50 border-r border-slate-50">
@@ -8771,25 +9133,24 @@ window.performSubjectSaveAction = function (status) {
             }
 
             saveStoredJson(SUBJECTS_STORAGE_KEY, subjects);
-            renderSubjectsTable();
             window.toggleSubjectOverlay(false);
+            window.location.reload();
         }, 1500);
     }
 };
 
-window.subjectSearchState = window.subjectSearchState || {
-    code: '',
-    name: '',
-    type: ''
-};
+// State already initialized at top of file
 
-window.applySubjectSearch = function () {
+window.applySubjectSearch = function (isFromButton = false) {
     window.subjectSearchState = {
         code: String(document.getElementById('subject-search-code')?.value || '').trim(),
         name: String(document.getElementById('subject-search-name')?.value || '').trim(),
-        type: String(document.getElementById('subject-search-type')?.value || '').trim()
+        type: String(document.getElementById('subject-search-type')?.value || '').trim(),
+        hasSearched: isFromButton ? true : window.subjectSearchState.hasSearched
     };
+    window.subjectPaginationState.currentPage = 1;
     renderSubjectsTable();
+    if (isFromButton) window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 function bindSubjectSearch() {
@@ -8803,7 +9164,7 @@ function bindSubjectSearch() {
             input.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter') {
                     event.preventDefault();
-                    window.applySubjectSearch();
+                    window.applySubjectSearch(true);
                 }
             });
             input.dataset.enterBound = 'true';
@@ -8811,25 +9172,28 @@ function bindSubjectSearch() {
     });
 
     if (typeSelect && typeSelect.dataset.changeBound !== 'true') {
-        // Removed auto-search on change as requested by user
         typeSelect.dataset.changeBound = 'true';
     }
 
     if (searchBtn && searchBtn.dataset.searchBound !== 'true') {
-        searchBtn.addEventListener('click', window.applySubjectSearch);
+        searchBtn.addEventListener('click', () => window.applySubjectSearch(true));
         searchBtn.dataset.searchBound = 'true';
     }
 }
 
 // --- SECTIONS SEARCH LOGIC ---
 
-window.applySectionSearch = function () {
+// State already initialized at top of file
+window.applySectionSearch = function (isFromButton = false) {
     window.sectionSearchState = {
         name: String(document.getElementById('section-search-name')?.value || '').trim(),
         room: String(document.getElementById('section-search-room')?.value || '').trim(),
-        grade: String(document.getElementById('section-search-grade')?.value || '').trim()
+        grade: String(document.getElementById('section-search-grade')?.value || '').trim(),
+        hasSearched: isFromButton ? true : window.sectionSearchState.hasSearched
     };
+    window.sectionPaginationState.currentPage = 1;
     renderSectionsTable();
+    if (isFromButton) window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 function bindSectionSearch() {
@@ -8843,15 +9207,19 @@ function bindSectionSearch() {
             input.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter') {
                     event.preventDefault();
-                    window.applySectionSearch();
+                    window.applySectionSearch(true);
                 }
             });
             input.dataset.enterBound = 'true';
         }
     });
 
+    if (gradeSelect && gradeSelect.dataset.changeBound !== 'true') {
+        gradeSelect.dataset.changeBound = 'true';
+    }
+
     if (searchBtn && searchBtn.dataset.searchBound !== 'true') {
-        searchBtn.addEventListener('click', window.applySectionSearch);
+        searchBtn.addEventListener('click', () => window.applySectionSearch(true));
         searchBtn.dataset.searchBound = 'true';
     }
 }
@@ -8875,76 +9243,108 @@ function renderSectionsTable() {
     if (!tableBody) return;
 
     const displaySections = getFilteredSectionsBySearch(window.sectionSearchState);
-    const hasActiveFilters = Boolean(window.sectionSearchState.name || window.sectionSearchState.room || window.sectionSearchState.grade);
 
-    if (!hasActiveFilters) {
-        tableBody.innerHTML = `
-            <tr id="section-empty-state" class="bg-white">
-                <td colspan="9" class="py-32 text-center">
-                    <div class="flex flex-col items-center justify-center space-y-4 opacity-25">
-                        <i class="fa-solid fa-layer-group text-6xl text-black"></i>
-                        <p class="text-base font-bold text-black font-['Inter']">Search Sections</p>
-                    </div>
-                </td>
-            </tr>
-        `;
-        return;
-    }
+    const totalItems = displaySections.length;
+    const startIndex = (window.sectionPaginationState.currentPage - 1) * window.sectionPaginationState.itemsPerPage;
+    const paginatedSections = displaySections.slice(startIndex, startIndex + window.sectionPaginationState.itemsPerPage);
 
     if (displaySections.length === 0) {
-        tableBody.innerHTML = `
-            <tr class="bg-white">
-                <td colspan="9" class="py-32 text-center">
-                    <div class="flex flex-col items-center justify-center space-y-4 opacity-25">
-                        <i class="fa-solid fa-layer-group text-6xl text-black"></i>
-                        <p class="text-base font-bold text-black font-['Inter']">No Matching Found</p>
-                    </div>
-                </td>
-            </tr>
-        `;
-        return;
+        if (window.sectionSearchState.hasSearched) {
+            tableBody.innerHTML = `
+                <tr id="section-empty-state">
+                    <td colspan="10" class="py-[400px] text-center bg-white">
+                        <div class="flex flex-col items-center justify-center space-y-4 opacity-25">
+                            <i class="fa-solid fa-layer-group text-6xl text-black"></i>
+                            <p class="text-base font-bold text-black font-['Inter']">No Matching Found</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        } else {
+            tableBody.innerHTML = '';
+        }
+    } else {
+        tableBody.innerHTML = paginatedSections.map((sec, idx) => {
+            const isDraft = sec.status === 'Draft';
+            const statusColor = isDraft ? 'text-red-600' : 'text-[#15803d]';
+            return `
+                <tr class="transition-all group cursor-pointer hover:bg-slate-50">
+                    <td class="px-8 py-6 text-center">
+                        <div class="text-sm font-medium text-black font-['Inter'] tracking-wide">${startIndex + idx + 1}</div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="text-sm font-medium text-black font-['Inter'] tracking-tight">${escapeHtml(sec.name)}</div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="text-sm font-medium text-black font-['Inter'] tracking-tight">${escapeHtml(sec.gradeLevel || sec.grade)}</div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="text-sm font-medium text-black font-['Inter'] tracking-tight">${escapeHtml(sec.subject)}</div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="text-sm font-medium text-black font-['Inter'] tracking-tight">${escapeHtml(sec.teacher)}</div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="text-sm font-medium text-black font-['Inter'] tracking-tight">${escapeHtml(sec.room)}</div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="text-sm font-medium text-black font-['Inter'] tracking-wide">${sec.studentsCount || 0}</div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="text-sm font-medium text-black font-['Inter'] tracking-wide">${escapeHtml(sec.schoolYear || '—')}</div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="text-sm font-medium ${statusColor} font-['Inter'] tracking-wide">
+                            ${sec.status || 'Active'}
+                        </div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="flex justify-center">
+                            <div class="action-dropdown-container">
+                                <button onclick="window.toggleSectionActionDropdown(${startIndex + idx}, event)" 
+                                    id="section-dots-btn-${startIndex + idx}"
+                                    class="action-dots-btn" 
+                                    title="Actions">
+                                    <i class="fa-solid fa-ellipsis"></i>
+                                </button>
+                                <div id="section-action-menu-${startIndex + idx}" class="action-dropdown-menu">
+                                    <button onclick="window.editSection('${escapeHtml(sec.name)}')" class="action-dropdown-item">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                        <span>Edit Section</span>
+                                    </button>
+                                    <div class="h-px bg-slate-100 my-1"></div>
+                                    <button onclick="window.deleteSection('${escapeHtml(sec.name)}')" class="action-dropdown-item text-red-600">
+                                        <i class="fa-solid fa-trash-can text-red-600"></i>
+                                        <span>Delete Section</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
     }
 
-    tableBody.innerHTML = displaySections.map(sec => `
-        <tr class="hover:bg-slate-50 transition-all group cursor-pointer" onclick="if(window.editSection) window.editSection('${sec.id}')">
-            <td class="px-6 py-5">
-                <span class="text-[13px] text-black font-['Inter']">${escapeHtml(sec.name)}</span>
-            </td>
-            <td class="px-6 py-5 text-center">
-                <span class="text-[12px] text-black font-['Inter']">
-                    ${escapeHtml(sec.grade)}
-                </span>
-            </td>
-            <td class="px-6 py-5">
-                <span class="text-[12px] text-black font-['Inter']">${escapeHtml(sec.subject)}</span>
-            </td>
-            <td class="px-6 py-5">
-                <span class="text-[12px] text-black font-['Inter']">${escapeHtml(sec.teacher)}</span>
-            </td>
-            <td class="px-6 py-5 text-center">
-                <span class="text-[12px] text-black font-['Inter']">${escapeHtml(sec.room)}</span>
-            </td>
-            <td class="px-6 py-5 text-center">
-                <span class="text-[12px] text-black font-['Inter']">${sec.studentsCount || 0}</span>
-            </td>
-            <td class="px-6 py-5 text-center">
-                <span class="text-[12px] text-black font-['Inter']">${escapeHtml(sec.schoolYear || '—')}</span>
-            </td>
-            <td class="px-6 py-5 text-center">
-                <span class="text-[12px] font-medium ${sec.status === 'Deployed' ? 'text-[#15803d]' : 'text-red-500'} font-['Inter']">
-                    ${sec.status === 'Deployed' ? 'Deployed' : 'Draft'}
-                </span>
-            </td>
-            <td class="px-6 py-5 text-right">
-                <div class="flex justify-end">
-                    <button class="w-8 h-8 hover:bg-slate-200 rounded-full flex items-center justify-center transition-all group/btn">
-                        <i class="fa-solid fa-pen-to-square text-black group-hover/btn:text-[#FFD000] text-sm transition-colors"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
+    const itemsPerPage = window.sectionPaginationState.itemsPerPage || 20;
+    // If no match found, the message row itself takes up the whole space (currentRowsCount = itemsPerPage)
+    const currentRowsCount = (displaySections.length === 0 && window.sectionSearchState.hasSearched) ? itemsPerPage : paginatedSections.length;
+    const remainingRows = itemsPerPage - currentRowsCount;
+    
+    if (remainingRows > 0) {
+        for (let i = 0; i < remainingRows; i++) {
+            const emptyRow = `
+                <tr>
+                    <td colspan="10" class="px-6 py-5 text-center">&nbsp;</td>
+                </tr>
+            `;
+            tableBody.innerHTML += emptyRow;
+        }
+    }
+
+    renderPaginationControls('section-pagination-container', totalItems, window.sectionPaginationState, 'onSectionPageChange');
 }
+
 
 function getFilteredSubjectsBySearch(searchState) {
     const subjects = getStoredJson(SUBJECTS_STORAGE_KEY, []);
@@ -8965,79 +9365,109 @@ function renderSubjectsTable() {
     if (!tableBody) return;
 
     const displaySubjects = getFilteredSubjectsBySearch(window.subjectSearchState);
-    const hasActiveFilters = Boolean(window.subjectSearchState.code || window.subjectSearchState.name || window.subjectSearchState.type);
 
-    if (!hasActiveFilters) {
-        tableBody.innerHTML = `
-            <tr id="subject-empty-state" class="bg-white">
-                <td colspan="7" class="py-32 text-center">
-                    <div class="flex flex-col items-center justify-center space-y-4 opacity-25">
-                        <i class="fa-solid fa-book-open text-6xl text-black"></i>
-                        <p class="text-base font-bold text-black font-['Inter']">Search Subjects</p>
-                    </div>
-                </td>
-            </tr>
-        `;
-        return;
-    }
+    const totalItems = displaySubjects.length;
+    const startIndex = (window.subjectPaginationState.currentPage - 1) * window.subjectPaginationState.itemsPerPage;
+    const paginatedSubjects = displaySubjects.slice(startIndex, startIndex + window.subjectPaginationState.itemsPerPage);
 
     if (displaySubjects.length === 0) {
-        tableBody.innerHTML = `
-            <tr id="subject-empty-state" class="bg-white">
-                <td colspan="7" class="py-32 text-center">
-                    <div class="flex flex-col items-center justify-center space-y-4 opacity-25">
-                        <i class="fa-solid fa-magnifying-glass text-6xl text-black"></i>
-                        <p class="text-base font-bold text-black font-['Inter']">No matching subjects found</p>
-                    </div>
-                </td>
-            </tr>
-        `;
-        return;
+        if (window.subjectSearchState.hasSearched) {
+            tableBody.innerHTML = `
+                <tr id="subject-empty-state">
+                    <td colspan="7" class="py-[400px] text-center bg-white">
+                        <div class="flex flex-col items-center justify-center space-y-4 opacity-25">
+                            <i class="fa-solid fa-magnifying-glass text-6xl text-black"></i>
+                            <p class="text-base font-bold text-black font-['Inter']">No matching subjects found</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        } else {
+            tableBody.innerHTML = '';
+        }
+    } else {
+        tableBody.innerHTML = paginatedSubjects.map((sub, idx) => {
+            const isDraft = sub.status === 'Draft';
+            const statusColor = isDraft ? 'text-red-600' : 'text-[#15803d]';
+
+            // Mapping for Type
+            let typeDisplay = sub.type;
+            if (sub.type.toLowerCase() === 'core') typeDisplay = 'Core Subject';
+            else if (sub.type.toLowerCase() === 'applied') typeDisplay = 'Applied Subject';
+            else if (sub.type.toLowerCase() === 'specialized') typeDisplay = 'Specialized Subject';
+
+            // Format units to always have .0 if integer
+            let unitsDisplay = String(sub.units || '0');
+            if (!unitsDisplay.includes('.')) unitsDisplay += '.0';
+
+            return `
+                <tr class="transition-colors hover:bg-slate-50">
+                    <td class="px-8 py-6 text-center">
+                        <div class="text-sm font-medium text-black font-['Inter'] tracking-wide">${startIndex + idx + 1}</div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="text-sm font-medium text-black font-['Inter'] tracking-wide leading-relaxed">${sub.code}</div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="text-sm font-medium text-black font-['Inter'] tracking-tight leading-relaxed">${escapeHtml(sub.name)}</div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="text-sm font-medium text-black font-['Inter'] tracking-tight leading-relaxed">${typeDisplay}</div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="text-sm font-medium text-black font-['Inter'] tracking-wide leading-relaxed">${unitsDisplay}</div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="text-sm font-medium ${statusColor} font-['Inter'] tracking-wide leading-relaxed">
+                            ${sub.status || 'Active'}
+                        </div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="flex justify-center">
+                            <div class="action-dropdown-container">
+                                <button onclick="window.toggleSubjectActionDropdown(${startIndex + idx}, event)" 
+                                    id="subject-dots-btn-${startIndex + idx}"
+                                    class="action-dots-btn" 
+                                    title="Actions">
+                                    <i class="fa-solid fa-ellipsis"></i>
+                                </button>
+                                <div id="subject-action-menu-${startIndex + idx}" class="action-dropdown-menu">
+                                    <button onclick="window.editSubject('${sub.code}')" class="action-dropdown-item">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                        <span>Edit Subject</span>
+                                    </button>
+                                    <div class="h-px bg-slate-100 my-1"></div>
+                                    <button onclick="window.deleteSubject('${sub.code}')" class="action-dropdown-item text-red-600">
+                                        <i class="fa-solid fa-trash-can text-red-600"></i>
+                                        <span>Delete Subject</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
     }
 
-    tableBody.innerHTML = displaySubjects.map(sub => {
-        const isDraft = sub.status === 'Draft';
-        const statusColor = isDraft ? 'text-red-600' : 'text-[#15803d]';
+    // Fill remaining rows to reach itemsPerPage (20) to keep the table height fixed
+    const itemsPerPage = window.subjectPaginationState.itemsPerPage || 20;
+    // If no match found, the message row itself takes up the whole space (currentRowsCount = itemsPerPage)
+    const currentRowsCount = (displaySubjects.length === 0 && window.subjectSearchState.hasSearched) ? itemsPerPage : paginatedSubjects.length;
+    const remainingRows = itemsPerPage - currentRowsCount;
+    
+    if (remainingRows > 0) {
+        for (let i = 0; i < remainingRows; i++) {
+            const emptyRow = `
+                <tr>
+                    <td colspan="7" class="px-8 py-6 text-center">&nbsp;</td>
+                </tr>
+            `;
+            tableBody.innerHTML += emptyRow;
+        }
+    }
 
-        // Mapping for Type
-        let typeDisplay = sub.type;
-        if (sub.type.toLowerCase() === 'core') typeDisplay = 'Core Subject';
-        else if (sub.type.toLowerCase() === 'applied') typeDisplay = 'Applied Subject';
-        else if (sub.type.toLowerCase() === 'specialized') typeDisplay = 'Specialized Subject';
-
-        // Format units to always have .0 if integer
-        let unitsDisplay = String(sub.units || '0');
-        if (!unitsDisplay.includes('.')) unitsDisplay += '.0';
-
-        return `
-            <tr class="transition-colors">
-                <td class="px-8 py-6 text-center">
-                    <div class="text-[11px] font-medium text-black uppercase tracking-widest leading-relaxed">${sub.code}</div>
-                </td>
-                <td class="px-8 py-6 text-center">
-                    <div class="text-[11px] font-medium text-black tracking-widest leading-relaxed">${escapeHtml(sub.name)}</div>
-                </td>
-                <td class="px-8 py-6 text-center">
-                    <div class="text-[11px] font-medium text-black tracking-widest leading-relaxed">${typeDisplay}</div>
-                </td>
-                <td class="px-8 py-6 text-center">
-                    <div class="text-[11px] font-medium text-black tracking-widest leading-relaxed">${unitsDisplay}</div>
-                </td>
-                <td class="px-8 py-6 text-center">
-                    <div class="text-[11px] font-bold ${statusColor} tracking-widest leading-relaxed">
-                        ${sub.status || 'Active'}
-                    </div>
-                </td>
-                <td class="px-8 py-6 text-center">
-                    <div class="flex justify-center">
-                        <button onclick="window.editSubject('${sub.code}')" class="text-black transition-colors group">
-                            <i class="fa-regular fa-pen-to-square text-lg group-hover:text-[#FFD000]"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }).join('');
+    renderPaginationControls('subject-pagination-container', totalItems, window.subjectPaginationState, 'onSubjectPageChange');
 }
 
 // =============================================================
@@ -9053,7 +9483,7 @@ function normalizeUserRole(role) {
     if (value === 'admin') return 'Admin';
     if (value === 'teacher') return 'Teacher';
     if (value === 'student') return 'Student';
-    if (value === 'head admin' || value === 'master admin') return 'Master Admin';
+    if (value === 'head admin' || value === 'master admin' || value === 'super admin' || value === 'super administrator') return 'Master Admin';
     return role || '';
 }
 
@@ -9170,6 +9600,8 @@ window.populateUserProfilePage = function () {
     // Update user role and ID
     const roleEl = document.getElementById('view-user-role');
     if (roleEl) roleEl.textContent = userData.role || 'Unknown Role';
+    const sidebarRoleEl = document.getElementById('view-user-sidebar-role');
+    if (sidebarRoleEl) sidebarRoleEl.textContent = userData.role || 'Admin';
     const idEl = document.getElementById('view-user-id');
     if (idEl) idEl.textContent = `ID: ${userData.id || '0000000'}`;
 
@@ -9555,22 +9987,23 @@ document.addEventListener('click', (e) => {
 window.showMyProfile = function (event) {
     if (event) event.preventDefault();
 
-    // Load logged-in user profile data
+    // Load logged-in user profile data from session first (actual logged user)
+    const authUser = JSON.parse(sessionStorage.getItem('sigma-authenticated-user') || '{}');
     const userProfile = JSON.parse(localStorage.getItem('sigma_user_profile') || '{}');
+    const loggedUser = { ...userProfile, ...authUser };
 
-    // Simulate current logged in user data (fallback to defaults if not in storage)
     window.currentUserProfileData = {
-        id: userProfile.id || '0000000',
-        firstName: userProfile.firstName || 'Firstname',
-        lastName: userProfile.lastName || 'Lastname',
-        email: userProfile.email || 'example@gmail.com',
-        phone: userProfile.phone || '09123456789',
-        address: userProfile.address || 'Manila, Philippines',
-        role: userProfile.role || 'Super Administrator',
-        gender: userProfile.gender || 'Male',
-        schoolBranch: userProfile.schoolBranch || 'Main Campus',
-        bios: userProfile.bios || [],
-        avatar: userProfile.avatar || ''
+        id: loggedUser.uid || loggedUser.id || '0000000',
+        firstName: loggedUser.firstName || 'Firstname',
+        lastName: loggedUser.lastName || 'Lastname',
+        email: loggedUser.email || 'example@gmail.com',
+        phone: loggedUser.phone || '09123456789',
+        address: loggedUser.address || 'Manila, Philippines',
+        role: loggedUser.role || 'Master Admin',
+        gender: loggedUser.gender || 'Male',
+        schoolBranch: loggedUser.schoolBranch || 'Main Campus',
+        bios: loggedUser.bios || [],
+        avatar: loggedUser.avatar || ''
     };
 
     // Hide all header panels
@@ -9867,7 +10300,7 @@ window.generateUserId = function (role) {
         : '01';
 
     // RR — role code
-    const roleCode = role === 'Admin' ? '01' : role === 'Teacher' ? '02' : '03';
+    const roleCode = role === 'Master Admin' ? '00' : role === 'Admin' ? '01' : role === 'Teacher' ? '02' : '03';
 
     // S — sequential (peek: what the NEXT number will be, without committing yet)
     const seq = window.peekUserSeq(role);
@@ -9952,7 +10385,9 @@ window.handleUserSave = function () {
             const branch = branchEl ? branchEl.value : 'Main Campus';
 
             let defaultPerms = { bio: true, achievements: false, subjects: false, sections: false };
-            if (role === 'Teacher') {
+            if (role === 'Master Admin') {
+                defaultPerms = { bio: true, achievements: true, subjects: true, sections: true };
+            } else if (role === 'Teacher') {
                 defaultPerms = { bio: true, achievements: false, subjects: true, sections: true };
             } else if (role === 'Student') {
                 defaultPerms = { bio: true, achievements: true, subjects: true, sections: true };
@@ -9987,6 +10422,11 @@ window.handleUserSave = function () {
                 // Add new user
                 userData.createdAt = new Date().toISOString();
                 userData.createdVia = 'admin-panel';
+                
+                // Calculate sequential number (highest seq + 1)
+                const maxSeq = users.reduce((max, u) => Math.max(max, u.seq || 0), -1);
+                userData.seq = maxSeq + 1;
+                
                 users.unshift(userData);
 
                 // Commit the sequential counter for this role (only for new users)
@@ -9996,6 +10436,14 @@ window.handleUserSave = function () {
             }
 
             saveStoredJson(USER_STORAGE_KEY, users);
+
+            // Save info for the notification bar (only for new users)
+            if (!window.isEditingUser) {
+                sessionStorage.setItem('sigma-new-user-toast', JSON.stringify({
+                    id: userData.id,
+                    name: `${userData.firstName} ${userData.lastName}`
+                }));
+            }
 
             // After saving, move to Step 3 (Success Screen)
             userStep = 3;
@@ -10029,6 +10477,11 @@ window.sendCredentialsViaGmail = function () {
 
 window.handleUserSaveAndClose = function () {
     window.handleUserSave();
+};
+
+window.finishUserCreation = function () {
+    window.toggleUserOverlay(false);
+    window.location.reload();
 };
 
 window.downloadUserCredentialsTXT = function () {
@@ -10694,69 +11147,118 @@ document.addEventListener('DOMContentLoaded', () => {
     initMaterialLimits();
 
     // --- AI API KEY VAULT LOGIC ---
-    let INSTITUTIONAL_PASS = localStorage.getItem('sigma-api-vault-pass') || "sigma2024";
+    // Perform a one-time reset as requested by user
+    localStorage.removeItem('sigma-api-vault-pass');
+    localStorage.removeItem('sigma-api-keys');
+
+    let INSTITUTIONAL_PASS = "";
+    let currentVaultId = null;
+    let originalKeys = {};
 
     window.triggerVault = function (id) {
-        const gate = document.getElementById(`gate-${id}`);
-        const btn = document.getElementById(`btn-vault-${id}`);
+        currentVaultId = id;
+        const overlay = document.getElementById('vault-unlock-overlay');
+        const passInput = document.getElementById('vault-auth-pass');
+        const errorText = document.getElementById('vault-auth-error');
 
-        if (!gate || !btn) return;
-
-        btn.classList.add('hidden');
-        gate.classList.remove('hidden');
-
-        const passInput = document.getElementById(`pass-${id}`);
-        const errorText = document.getElementById(`error-${id}`);
-        if (passInput) passInput.value = '';
-        if (errorText) errorText.classList.add('hidden');
-        if (passInput) passInput.focus();
-    };
-
-    window.closeVault = function (id) {
-        const gate = document.getElementById(`gate-${id}`);
-        const btn = document.getElementById(`btn-vault-${id}`);
-        const keyField = document.getElementById(`key-field-${id}`);
-
-        if (!gate || !btn) return;
-
-        gate.classList.add('hidden');
-        if (keyField && keyField.classList.contains('hidden')) {
-            btn.classList.remove('hidden');
+        if (overlay) {
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Lock scroll
+            if (passInput) {
+                passInput.value = '';
+                passInput.focus();
+            }
+            if (errorText) errorText.classList.add('hidden');
         }
     };
 
-    window.verifyVault = function (id) {
-        const passInput = document.getElementById(`pass-${id}`);
-        const errorText = document.getElementById(`error-${id}`);
-        const gate = document.getElementById(`gate-${id}`);
-        const keyField = document.getElementById(`key-field-${id}`);
-        const mask = document.getElementById(`mask-${id}`);
-        const changePassBtn = document.getElementById(`btn-change-pass-${id}`);
+    window.closeVaultModal = function () {
+        const overlay = document.getElementById('vault-unlock-overlay');
+        if (overlay) {
+            overlay.classList.add('hidden');
+            document.body.style.overflow = ''; // Unlock scroll
+        }
+        currentVaultId = null;
+    };
 
-        if (!passInput || !errorText || !gate || !keyField) return;
+    window.verifyVaultModal = function () {
+        if (!currentVaultId) return;
+
+        const passInput = document.getElementById('vault-auth-pass');
+        const errorText = document.getElementById('vault-auth-error');
+        const keyField = document.getElementById(`key-field-${currentVaultId}`);
+        const keyInput = document.getElementById(`api-key-${currentVaultId}`);
+        const mask = document.getElementById(`mask-${currentVaultId}`);
+        const btn = document.getElementById(`btn-vault-${currentVaultId}`);
+
+        if (!passInput) return;
 
         if (passInput.value === INSTITUTIONAL_PASS) {
-            gate.classList.add('hidden');
-            keyField.classList.remove('hidden');
-            if (changePassBtn) changePassBtn.classList.remove('hidden');
+            if (keyInput) originalKeys[currentVaultId] = keyInput.value;
+
+            window.closeVaultModal();
+            if (keyField) keyField.classList.remove('hidden');
+            if (btn) btn.classList.add('hidden');
             if (mask) {
                 mask.textContent = "DECRYPTED ACCESS";
                 mask.classList.replace('text-slate-200', 'text-green-500');
             }
+            if (window.showToast) window.showToast(`${currentVaultId.toUpperCase()} Vault Unlocked`);
         } else {
-            errorText.classList.remove('hidden');
+            if (errorText) errorText.classList.remove('hidden');
             passInput.classList.add('border-red-500');
             setTimeout(() => passInput.classList.remove('border-red-500'), 2000);
         }
     };
 
-    window.triggerPasswordChange = function (id) {
-        const changeGate = document.getElementById(`change-gate-${id}`);
+    window.saveKeyField = function (id) {
+        const keyInput = document.getElementById(`api-key-${id}`);
         const keyField = document.getElementById(`key-field-${id}`);
-        if (changeGate) {
-            changeGate.classList.remove('hidden');
-            if (keyField) keyField.classList.add('hidden');
-            const input = document.getElementById(`new-pass-${id}`);
+        const btn = document.getElementById(`btn-vault-${id}`);
+        const mask = document.getElementById(`mask-${id}`);
+
+        if (!keyInput) return;
+
+        const saved = localStorage.getItem('sigma-api-keys');
+        let keys = saved ? JSON.parse(saved) : {};
+        keys[id] = keyInput.value;
+        localStorage.setItem('sigma-api-keys', JSON.stringify(keys));
+
+        if (keyField) keyField.classList.add('hidden');
+        if (btn) btn.classList.remove('hidden');
+        if (mask) {
+            mask.textContent = "••••••••••••••••";
+            mask.classList.replace('text-green-500', 'text-slate-200');
+        }
+
+        if (window.showToast) window.showToast(`${id.toUpperCase()} Key Saved Successfully`);
+    };
+
+    window.cancelKeyField = function (id) {
+        const keyInput = document.getElementById(`api-key-${id}`);
+        const keyField = document.getElementById(`key-field-${id}`);
+        const btn = document.getElementById(`btn-vault-${id}`);
+        const mask = document.getElementById(`mask-${id}`);
+
+        if (keyInput && originalKeys[id] !== undefined) {
+            keyInput.value = originalKeys[id];
+        }
+
+        if (keyField) keyField.classList.add('hidden');
+        if (btn) btn.classList.remove('hidden');
+        if (mask) {
+            mask.textContent = "••••••••••••••••";
+            mask.classList.replace('text-green-500', 'text-slate-200');
+        }
+    };
+
+    window.triggerPasswordChange = function (id) {
+        currentVaultId = id;
+        const overlay = document.getElementById('vault-password-edit-overlay');
+        const input = document.getElementById('new-vault-password');
+        if (overlay) {
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Lock scroll
             if (input) {
                 input.value = '';
                 input.focus();
@@ -10764,23 +11266,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.closePasswordChange = function (id) {
-        const changeGate = document.getElementById(`change-gate-${id}`);
-        const keyField = document.getElementById(`key-field-${id}`);
-        if (changeGate) changeGate.classList.add('hidden');
-        if (keyField) keyField.classList.remove('hidden');
+    window.closePasswordChange = function () {
+        const overlay = document.getElementById('vault-password-edit-overlay');
+        if (overlay) {
+            overlay.classList.add('hidden');
+            document.body.style.overflow = ''; // Unlock scroll
+        }
     };
 
-    window.updateVaultPassword = function (id) {
-        const input = document.getElementById(`new-pass-${id}`);
+    window.updateVaultPassword = function () {
+        const input = document.getElementById('new-vault-password');
+        const btn = document.getElementById('vault-password-save-btn');
+        const label = document.getElementById('vault-password-save-label');
+        const loading = document.getElementById('vault-password-save-loading');
+
         if (!input || !input.value.trim()) return;
 
-        INSTITUTIONAL_PASS = input.value.trim();
-        localStorage.setItem('sigma-api-vault-pass', INSTITUTIONAL_PASS);
+        const pass = input.value.trim();
+        if (pass.length > 30) return;
 
-        window.closePasswordChange(id);
-        if (window.showToast) window.showToast('Institutional Password Updated');
-        else alert('Institutional Password Updated Globally');
+        if (btn) btn.disabled = true;
+        if (label) label.textContent = 'Updating...';
+        if (loading) loading.classList.remove('hidden');
+
+        setTimeout(() => {
+            INSTITUTIONAL_PASS = pass;
+            localStorage.setItem('sigma-api-vault-pass', INSTITUTIONAL_PASS);
+
+            if (btn) btn.disabled = false;
+            if (label) label.textContent = 'Update Global Password';
+            if (loading) loading.classList.add('hidden');
+
+            window.closePasswordChange();
+            if (window.showToast) window.showToast('Institutional Password Updated Successfully');
+            else alert('Institutional Password Updated Successfully');
+        }, 800);
     };
 
     window.saveApiKeys = function () {
@@ -10801,16 +11321,30 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             btn.disabled = false;
             btn.innerHTML = '<span>Vault Synchronized</span>';
-            btn.classList.replace('bg-[#15803d]', 'bg-black');
+            btn.classList.add('bg-black');
+            btn.classList.remove('bg-[#15803d]');
 
             setTimeout(() => {
                 btn.innerHTML = originalText;
-                btn.classList.replace('bg-black', 'bg-[#15803d]');
+                btn.classList.add('bg-[#15803d]');
+                btn.classList.remove('bg-black');
             }, 2000);
 
             if (window.showToast) window.showToast('API Vault Synchronized Successfully');
         }, 1000);
     };
+
+    function initApiVault() {
+        const saved = localStorage.getItem('sigma-api-keys');
+        if (saved) {
+            const keys = JSON.parse(saved);
+            if (document.getElementById('api-key-gemini')) document.getElementById('api-key-gemini').value = keys.gemini || '';
+            if (document.getElementById('api-key-groq')) document.getElementById('api-key-groq').value = keys.groq || '';
+            if (document.getElementById('api-key-recaptcha')) document.getElementById('api-key-recaptcha').value = keys.recaptcha || '';
+            if (document.getElementById('api-key-drive')) document.getElementById('api-key-drive').value = keys.drive || '';
+        }
+    }
+    initApiVault();
 
     function initApiVault() {
         const saved = localStorage.getItem('sigma-api-keys');
@@ -10992,3 +11526,145 @@ window.confirmActivateUser = function () {
         else alert('Account successfully activated');
     }
 };
+
+window.toggleSearchField = function (fieldId, isVisible) {
+    const field = document.getElementById(fieldId);
+    if (field) {
+        if (isVisible) {
+            field.classList.remove('hidden');
+        } else {
+            field.classList.add('hidden');
+            const input = field.querySelector('input');
+            if (input) input.value = '';
+            window.applyUserAccountSearch();
+        }
+    }
+};
+
+// NEW: Persistent Admin Search Fields
+window.toggleAdminSearchField = function (module, fieldKey, isVisible) {
+    const fieldId = `${module}-field-${fieldKey}`;
+    const checkId = `${module}-check-${fieldKey}`;
+    const field = document.getElementById(fieldId);
+    const checkbox = document.getElementById(checkId);
+
+    if (field) {
+        field.classList.toggle('hidden', !isVisible);
+        if (!isVisible) {
+            const input = field.querySelector('input, select');
+            if (input) {
+                input.value = '';
+                // Trigger re-render to clear filter effect
+                if (module === 'section') window.applySectionSearch();
+                if (module === 'subject') window.applySubjectSearch();
+            }
+        }
+    }
+
+    // Save preference
+    const prefs = JSON.parse(localStorage.getItem('sigma-admin-search-prefs') || '{}');
+    if (!prefs[module]) prefs[module] = {};
+    prefs[module][fieldKey] = isVisible;
+    localStorage.setItem('sigma-admin-search-prefs', JSON.stringify(prefs));
+};
+
+window.initSearchFieldPreferences = function () {
+    const prefs = JSON.parse(localStorage.getItem('sigma-admin-search-prefs') || '{}');
+    const modules = ['section', 'subject'];
+    const fields = {
+        section: ['name', 'room', 'grade'],
+        subject: ['code', 'name', 'type']
+    };
+
+    modules.forEach(module => {
+        if (fields[module]) {
+            fields[module].forEach(fieldKey => {
+                // Default visibility: check if explicitly saved as false, otherwise default to what's in HTML (but we force sync)
+                // Actually, let's look at the HTML defaults: Section Name and Subject Code are usually visible.
+                let isVisible = true; 
+                if (prefs[module] && prefs[module][fieldKey] !== undefined) {
+                    isVisible = prefs[module][fieldKey];
+                } else {
+                    // Fallback to HTML state if no pref saved
+                    const checkbox = document.getElementById(`${module}-check-${fieldKey}`);
+                    if (checkbox) isVisible = checkbox.checked;
+                }
+
+                // Apply state
+                const fieldId = `${module}-field-${fieldKey}`;
+                const checkId = `${module}-check-${fieldKey}`;
+                const field = document.getElementById(fieldId);
+                const checkbox = document.getElementById(checkId);
+
+                if (field) field.classList.toggle('hidden', !isVisible);
+                if (checkbox) checkbox.checked = isVisible;
+            });
+        }
+    });
+};
+
+// Auto-init on script load or soon after
+setTimeout(() => {
+    window.initSearchFieldPreferences();
+
+    // RESTORE ACTIVE TAB AFTER RELOAD
+    const savedTab = sessionStorage.getItem('sigma-admin-active-tab');
+    if (savedTab) {
+        try {
+            const { sectionId, navId } = JSON.parse(savedTab);
+            if (typeof window.showSection === 'function') {
+                window.showSection(sectionId, navId);
+            }
+        } catch (e) {
+            console.error('Failed to restore tab:', e);
+        }
+    }
+
+    // SHOW NEW USER TOAST BAR
+    const newUserData = sessionStorage.getItem('sigma-new-user-toast');
+    if (newUserData) {
+        try {
+            const data = JSON.parse(newUserData);
+            window.showNewUserToast(data.id, data.name);
+            // DO NOT clear immediately - allow persistence across refreshes
+        } catch (e) {
+            console.error('Failed to show toast:', e);
+        }
+    }
+}, 100);
+
+window.showNewUserToast = function (userId, userName) {
+    // Remove existing if any
+    const existing = document.getElementById('new-user-toast-bar');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'new-user-toast-bar';
+    toast.className = 'fixed bottom-0 left-0 right-0 z-[9999] animate-slide-up';
+    toast.innerHTML = `
+        <div class="bg-[#15803d] text-white px-10 py-4 flex items-center justify-between shadow-2xl border-t border-white/20">
+            <div class="flex items-center gap-10">
+                <div class="flex items-center gap-4">
+                    <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                        <i class="fa-solid fa-user-plus text-white text-xs"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black uppercase tracking-[0.2em] text-white/70">Created Account</p>
+                        <p class="text-sm font-bold text-white tracking-tight">${userName}</p>
+                    </div>
+                </div>
+                <div class="h-8 w-px bg-white/20"></div>
+                <div>
+                    <p class="text-[9px] font-black uppercase tracking-[0.2em] text-[#FFD000]">Login ID</p>
+                    <p class="text-base font-bold text-white tracking-widest">${userId}</p>
+                </div>
+            </div>
+            <button onclick="sessionStorage.removeItem('sigma-new-user-toast'); this.closest('#new-user-toast-bar').remove()" class="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-all">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+    `;
+    document.body.appendChild(toast);
+};
+
+

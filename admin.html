@@ -435,7 +435,7 @@
                                                         <span id="view-user-lastName-banner">Lastname</span>
                                                     </h2>
                                                     <div class="flex items-center gap-3">
-                                                        <span id="view-user-role" style="display:none"
+                                                        <span id="view-user-role"
                                                             class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest text-white">Role</span>
                                                         <span id="view-user-id"
                                                             class="text-[10px] font-normal uppercase tracking-widest text-white">ID:
@@ -517,7 +517,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="pt-24">
+                                <div class="pt-28">
                                     <div class="border-t border-slate-200"></div>
                                 </div>
                             </div>
@@ -527,7 +527,7 @@
                     <!-- Bottom Tabs & Content Part -->
                     <div class="mx-auto max-w-[1024px] w-full">
                         <div
-                            class="bg-white border-x border-b border-slate-200 min-h-screen p-0 shadow-sm relative flex flex-col">
+                            class="bg-white border-x border-b border-slate-200 min-h-screen p-0 standard-panel-shadow relative flex flex-col">
                             <div class="pt-2 pb-10 space-y-1">
                                 <div
                                     class="px-10 grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)_auto] gap-8 items-center">
@@ -558,7 +558,7 @@
                                 <div class="border-t border-slate-200"></div>
 
                                 <div class="px-10 pt-6 grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)] gap-8">
-                                    <aside class="rounded-[28px] border border-slate-200 bg-white p-7 space-y-7">
+                                     <aside class="rounded-[28px] border border-slate-200 bg-white p-7 space-y-7">
                                         <div class="space-y-5">
                                             <div class="space-y-1">
                                                 <div class="flex items-center justify-between">
@@ -569,6 +569,16 @@
                                                 <p id="view-user-email"
                                                     class="text-sm font-medium text-black font-['Inter'] break-words">
                                                     example@gmail.com</p>
+                                            </div>
+                                            <div class="space-y-1">
+                                                <div class="flex items-center justify-between">
+                                                    <p
+                                                        class="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400 font-['Inter']">
+                                                        Institutional Role</p>
+                                                </div>
+                                                <p id="view-user-sidebar-role"
+                                                    class="text-sm font-medium text-black font-['Inter']">
+                                                    Admin</p>
                                             </div>
                                         </div>
                                     </aside>
@@ -592,7 +602,7 @@
                             class="lg:col-span-3 space-y-6 sticky top-[106px] mt-2 pr-2 max-h-[calc(100vh-106px)] overflow-y-auto custom-scrollbar">
                             <!-- System Health Panel -->
                             <div data-id="metric-health"
-                                class="bg-white border border-slate-200 h-[180px] rounded-[22px] shadow-sm p-5 flex flex-col justify-between">
+                                class="bg-white border border-slate-200 h-[180px] rounded-[22px] standard-panel-shadow p-5 flex flex-col justify-between">
                                 <div class="flex items-center justify-between pb-4 border-b border-slate-100">
                                     <h4 class="text-[10px] font-black text-black uppercase tracking-widest">System
                                         Health</h4>
@@ -629,7 +639,7 @@
                             </div>
                             <!-- AI Usage Panel -->
                             <div data-id="metric-ai"
-                                class="bg-white border border-slate-200 h-[180px] rounded-[22px] shadow-sm p-5 flex flex-col justify-between">
+                                class="bg-white border border-slate-200 h-[180px] rounded-[22px] standard-panel-shadow p-5 flex flex-col justify-between">
                                 <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                                     <h4 class="text-[10px] font-black text-black uppercase tracking-widest">AI Usage
                                     </h4>
@@ -683,7 +693,7 @@
                             </div>
                             <!-- Storage Usage Panel -->
                             <div data-id="metric-storage"
-                                class="bg-white border border-slate-200 h-[180px] rounded-[22px] shadow-sm p-5 flex flex-col justify-between">
+                                class="bg-white border border-slate-200 h-[180px] rounded-[22px] standard-panel-shadow p-5 flex flex-col justify-between">
                                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                                     <h4 class="text-[10px] font-black text-black uppercase tracking-widest">Storage
                                         Usage</h4>
@@ -720,7 +730,7 @@
 
                             <!-- Recent Activity Panel (own scrollbar) -->
                             <div data-id="metric-activity"
-                                class="bg-white border border-slate-200 h-[180px] rounded-[22px] shadow-sm p-5 flex flex-col">
+                                class="bg-white border border-slate-200 h-[180px] rounded-[22px] standard-panel-shadow p-5 flex flex-col">
                                 <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
                                     <h4 class="text-[10px] font-black text-black uppercase tracking-widest">Recent
                                         Activity</h4>
@@ -798,14 +808,14 @@
                         <div class="lg:col-span-6 space-y-8 mt-2">
                             <!-- Welcome Panel -->
                             <div
-                                class="welcome-panel relative h-[220px] rounded-[22px] overflow-hidden shadow-lg border border-slate-200 flex items-center px-12 group">
+                                class="welcome-panel relative h-[220px] rounded-[22px] overflow-hidden standard-panel-shadow border border-slate-200 flex items-center px-12 group">
                                 <img id="welcome-panel-admin-img" src="image/Welcome.jpg" alt="Welcome to ICC"
                                     class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                                 <div class="absolute inset-0 bg-gradient-to-r from-icc/90 via-icc/40 to-transparent">
                                 </div>
                                 <div class="relative z-10">
                                     <h4 class="text-[#FFD000] font-black text-2xl mb-3">
-                                        Welcome back, Admin <span id="welcome-user-firstName">Firstname</span>!</h4>
+                                        Welcome back, <span id="welcome-user-role">Admin</span> <span id="welcome-user-firstName">Firstname</span>!</h4>
                                     <h2 class="text-white text-4xl font-black leading-tight drop-shadow-md uppercase">
                                         INTERFACE COMPUTER COLLEGE</h2>
                                 </div>
@@ -813,7 +823,7 @@
 
 
                             <!-- Announcement Composer Trigger -->
-                            <div class="bg-white border border-slate-200 shadow-sm rounded-[22px] p-3 mb-6">
+                            <div class="bg-white border border-slate-200 standard-panel-shadow rounded-[22px] p-3 mb-6">
                                 <button id="trigger-announcement-composer"
                                     class="w-full h-10 bg-slate-100 hover:bg-slate-200 transition-all rounded-full px-6 text-left text-slate-500 text-[13px] font-medium flex items-center gap-3 group">
                                     <i class="fa-solid fa-bullhorn text-[12px] text-slate-400"></i>
@@ -824,7 +834,7 @@
                             <!-- Announcements Section -->
                             <div class="space-y-6">
                                 <!-- Tabs Area -->
-                                <div class="bg-white border border-slate-200 shadow-sm rounded-full p-2 flex items-center gap-2 mb-0">
+                                <div class="bg-white border border-slate-200 standard-panel-shadow rounded-full p-2 flex items-center gap-2 mb-0">
                                     <button type="button" id="tab-announcement-overall"
                                         class="px-8 py-3 rounded-full text-[11px] font-black uppercase tracking-widest bg-[#15803d] text-white transition-all shadow-sm"
                                         data-announcement-tab="overall">Announcements</button>
@@ -846,7 +856,7 @@
                         <!-- 3. Right Section (3/12) - Charts -->
                         <div class="lg:col-span-3 sticky top-[106px] mt-2">
                             <div
-                                class="bg-white border border-slate-200 min-h-[500px] shadow-sm flex flex-col rounded-[22px] overflow-hidden">
+                                class="bg-white border border-slate-200 min-h-[500px] standard-panel-shadow flex flex-col rounded-[22px] overflow-hidden">
                                 <!-- Header Area -->
                                 <div class="h-16 flex items-center px-4 border-b border-slate-200 bg-white">
                                     <button id="prev-overview-page"
@@ -898,37 +908,31 @@
                                             <canvas id="userDistributionChart"></canvas>
                                         </div>
 
-                                        <!-- Legend Grid -->
-                                        <div class="w-full space-y-1 px-2">
-                                            <!-- Students -->
+                                        <!-- Legend -->
+                                        <div class="w-full space-y-0 mt-4 px-2">
+                                            <!-- Admins -->
                                             <div class="flex items-center justify-between py-1.5">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-2 h-2 rounded-[2px] bg-[#15803d]"></div>
-                                                    <span
-                                                        class="text-[9px] font-medium uppercase tracking-widest text-black">Students</span>
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-2 h-2 flex-shrink-0 rounded-[2px] bg-[#0f172a]"></div>
+                                                    <span class="text-[9px] font-bold uppercase tracking-widest text-black/60">Admins</span>
                                                 </div>
-                                                <span id="count-students"
-                                                    class="text-[11px] font-medium text-black">342</span>
+                                                <span id="count-admins" class="text-[11px] font-bold text-black">0</span>
                                             </div>
                                             <!-- Teachers -->
                                             <div class="flex items-center justify-between py-1.5">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-2 h-2 rounded-[2px] bg-[#FFD000]"></div>
-                                                    <span
-                                                        class="text-[9px] font-medium uppercase tracking-widest text-black">Teachers</span>
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-2 h-2 flex-shrink-0 rounded-[2px] bg-[#FFD000]"></div>
+                                                    <span class="text-[9px] font-bold uppercase tracking-widest text-black/60">Teachers</span>
                                                 </div>
-                                                <span id="count-teachers"
-                                                    class="text-[11px] font-medium text-black">42</span>
+                                                <span id="count-teachers" class="text-[11px] font-bold text-black">0</span>
                                             </div>
-                                            <!-- Admins -->
-                                            <div class="flex items-center justify-between py-1.5">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-2 h-2 rounded-[2px] bg-[#0f172a]"></div>
-                                                    <span
-                                                        class="text-[9px] font-medium uppercase tracking-widest text-black">Admins</span>
+                                            <!-- Students -->
+                                            <div class="flex items-center justify-between py-1.5 border-t border-slate-100 mt-1 pt-2">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-2 h-2 flex-shrink-0 rounded-[2px] bg-[#15803d]"></div>
+                                                    <span class="text-[9px] font-bold uppercase tracking-widest text-black/60">Students</span>
                                                 </div>
-                                                <span id="count-admins"
-                                                    class="text-[11px] font-medium text-black">8</span>
+                                                <span id="count-students" class="text-[11px] font-bold text-black">0</span>
                                             </div>
                                         </div>
                                     </div>
@@ -951,7 +955,7 @@
                                                         class="text-[9px] font-medium uppercase tracking-widest text-black">Core
                                                         Subjects</span>
                                                 </div>
-                                                <span class="text-[11px] font-medium text-black">15</span>
+                                                <span id="count-core-subjects" class="text-[11px] font-medium text-black">0</span>
                                             </div>
                                             <!-- Applied Subjects -->
                                             <div class="flex items-center justify-between py-1.5">
@@ -961,7 +965,7 @@
                                                         class="text-[9px] font-medium uppercase tracking-widest text-black">Applied
                                                         Subjects</span>
                                                 </div>
-                                                <span class="text-[11px] font-medium text-black">12</span>
+                                                <span id="count-applied-subjects" class="text-[11px] font-medium text-black">0</span>
                                             </div>
                                             <!-- Specialized Subjects -->
                                             <div class="flex items-center justify-between py-1.5">
@@ -971,7 +975,7 @@
                                                         class="text-[9px] font-medium uppercase tracking-widest text-black">Specialized
                                                         Subjects</span>
                                                 </div>
-                                                <span class="text-[11px] font-medium text-black">4</span>
+                                                <span id="count-specialized-subjects" class="text-[11px] font-medium text-black">0</span>
                                             </div>
                                         </div>
                                     </div>
@@ -994,7 +998,7 @@
                                                         class="text-[9px] font-medium uppercase tracking-widest text-black">Grade
                                                         11 Sections</span>
                                                 </div>
-                                                <span class="text-[11px] font-medium text-black">10</span>
+                                                <span id="count-grade11-sections" class="text-[11px] font-medium text-black">0</span>
                                             </div>
                                             <!-- Grade 12 -->
                                             <div class="flex items-center justify-between py-1.5">
@@ -1004,17 +1008,7 @@
                                                         class="text-[9px] font-medium uppercase tracking-widest text-black">Grade
                                                         12 Sections</span>
                                                 </div>
-                                                <span class="text-[11px] font-medium text-black">12</span>
-                                            </div>
-                                            <!-- Specialized -->
-                                            <div class="flex items-center justify-between py-1.5">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-2 h-2 rounded-[2px] bg-[#0f172a]"></div>
-                                                    <span
-                                                        class="text-[9px] font-medium uppercase tracking-widest text-black">Specialized
-                                                        Sections</span>
-                                                </div>
-                                                <span class="text-[11px] font-medium text-black">4</span>
+                                                <span id="count-grade12-sections" class="text-[11px] font-medium text-black">0</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1026,9 +1020,9 @@
 
                 <!-- USER ACCOUNTS VIEW -->
                 <section id="users-view" class="dynamic-section hidden">
-                    <div class="mx-auto max-w-[1024px] w-full">
+                    <div class="mx-auto max-w-none w-full">
                         <div
-                            class="bg-white border-x border-slate-200 min-h-[calc(100vh-82px)] p-0 relative flex flex-col">
+                            class="bg-white border-x border-b border-slate-200 min-h-screen p-0 standard-panel-shadow relative flex flex-col">
 
 
                             <!-- Primary Action (Far Left Below Header) -->
@@ -1048,22 +1042,22 @@
                                     <div id="field-id" class="w-[280px] relative">
                                         <input type="text" id="user-search-id" placeholder="Search ID" maxlength="20"
                                             oninput="this.value = this.value.replace(/[^0-9]/g, '')" inputmode="numeric"
-                                            class="w-full bg-slate-50 border border-slate-200 px-5 py-2.5 rounded-2xl text-[11px] font-medium text-black tracking-widest outline-none focus:border-black transition-all placeholder:text-black/40 placeholder:font-normal">
+                                            class="w-full bg-white border border-slate-200 px-5 py-2.5 rounded-xl text-[11px] font-medium text-black tracking-widest outline-none focus:border-black transition-all placeholder:text-black/40 placeholder:font-normal standard-panel-shadow">
                                     </div>
 
                                     <!-- Name Search -->
                                     <div id="field-name" class="w-full max-w-[280px] relative">
                                         <input type="text" id="user-search-name" placeholder="Search name"
                                             maxlength="20" oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')"
-                                            class="w-full bg-slate-50 border border-slate-200 px-5 py-2.5 rounded-2xl text-[11px] font-medium text-black tracking-widest outline-none focus:border-black transition-all placeholder:text-black/40 placeholder:font-normal">
+                                            class="w-full bg-white border border-slate-200 px-5 py-2.5 rounded-xl text-[11px] font-medium text-black tracking-widest outline-none focus:border-black transition-all placeholder:text-black/40 placeholder:font-normal standard-panel-shadow">
                                     </div>
 
                                     <!-- Role Field -->
                                     <div id="field-role" class="w-[280px] relative">
                                         <div class="relative w-full">
                                             <select id="user-search-role"
-                                                class="w-full bg-slate-50 border border-slate-200 pl-5 pr-10 py-2.5 rounded-2xl text-[11px] font-medium tracking-widest outline-none focus:border-black transition-all appearance-none cursor-pointer text-black">
-                                                <option value="" disabled selected hidden>Select Role</option>
+                                                class="w-full bg-white border border-slate-200 pl-5 pr-10 py-2.5 rounded-xl text-[11px] font-medium tracking-widest outline-none focus:border-black transition-all appearance-none cursor-pointer text-black standard-panel-shadow">
+                                                <option value="" selected>All Users</option>
                                                 <option value="Admin" class="text-black font-medium">Admin</option>
                                                 <option value="Teacher" class="text-black font-medium">Teacher</option>
                                                 <option value="Student" class="text-black font-medium">Student</option>
@@ -1072,68 +1066,72 @@
                                                 class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-black text-[10px] pointer-events-none"></i>
                                         </div>
                                     </div>
-
-
                                 </div>
 
-                                <!-- Filter & Search Buttons (Right) -->
-                                <div class="flex items-center gap-3">
+                                <!-- Search & Filter Controls (Right) -->
+                                <div class="flex items-center gap-2">
                                     <div class="relative">
-                                        <button type="button" id="user-filter-btn"
-                                            onclick="document.getElementById('user-filter-menu').classList.toggle('hidden')"
-                                            class="w-10 h-10 hover:bg-slate-100 rounded-full flex items-center justify-center text-black transition-all group"
-                                            title="Filter Configuration">
-                                            <i
-                                                class="fa-solid fa-sliders text-base group-hover:rotate-90 transition-transform duration-300"></i>
+                                        <button onclick="window.toggleUserFilterDropdown(event)"
+                                            class="w-10 h-10 flex items-center justify-center text-black rounded-full hover:bg-slate-100 transition-all">
+                                            <i class="fa-solid fa-sliders text-sm"></i>
                                         </button>
 
-                                        <!-- Filter Selection Dropdown -->
-                                        <div id="user-filter-menu"
-                                            class="hidden absolute right-0 mt-3 w-64 bg-white border border-slate-200 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-50 p-6 space-y-4">
-                                            <p
-                                                class="text-[9px] font-bold uppercase tracking-[0.2em] text-black/40 mb-4 px-2">
-                                                Manage Search Fields</p>
+                                        <!-- Filter Dropdown Panel (Manage Search Fields) -->
+                                        <div id="user-filter-dropdown"
+                                            class="hidden absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-[3rem] shadow-[0_30px_60px_rgba(0,0,0,0.12)] z-[110] p-10 overflow-hidden font-['Inter']">
+                                            <div class="space-y-10">
+                                                <div>
+                                                    <span
+                                                        class="text-[10px] font-black uppercase tracking-[0.2em] text-black opacity-30">Manage
+                                                        Search Fields</span>
+                                                </div>
 
-                                            <label
-                                                class="flex items-center justify-between group cursor-pointer p-2 hover:bg-slate-50 rounded-xl transition-all">
-                                                <span
-                                                    class="text-[10px] font-bold text-black uppercase tracking-widest">Search
-                                                    Name</span>
-                                                <input type="checkbox" checked
-                                                    onchange="document.getElementById('field-name').classList.toggle('hidden', !this.checked)"
-                                                    class="w-4 h-4 rounded border-2 border-slate-200 checked:bg-black checked:border-black transition-all cursor-pointer">
-                                            </label>
+                                                <div class="space-y-6">
+                                                    <!-- Standard Fields -->
+                                                    <label class="flex items-center justify-between cursor-pointer group">
+                                                        <span
+                                                            class="text-[11px] font-bold uppercase tracking-widest text-black">Search
+                                                            ID</span>
+                                                        <div class="relative inline-flex items-center">
+                                                            <input type="checkbox" checked
+                                                                onchange="window.toggleSearchField('field-id', this.checked)"
+                                                                class="w-6 h-6 rounded-lg border-2 border-slate-200 checked:bg-[#15803d] checked:border-[#15803d] transition-all appearance-none cursor-pointer">
+                                                            <i
+                                                                class="fa-solid fa-check absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[10px] pointer-events-none opacity-0 transition-opacity"></i>
+                                                        </div>
+                                                    </label>
 
-                                            <label
-                                                class="flex items-center justify-between group cursor-pointer p-2 hover:bg-slate-50 rounded-xl transition-all">
-                                                <span
-                                                    class="text-[10px] font-bold text-black uppercase tracking-widest">Search
-                                                    Role</span>
-                                                <input type="checkbox" checked
-                                                    onchange="document.getElementById('field-role').classList.toggle('hidden', !this.checked)"
-                                                    class="w-4 h-4 rounded border-2 border-slate-200 checked:bg-black checked:border-black transition-all cursor-pointer">
-                                            </label>
+                                                    <label class="flex items-center justify-between cursor-pointer group">
+                                                        <span
+                                                            class="text-[11px] font-bold uppercase tracking-widest text-black">Search
+                                                            Name</span>
+                                                        <div class="relative inline-flex items-center">
+                                                            <input type="checkbox" checked
+                                                                onchange="window.toggleSearchField('field-name', this.checked)"
+                                                                class="w-6 h-6 rounded-lg border-2 border-slate-200 checked:bg-[#15803d] checked:border-[#15803d] transition-all appearance-none cursor-pointer">
+                                                            <i
+                                                                class="fa-solid fa-check absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[10px] pointer-events-none opacity-0 transition-opacity"></i>
+                                                        </div>
+                                                    </label>
 
-
-
-                                            <label
-                                                class="flex items-center justify-between group cursor-pointer p-2 hover:bg-slate-50 rounded-xl transition-all">
-                                                <span
-                                                    class="text-[10px] font-bold text-black uppercase tracking-widest">Search
-                                                    ID</span>
-                                                <input type="checkbox" checked
-                                                    onchange="document.getElementById('field-id').classList.toggle('hidden', !this.checked)"
-                                                    class="w-4 h-4 rounded border-2 border-slate-200 checked:bg-black checked:border-black transition-all cursor-pointer">
-                                            </label>
-
-
+                                                    <label class="flex items-center justify-between cursor-pointer group">
+                                                        <span
+                                                            class="text-[11px] font-bold uppercase tracking-widest text-black">Search
+                                                            Role</span>
+                                                        <div class="relative inline-flex items-center">
+                                                            <input type="checkbox" checked
+                                                                onchange="window.toggleSearchField('field-role', this.checked)"
+                                                                class="w-6 h-6 rounded-lg border-2 border-slate-200 checked:bg-[#15803d] checked:border-[#15803d] transition-all appearance-none cursor-pointer">
+                                                            <i
+                                                                class="fa-solid fa-check absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-[10px] pointer-events-none opacity-0 transition-opacity"></i>
+                                                        </div>
+                                                    </label>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-
-                                    <button type="button" id="user-search-btn"
-                                        class="px-8 py-3 bg-[#15803d] text-white hover:bg-[#166534] rounded-xl text-[10px] font-bold uppercase tracking-[0.25em] transition-all">
-                                        Search
-                                    </button>
+                                    <button onclick="window.applyUserAccountSearch(true)"
+                                        class="h-10 px-8 bg-[#15803d] text-white rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-[#166534] transition-all standard-panel-shadow">Search</button>
                                 </div>
                             </div>
 
@@ -1141,15 +1139,19 @@
                             <div class="flex-1 pb-16">
                                 <table class="w-full border-collapse table-fixed">
                                     <colgroup>
-                                        <col style="width: 18%;"> <!-- ID -->
-                                        <col style="width: 19%;"> <!-- Firstname -->
-                                        <col style="width: 19%;"> <!-- Lastname -->
-                                        <col style="width: 16%;"> <!-- Role -->
-                                        <col style="width: 16%;"> <!-- Status -->
-                                        <col style="width: 12%;"> <!-- Action -->
+                                        <col style="width: 6%;"> <!-- No. -->
+                                        <col style="width: 15%;"> <!-- ID -->
+                                        <col style="width: 17%;"> <!-- Firstname -->
+                                        <col style="width: 17%;"> <!-- Lastname -->
+                                        <col style="width: 15%;"> <!-- Role -->
+                                        <col style="width: 15%;"> <!-- Status -->
+                                        <col style="width: 15%;"> <!-- Action -->
                                     </colgroup>
                                     <thead class="sticky top-0 bg-slate-50 z-10 border-b border-slate-200">
                                         <tr>
+                                            <th
+                                                class="px-8 py-4 text-[10px] font-bold text-black uppercase tracking-widest text-center">
+                                                No.</th>
                                             <th
                                                 class="px-8 py-4 text-[10px] font-bold text-black uppercase tracking-widest text-center">
                                                 ID</th>
@@ -1173,18 +1175,9 @@
                                     <tbody id="userTableBody"
                                         class="divide-y divide-slate-100 [&_tr:nth-child(even)]:bg-slate-50/50">
                                         <!-- Populated by JS -->
-                                        <tr id="user-empty-state" class="bg-white">
-                                            <td colspan="7" class="py-32 text-center">
-                                                <div
-                                                    class="flex flex-col items-center justify-center space-y-4 text-black">
-                                                    <i class="fa-solid fa-users-viewfinder text-5xl"></i>
-                                                    <p class="text-[11px] font-medium uppercase tracking-[0.3em]">Search
-                                                        Accounts</p>
-                                                </div>
-                                            </td>
-                                        </tr>
                                     </tbody>
                                 </table>
+                                <div id="user-pagination-container" class="px-10 py-6 border-t border-slate-100 flex items-center justify-center bg-white"></div>
                             </div>
                         </div>
                     </div>
@@ -1193,33 +1186,31 @@
 
                 <!-- SCHOOL BRANCHES VIEW -->
                 <section id="school-branch-view" class="dynamic-section hidden">
-                    <div class="mx-auto max-w-[1024px] w-full">
-                        <div class="bg-white border border-slate-200 p-0">
-                            <div class="px-10 py-8">
-                                <h1 class="text-2xl font-bold text-black tracking-tight">School Branch</h1>
-                            </div>
+                    <div class="flex flex-col h-full bg-white min-h-screen border-b border-slate-200">
+                        <div class="px-10 py-8 border-b border-slate-100">
+                            <h1 class="text-2xl font-bold text-black tracking-tight">School Branch</h1>
+                        </div>
 
-                            <div id="branch-table-container">
-                                <table class="w-full border-collapse table-fixed">
-                                    <thead class="bg-slate-50 border-b border-slate-200">
-                                        <tr>
-                                            <th
-                                                class="w-[50%] px-10 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
-                                                Branch Name</th>
-                                            <th
-                                                class="w-[30%] px-10 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
-                                                City</th>
-                                            <th
-                                                class="w-[20%] px-10 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
-                                                Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="branchTableBody"
-                                        class="divide-y divide-slate-100 [&_tr:nth-child(even)]:bg-slate-50/50">
-                                        <!-- Will be populated by JS -->
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div id="branch-table-container" class="flex-1 overflow-x-auto">
+                            <table class="w-full border-collapse table-fixed">
+                                <thead class="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th
+                                            class="w-[50%] px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-left">
+                                            Branch Name</th>
+                                        <th
+                                            class="w-[30%] px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-left">
+                                            City</th>
+                                        <th
+                                            class="w-[20%] px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
+                                            Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="branchTableBody"
+                                    class="divide-y divide-slate-100 [&_tr:nth-child(even)]:bg-slate-50/50">
+                                    <!-- Will be populated by JS -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </section>
@@ -1235,7 +1226,7 @@
 
                     <div class="branch-edit-shell mx-auto w-full animate-in slide-in-from-top-4 duration-500">
                         <div
-                            class="branch-edit-panel bg-white border border-slate-200 min-h-screen p-0 shadow-sm relative flex flex-col">
+                            class="branch-edit-panel bg-white border border-slate-200 min-h-screen p-0 standard-panel-shadow relative flex flex-col">
                             <div class="px-10 py-8 border-b border-slate-50">
                                 <h1 id="branch-editor-title" class="text-2xl font-bold text-black tracking-tight">Edit
                                     Branch</h1>
@@ -1358,7 +1349,7 @@
                     <div class="branch-edit-shell mx-auto w-full animate-in slide-in-from-top-4 duration-500">
                         <!-- White Panel (Same 1024px Width, Centered, Full Height) -->
                         <div
-                            class="branch-edit-panel bg-white border border-slate-200 min-h-screen p-0 shadow-sm relative flex flex-col">
+                            class="branch-edit-panel bg-white border border-slate-200 min-h-screen p-0 standard-panel-shadow relative flex flex-col">
 
                             <div class="px-10 py-8 border-b border-slate-50 flex items-center justify-between">
                                 <h1 id="sy-editor-title" class="text-2xl font-bold text-black tracking-tight">Create
@@ -1602,9 +1593,9 @@
 
                 <!-- SCHOOL PROFILE VIEW -->
                 <section id="school-profile-view" class="dynamic-section hidden">
-                    <div class="w-full bg-white border-b border-slate-200">
+                    <div class="w-full bg-white">
                         <div class="mx-auto max-w-[1024px] w-full">
-                            <div class="bg-white border-x border-slate-200 p-0 shadow-sm relative flex flex-col">
+                            <div class="bg-white border-x border-slate-200 p-0 relative flex flex-col">
                                 <div class="relative min-h-[310px]">
                                     <div class="absolute inset-0 overflow-hidden rounded-b-[44px] bg-[#15803d]">
                                         <div
@@ -1640,7 +1631,7 @@
                                     </div>
                                 </div>
 
-                                <div class="pt-24">
+                                <div class="pt-28">
                                     <div class="border-t border-slate-200"></div>
                                 </div>
                             </div>
@@ -1648,18 +1639,19 @@
                     </div>
                     <div class="mx-auto max-w-[1024px] w-full">
                         <div
-                            class="bg-white border-x border-b border-slate-200 min-h-screen p-0 shadow-sm relative flex flex-col">
+                            class="bg-white border-x border-b border-slate-200 min-h-screen p-0 standard-panel-shadow relative flex flex-col">
                             <div class="pt-2 pb-10 space-y-1">
                                 <div
-                                    class="px-10 grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)] gap-8 items-center">
+                                    class="px-10 grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)_auto] gap-8 items-center">
                                     <div class="flex justify-center">
                                         <h3
                                             class="text-base font-semibold text-slate-400 tracking-normal font-['Inter']">
                                             About</h3>
                                     </div>
-                                    <div class="flex justify-center lg:justify-start">
-                                        <p
-                                            class="px-4 py-0.5 border-b-2 border-[#15803d] text-base font-bold text-[#FFD000] tracking-normal font-['Inter'] cursor-pointer transition-colors hover:bg-slate-100 rounded-t-lg">
+                                    <div class="flex justify-center lg:justify-start gap-2">
+                                        <p id="school-tab-bio"
+                                            class="px-4 py-0.5 border-b-2 border-[#15803d] text-base font-bold text-[#FFD000] tracking-normal font-['Inter'] cursor-pointer transition-colors hover:bg-slate-100 rounded-t-lg"
+                                            onclick="window.switchSchoolProfileTab('bio')">
                                             Bio</p>
                                     </div>
                                 </div>
@@ -1836,7 +1828,7 @@
                     <div class="mx-auto max-w-[1024px] w-full p-0 animate-in slide-in-from-top-4 duration-500">
                         <!-- White Panel (Same 1024px Width, Centered, Full Height) -->
                         <div
-                            class="bg-white border-x border-slate-200 min-h-screen p-0 shadow-sm relative flex flex-col">
+                            class="bg-white border-x border-slate-200 min-h-screen p-0 standard-panel-shadow relative flex flex-col">
                             <div class="px-10 py-8">
                                 <h1 class="text-2xl font-bold text-black tracking-tight">Edit School Profile</h1>
                             </div>
@@ -1968,67 +1960,70 @@
 
                 <!-- SCHOOL YEAR MANAGEMENT VIEW -->
                 <section id="school-year-view" class="dynamic-section hidden">
-                    <div class="mx-auto max-w-[1024px] w-full">
-                        <div
-                            class="bg-white border-x border-slate-200 min-h-[calc(100vh-82px)] p-0 relative flex flex-col">
-                            <!-- Exact Title Placement (Matches School Branch) -->
-                            <div class="px-10 py-8">
-                                <h1 class="text-2xl font-bold text-black tracking-tight">School Year</h1>
-                            </div>
+                    <div class="flex flex-col h-full bg-white min-h-screen border-b border-slate-200">
+                        <!-- Exact Title Placement -->
+                        <div class="px-10 py-8">
+                            <h1 class="text-2xl font-bold text-black tracking-tight">School Year</h1>
+                        </div>
 
-                            <!-- Auxiliary Header Controls -->
-                            <div class="px-10 pb-10 border-b border-slate-50 flex items-end justify-between gap-12">
-                                <button onclick="window.openSYEditor()"
-                                    class="shrink-0 px-8 py-3 bg-[#15803d] text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-[#166534] transition-all flex items-center justify-center gap-3">
-                                    <i class="fa-solid fa-plus text-xs"></i>
-                                    <span>Create School Year</span>
-                                </button>
+                        <!-- Auxiliary Header Controls -->
+                        <div class="px-10 pb-10 border-b border-slate-50 flex items-end justify-between gap-12">
+                            <button onclick="window.openSYEditor()"
+                                class="shrink-0 px-8 py-3 bg-[#15803d] text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-[#166534] transition-all flex items-center justify-center gap-3">
+                                <i class="fa-solid fa-plus text-xs"></i>
+                                <span>Create School Year</span>
+                            </button>
 
-                                <div
-                                    class="flex-1 max-w-[750px] rounded-[2.5rem] bg-[#15803d] px-12 py-8 text-white shadow-lg shadow-green-200/40 border border-white/10">
-                                    <div class="flex items-center justify-between gap-10">
-                                        <p id="sy-bar-year"
-                                            class="text-5xl font-black tracking-tighter leading-none italic">
-                                            2025-2026</p>
-                                        <p id="sy-bar-quarter"
-                                            class="text-lg font-bold tracking-widest uppercase opacity-90">2nd
-                                            Quarter</p>
-                                    </div>
+                            <div
+                                class="flex-1 max-w-4xl rounded-[2.5rem] bg-[#15803d] px-16 py-12 text-white shadow-lg shadow-green-200/40 border border-white/10">
+                                <div class="flex items-center justify-between gap-10">
+                                    <p id="sy-bar-year"
+                                        class="text-6xl font-black tracking-tighter leading-none italic">
+                                        2025-2026</p>
+                                    <p id="sy-bar-quarter"
+                                        class="text-xl font-bold tracking-widest uppercase opacity-90">2nd
+                                        Quarter</p>
                                 </div>
                             </div>
-
-                            <div class="border-t border-slate-100 overflow-x-auto">
-                                <table class="w-full text-center border-collapse table-fixed min-w-[800px]">
-                                    <thead class="sticky top-0 bg-slate-50 z-10 border-b border-slate-200">
-                                        <tr>
-                                            <th style="width: 10%;"
-                                                class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
-                                                Year Start</th>
-                                            <th style="width: 10%;"
-                                                class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
-                                                Year End</th>
-                                            <th style="width: 14%;"
-                                                class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
-                                                Quarter</th>
-                                            <th style="width: 22%;"
-                                                class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
-                                                Date Start</th>
-                                            <th style="width: 22%;"
-                                                class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
-                                                Date End</th>
-                                            <th style="width: 12%;"
-                                                class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
-                                                Status</th>
-                                            <th style="width: 10%;"
-                                                class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
-                                                Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="schoolYearTableBody"
-                                        class="divide-y divide-slate-100 [&_tr:nth-child(even)]:bg-slate-50/50"></tbody>
-                                </table>
-                            </div>
                         </div>
+
+                        <div class="flex-1 overflow-x-auto">
+                            <table class="w-full text-center border-collapse table-fixed min-w-[800px]">
+                                <thead class="sticky top-0 bg-slate-50 z-10 border-b border-slate-200">
+                                    <tr>
+                                        <th style="width: 6%;"
+                                            class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
+                                            No.</th>
+                                        <th style="width: 8%;"
+                                            class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
+                                            Year Start</th>
+                                        <th style="width: 8%;"
+                                            class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
+                                            Year End</th>
+                                        <th style="width: 14%;"
+                                            class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
+                                            Quarter</th>
+                                        <th style="width: 22%;"
+                                            class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
+                                            Date Start</th>
+                                        <th style="width: 22%;"
+                                            class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
+                                            Date End</th>
+                                        <th style="width: 10%;"
+                                            class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
+                                            Status</th>
+                                        <th style="width: 10%;"
+                                            class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-black text-center">
+                                            Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="schoolYearTableBody"
+                                    class="divide-y divide-slate-100 [&_tr:nth-child(even)]:bg-slate-50/50"></tbody>
+                            </table>
+                        </div>
+
+                        <!-- PAGINATION -->
+                        <div id="school-year-pagination-container" class="px-10 py-6 border-t border-slate-50"></div>
                     </div>
                 </section>
 
@@ -2037,7 +2032,7 @@
                     <div id="settings-content">
                         <div class="mx-auto max-w-[1024px] w-full">
                             <div
-                                class="bg-white border-x border-b border-slate-200 min-h-screen p-0 shadow-sm relative flex flex-col">
+                                class="bg-white border-x border-b border-slate-200 min-h-screen p-0 standard-panel-shadow relative flex flex-col">
                                 <div class="px-10 pb-10 pt-0 space-y-20">
 
                                     <!-- Login Security Section -->
@@ -2814,8 +2809,6 @@
                                                 </div>
 
                                                 <!-- GEMINI -->
-                                                <div id="row-gemini"
-                                                    class="group bg-white rounded-2xl border border-slate-100 hover:border-slate-200 transition-all overflow-hidden">
                                                     <div class="grid grid-cols-12 items-center p-6 gap-4">
                                                         <div class="col-span-3">
                                                             <p class="text-[14px] font-bold text-black font-['Inter']">
@@ -2833,10 +2826,6 @@
                                                                 ••••••••••••••••</div>
                                                         </div>
                                                         <div class="col-span-2 flex justify-end relative">
-                                                            <button onclick="window.triggerPasswordChange('gemini')"
-                                                                id="btn-change-pass-gemini"
-                                                                class="hidden absolute -top-1 -right-1 px-3 py-1 bg-slate-100 border border-slate-200 text-[8px] font-black text-slate-400 uppercase tracking-widest rounded-lg hover:bg-[#FFD000] hover:text-black transition-all">Change
-                                                                Password</button>
                                                             <button onclick="window.triggerVault('gemini')"
                                                                 id="btn-vault-gemini"
                                                                 class="flex items-center gap-2 px-6 py-2.5 bg-slate-50 text-[10px] font-bold text-black uppercase tracking-widest rounded-xl hover:bg-[#FFD000] hover:text-black transition-all">
@@ -2845,45 +2834,26 @@
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <!-- Password Gate (Hidden) -->
-                                                    <div id="gate-gemini"
-                                                        class="hidden p-6 bg-slate-50 border-t border-slate-100">
-                                                        <div class="flex items-center gap-4">
-                                                            <input type="password" id="pass-gemini"
-                                                                placeholder="Institutional Password"
-                                                                class="flex-1 bg-white border border-slate-200 px-5 py-3 rounded-xl text-xs font-bold text-black outline-none focus:border-black transition-all font-['Inter']">
-                                                            <button onclick="window.verifyVault('gemini')"
-                                                                class="px-8 py-3 bg-[#15803d] text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-[#166534] transition-all">Unlock</button>
-                                                            <button onclick="window.closeVault('gemini')"
-                                                                class="text-[10px] font-bold text-black uppercase tracking-widest hover:text-black">Cancel</button>
-                                                        </div>
-                                                        <p id="error-gemini"
-                                                            class="hidden text-[10px] font-bold text-red-500 uppercase tracking-widest mt-3">
-                                                            Password failed</p>
-                                                    </div>
-                                                    <!-- Change Password Gate (Hidden) -->
-                                                    <div id="change-gate-gemini"
-                                                        class="hidden p-6 bg-slate-50 border-t border-slate-100">
-                                                        <div class="flex items-center gap-4">
-                                                            <input type="password" id="new-pass-gemini"
-                                                                placeholder="New Institutional Password"
-                                                                class="flex-1 bg-white border border-slate-200 px-5 py-3 rounded-xl text-xs font-bold text-black outline-none focus:border-black transition-all font-['Inter']">
-                                                            <button onclick="window.updateVaultPassword('gemini')"
-                                                                class="px-8 py-3 bg-[#15803d] text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-[#166534] transition-all">Update</button>
-                                                            <button onclick="window.closePasswordChange('gemini')"
-                                                                class="text-[10px] font-bold text-black uppercase tracking-widest hover:text-black">Cancel</button>
-                                                        </div>
-                                                    </div>
                                                     <!-- Key Field (Hidden) -->
                                                     <div id="key-field-gemini"
                                                         class="hidden p-6 bg-white border-t border-slate-100">
-                                                        <div class="space-y-2">
-                                                            <label
-                                                                class="text-[10px] font-bold text-black uppercase tracking-widest font-['Inter']">Key:
-                                                                text box (paste here)</label>
+                                                        <div class="space-y-4">
+                                                            <div class="flex justify-between items-center">
+                                                                <label
+                                                                    class="text-[10px] font-bold text-black uppercase tracking-widest font-['Inter']">Key:
+                                                                    (paste here)</label>
+                                                                <button onclick="window.triggerPasswordChange('gemini')"
+                                                                    class="text-[10px] font-bold text-black hover:underline transition-all">Change Password</button>
+                                                            </div>
                                                             <input type="text" id="api-key-gemini"
-                                                                class="w-full bg-slate-50 border border-slate-200 px-6 py-4 rounded-2xl text-sm font-medium text-black outline-none focus:border-[#FFD000] transition-all font-['Inter']"
+                                                                class="w-full bg-slate-50 border border-slate-200 px-6 py-4 rounded-none text-sm font-bold text-black outline-none focus:border-black transition-all"
                                                                 placeholder="Paste your API key here...">
+                                                            <div class="flex justify-end gap-3 pt-2">
+                                                                <button onclick="window.saveKeyField('gemini')"
+                                                                    class="px-6 py-2 bg-[#15803d] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#166534] transition-all">Save Changes</button>
+                                                                <button onclick="window.cancelKeyField('gemini')"
+                                                                    class="px-6 py-2 bg-slate-100 text-black text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -2899,8 +2869,9 @@
                                                         <div class="col-span-4">
                                                             <p
                                                                 class="text-[12px] text-black font-medium font-['Inter']">
-                                                                High-performance processing logic driving descriptive,
-                                                                predictive, and prescriptive data analytics.</p>
+                                                                High-performance processing logic driving
+                                                                descriptive, predictive, and prescriptive data
+                                                                analytics.</p>
                                                         </div>
                                                         <div class="col-span-3 text-center">
                                                             <div id="mask-groq"
@@ -2908,10 +2879,6 @@
                                                                 ••••••••••••••••</div>
                                                         </div>
                                                         <div class="col-span-2 flex justify-end relative">
-                                                            <button onclick="window.triggerPasswordChange('groq')"
-                                                                id="btn-change-pass-groq"
-                                                                class="hidden absolute -top-1 -right-1 px-3 py-1 bg-slate-100 border border-slate-200 text-[8px] font-black text-slate-400 uppercase tracking-widest rounded-lg hover:bg-[#FFD000] hover:text-black transition-all">Change
-                                                                Password</button>
                                                             <button onclick="window.triggerVault('groq')"
                                                                 id="btn-vault-groq"
                                                                 class="flex items-center gap-2 px-6 py-2.5 bg-slate-50 text-[10px] font-bold text-black uppercase tracking-widest rounded-xl hover:bg-[#FFD000] hover:text-black transition-all">
@@ -2920,43 +2887,26 @@
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <div id="gate-groq"
-                                                        class="hidden p-6 bg-slate-50 border-t border-slate-100">
-                                                        <div class="flex items-center gap-4">
-                                                            <input type="password" id="pass-groq"
-                                                                placeholder="Institutional Password"
-                                                                class="flex-1 bg-white border border-slate-200 px-5 py-3 rounded-xl text-xs font-bold text-black outline-none focus:border-black transition-all font-['Inter']">
-                                                            <button onclick="window.verifyVault('groq')"
-                                                                class="px-8 py-3 bg-[#15803d] text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-[#166534] transition-all">Unlock</button>
-                                                            <button onclick="window.closeVault('groq')"
-                                                                class="text-[10px] font-bold text-black uppercase tracking-widest hover:text-black">Cancel</button>
-                                                        </div>
-                                                        <p id="error-groq"
-                                                            class="hidden text-[10px] font-bold text-red-500 uppercase tracking-widest mt-3">
-                                                            Password failed</p>
-                                                    </div>
-                                                    <!-- Change Password Gate (Hidden) -->
-                                                    <div id="change-gate-groq"
-                                                        class="hidden p-6 bg-slate-50 border-t border-slate-100">
-                                                        <div class="flex items-center gap-4">
-                                                            <input type="password" id="new-pass-groq"
-                                                                placeholder="New Institutional Password"
-                                                                class="flex-1 bg-white border border-slate-200 px-5 py-3 rounded-xl text-xs font-bold text-black outline-none focus:border-black transition-all font-['Inter']">
-                                                            <button onclick="window.updateVaultPassword('groq')"
-                                                                class="px-8 py-3 bg-[#15803d] text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-[#166534] transition-all">Update</button>
-                                                            <button onclick="window.closePasswordChange('groq')"
-                                                                class="text-[10px] font-bold text-black uppercase tracking-widest hover:text-black">Cancel</button>
-                                                        </div>
-                                                    </div>
+                                                    <!-- Key Field (Hidden) -->
                                                     <div id="key-field-groq"
                                                         class="hidden p-6 bg-white border-t border-slate-100">
-                                                        <div class="space-y-2">
-                                                            <label
-                                                                class="text-[10px] font-bold text-black uppercase tracking-widest font-['Inter']">Key:
-                                                                text box (paste here)</label>
+                                                        <div class="space-y-4">
+                                                            <div class="flex justify-between items-center">
+                                                                <label
+                                                                    class="text-[10px] font-bold text-black uppercase tracking-widest font-['Inter']">Key:
+                                                                    (paste here)</label>
+                                                                <button onclick="window.triggerPasswordChange('groq')"
+                                                                    class="text-[10px] font-bold text-black hover:underline transition-all">Change Password</button>
+                                                            </div>
                                                             <input type="text" id="api-key-groq"
-                                                                class="w-full bg-slate-50 border border-slate-200 px-6 py-4 rounded-2xl text-sm font-medium text-black outline-none focus:border-[#FFD000] transition-all font-['Inter']"
+                                                                class="w-full bg-slate-50 border border-slate-200 px-6 py-4 rounded-none text-sm font-bold text-black outline-none focus:border-black transition-all"
                                                                 placeholder="Paste your API key here...">
+                                                            <div class="flex justify-end gap-3 pt-2">
+                                                                <button onclick="window.saveKeyField('groq')"
+                                                                    class="px-6 py-2 bg-[#15803d] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#166534] transition-all">Save Changes</button>
+                                                                <button onclick="window.cancelKeyField('groq')"
+                                                                    class="px-6 py-2 bg-slate-100 text-black text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -2980,8 +2930,8 @@
                                                         <div class="col-span-4">
                                                             <p
                                                                 class="text-[12px] text-black font-medium font-['Inter']">
-                                                                Security credential for enterprise-grade bot protection
-                                                                and system integrity.</p>
+                                                                Security credential for enterprise-grade bot
+                                                                protection and system integrity.</p>
                                                         </div>
                                                         <div class="col-span-3 text-center">
                                                             <div id="mask-recaptcha"
@@ -2989,10 +2939,6 @@
                                                                 ••••••••••••••••</div>
                                                         </div>
                                                         <div class="col-span-2 flex justify-end relative">
-                                                            <button onclick="window.triggerPasswordChange('recaptcha')"
-                                                                id="btn-change-pass-recaptcha"
-                                                                class="hidden absolute -top-1 -right-1 px-3 py-1 bg-slate-100 border border-slate-200 text-[8px] font-black text-slate-400 uppercase tracking-widest rounded-lg hover:bg-[#FFD000] hover:text-black transition-all">Change
-                                                                Password</button>
                                                             <button onclick="window.triggerVault('recaptcha')"
                                                                 id="btn-vault-recaptcha"
                                                                 class="flex items-center gap-2 px-6 py-2.5 bg-slate-50 text-[10px] font-bold text-black uppercase tracking-widest rounded-xl hover:bg-[#FFD000] hover:text-black transition-all">
@@ -3001,43 +2947,26 @@
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <div id="gate-recaptcha"
-                                                        class="hidden p-6 bg-slate-50 border-t border-slate-100">
-                                                        <div class="flex items-center gap-4">
-                                                            <input type="password" id="pass-recaptcha"
-                                                                placeholder="Institutional Password"
-                                                                class="flex-1 bg-white border border-slate-200 px-5 py-3 rounded-xl text-xs font-bold text-black outline-none focus:border-black transition-all font-['Inter']">
-                                                            <button onclick="window.verifyVault('recaptcha')"
-                                                                class="px-8 py-3 bg-[#15803d] text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-[#166534] transition-all">Unlock</button>
-                                                            <button onclick="window.closeVault('recaptcha')"
-                                                                class="text-[10px] font-bold text-black uppercase tracking-widest hover:text-black">Cancel</button>
-                                                        </div>
-                                                        <p id="error-recaptcha"
-                                                            class="hidden text-[10px] font-bold text-red-500 uppercase tracking-widest mt-3">
-                                                            Password failed</p>
-                                                    </div>
-                                                    <!-- Change Password Gate (Hidden) -->
-                                                    <div id="change-gate-recaptcha"
-                                                        class="hidden p-6 bg-slate-50 border-t border-slate-100">
-                                                        <div class="flex items-center gap-4">
-                                                            <input type="password" id="new-pass-recaptcha"
-                                                                placeholder="New Institutional Password"
-                                                                class="flex-1 bg-white border border-slate-200 px-5 py-3 rounded-xl text-xs font-bold text-black outline-none focus:border-black transition-all font-['Inter']">
-                                                            <button onclick="window.updateVaultPassword('recaptcha')"
-                                                                class="px-8 py-3 bg-[#15803d] text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-[#166534] transition-all">Update</button>
-                                                            <button onclick="window.closePasswordChange('recaptcha')"
-                                                                class="text-[10px] font-bold text-black uppercase tracking-widest hover:text-black">Cancel</button>
-                                                        </div>
-                                                    </div>
+                                                    <!-- Key Field (Hidden) -->
                                                     <div id="key-field-recaptcha"
                                                         class="hidden p-6 bg-white border-t border-slate-100">
-                                                        <div class="space-y-2">
-                                                            <label
-                                                                class="text-[10px] font-bold text-black uppercase tracking-widest font-['Inter']">Key:
-                                                                text box (paste here)</label>
+                                                        <div class="space-y-4">
+                                                            <div class="flex justify-between items-center">
+                                                                <label
+                                                                    class="text-[10px] font-bold text-black uppercase tracking-widest font-['Inter']">Key:
+                                                                    (paste here)</label>
+                                                                <button onclick="window.triggerPasswordChange('recaptcha')"
+                                                                    class="text-[10px] font-bold text-black hover:underline transition-all">Change Password</button>
+                                                            </div>
                                                             <input type="text" id="api-key-recaptcha"
-                                                                class="w-full bg-slate-50 border border-slate-200 px-6 py-4 rounded-2xl text-sm font-medium text-black outline-none focus:border-[#FFD000] transition-all font-['Inter']"
+                                                                class="w-full bg-slate-50 border border-slate-200 px-6 py-4 rounded-none text-sm font-bold text-black outline-none focus:border-black transition-all"
                                                                 placeholder="Paste your API key here...">
+                                                            <div class="flex justify-end gap-3 pt-2">
+                                                                <button onclick="window.saveKeyField('recaptcha')"
+                                                                    class="px-6 py-2 bg-[#15803d] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#166534] transition-all">Save Changes</button>
+                                                                <button onclick="window.cancelKeyField('recaptcha')"
+                                                                    class="px-6 py-2 bg-slate-100 text-black text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -3053,8 +2982,8 @@
                                                         <div class="col-span-4">
                                                             <p
                                                                 class="text-[12px] text-black font-medium font-['Inter']">
-                                                                Institutional storage integration for secure document
-                                                                management and repository access.</p>
+                                                                Institutional storage integration for secure
+                                                                document management and repository access.</p>
                                                         </div>
                                                         <div class="col-span-3 text-center">
                                                             <div id="mask-drive"
@@ -3062,10 +2991,6 @@
                                                                 ••••••••••••••••</div>
                                                         </div>
                                                         <div class="col-span-2 flex justify-end relative">
-                                                            <button onclick="window.triggerPasswordChange('drive')"
-                                                                id="btn-change-pass-drive"
-                                                                class="hidden absolute -top-1 -right-1 px-3 py-1 bg-slate-100 border border-slate-200 text-[8px] font-black text-slate-400 uppercase tracking-widest rounded-lg hover:bg-[#FFD000] hover:text-black transition-all">Change
-                                                                Password</button>
                                                             <button onclick="window.triggerVault('drive')"
                                                                 id="btn-vault-drive"
                                                                 class="flex items-center gap-2 px-6 py-2.5 bg-slate-50 text-[10px] font-bold text-black uppercase tracking-widest rounded-xl hover:bg-[#FFD000] hover:text-black transition-all">
@@ -3074,43 +2999,26 @@
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <div id="gate-drive"
-                                                        class="hidden p-6 bg-slate-50 border-t border-slate-100">
-                                                        <div class="flex items-center gap-4">
-                                                            <input type="password" id="pass-drive"
-                                                                placeholder="Institutional Password"
-                                                                class="flex-1 bg-white border border-slate-200 px-5 py-3 rounded-xl text-xs font-bold text-black outline-none focus:border-black transition-all font-['Inter']">
-                                                            <button onclick="window.verifyVault('drive')"
-                                                                class="px-8 py-3 bg-[#15803d] text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-[#166534] transition-all">Unlock</button>
-                                                            <button onclick="window.closeVault('drive')"
-                                                                class="text-[10px] font-bold text-black uppercase tracking-widest hover:text-black">Cancel</button>
-                                                        </div>
-                                                        <p id="error-drive"
-                                                            class="hidden text-[10px] font-bold text-red-500 uppercase tracking-widest mt-3">
-                                                            Password failed</p>
-                                                    </div>
-                                                    <!-- Change Password Gate (Hidden) -->
-                                                    <div id="change-gate-drive"
-                                                        class="hidden p-6 bg-slate-50 border-t border-slate-100">
-                                                        <div class="flex items-center gap-4">
-                                                            <input type="password" id="new-pass-drive"
-                                                                placeholder="New Institutional Password"
-                                                                class="flex-1 bg-white border border-slate-200 px-5 py-3 rounded-xl text-xs font-bold text-black outline-none focus:border-black transition-all font-['Inter']">
-                                                            <button onclick="window.updateVaultPassword('drive')"
-                                                                class="px-8 py-3 bg-[#15803d] text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-[#166534] transition-all">Update</button>
-                                                            <button onclick="window.closePasswordChange('drive')"
-                                                                class="text-[10px] font-bold text-black uppercase tracking-widest hover:text-black">Cancel</button>
-                                                        </div>
-                                                    </div>
+                                                    <!-- Key Field (Hidden) -->
                                                     <div id="key-field-drive"
                                                         class="hidden p-6 bg-white border-t border-slate-100">
-                                                        <div class="space-y-2">
-                                                            <label
-                                                                class="text-[10px] font-bold text-black uppercase tracking-widest font-['Inter']">Key:
-                                                                text box (paste here)</label>
+                                                        <div class="space-y-4">
+                                                            <div class="flex justify-between items-center">
+                                                                <label
+                                                                    class="text-[10px] font-bold text-black uppercase tracking-widest font-['Inter']">Key:
+                                                                    (paste here)</label>
+                                                                <button onclick="window.triggerPasswordChange('drive')"
+                                                                    class="text-[10px] font-bold text-black hover:underline transition-all">Change Password</button>
+                                                            </div>
                                                             <input type="text" id="api-key-drive"
-                                                                class="w-full bg-slate-50 border border-slate-200 px-6 py-4 rounded-2xl text-sm font-medium text-black outline-none focus:border-[#FFD000] transition-all font-['Inter']"
+                                                                class="w-full bg-slate-50 border border-slate-200 px-6 py-4 rounded-none text-sm font-bold text-black outline-none focus:border-black transition-all"
                                                                 placeholder="Paste your API key here...">
+                                                            <div class="flex justify-end gap-3 pt-2">
+                                                                <button onclick="window.saveKeyField('drive')"
+                                                                    class="px-6 py-2 bg-[#15803d] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#166534] transition-all">Save Changes</button>
+                                                                <button onclick="window.cancelKeyField('drive')"
+                                                                    class="px-6 py-2 bg-slate-100 text-black text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -3135,9 +3043,7 @@
 
                 <!-- SCHOOL SECTIONS VIEW -->
                 <section id="school-sections-view" class="dynamic-section hidden">
-                    <div class="mx-auto max-w-[1024px] w-full">
-                        <div
-                            class="bg-white border-x border-slate-200 min-h-[calc(100vh-82px)] p-0 relative flex flex-col">
+                    <div class="flex flex-col h-full bg-white min-h-screen border-b border-slate-200">
                             <!-- Page Header -->
                             <div class="px-10 py-8 flex justify-between items-center">
                                 <h1 class="text-2xl font-bold text-black tracking-tight">Sections</h1>
@@ -3210,9 +3116,9 @@
                                                 <span
                                                     class="text-[10px] font-bold text-black uppercase tracking-widest">Search
                                                     Section</span>
-                                                <input type="checkbox" checked
-                                                    onchange="document.getElementById('section-field-name').classList.toggle('hidden', !this.checked)"
-                                                    class="w-4 h-4 rounded border-2 border-slate-200 checked:bg-black checked:border-black transition-all cursor-pointer">
+                                                <input type="checkbox" id="section-check-name" checked
+                                                    onchange="window.toggleAdminSearchField('section', 'name', this.checked)"
+                                                    class="w-4 h-4 rounded border-2 border-slate-200 checked:bg-[#15803d] checked:border-[#15803d] transition-all cursor-pointer">
                                             </label>
 
                                             <label
@@ -3220,9 +3126,9 @@
                                                 <span
                                                     class="text-[10px] font-bold text-black uppercase tracking-widest">Search
                                                     Room</span>
-                                                <input type="checkbox"
-                                                    onchange="document.getElementById('section-field-room').classList.toggle('hidden', !this.checked)"
-                                                    class="w-4 h-4 rounded border-2 border-slate-200 checked:bg-black checked:border-black transition-all cursor-pointer">
+                                                <input type="checkbox" id="section-check-room" checked
+                                                    onchange="window.toggleAdminSearchField('section', 'room', this.checked)"
+                                                    class="w-4 h-4 rounded border-2 border-slate-200 checked:bg-[#15803d] checked:border-[#15803d] transition-all cursor-pointer">
                                             </label>
 
                                             <label
@@ -3230,9 +3136,9 @@
                                                 <span
                                                     class="text-[10px] font-bold text-black uppercase tracking-widest">Grade
                                                     Level</span>
-                                                <input type="checkbox"
-                                                    onchange="document.getElementById('section-field-grade').classList.toggle('hidden', !this.checked)"
-                                                    class="w-4 h-4 rounded border-2 border-slate-200 checked:bg-black checked:border-black transition-all cursor-pointer">
+                                                <input type="checkbox" id="section-check-grade" checked
+                                                    onchange="window.toggleAdminSearchField('section', 'grade', this.checked)"
+                                                    class="w-4 h-4 rounded border-2 border-slate-200 checked:bg-[#15803d] checked:border-[#15803d] transition-all cursor-pointer">
                                             </label>
                                         </div>
                                     </div>
@@ -3246,52 +3152,42 @@
 
                             <!-- Standardized Institutional Table -->
                             <div class="flex-1 pb-16">
-                                <table class="w-full text-left border-collapse">
+                                <table class="w-full text-left border-collapse admin-table-striped">
                                     <thead class="sticky top-0 bg-white z-10 border-b border-slate-100">
                                         <tr>
-                                            <th
-                                                class="px-6 py-4 text-[10px] font-normal text-black uppercase tracking-widest font-['Inter']">
+                                            <th class="px-6 py-4 text-[10px] font-bold text-black uppercase tracking-wider text-center font-['Inter']">
+                                                No.</th>
+                                            <th class="px-6 py-4 text-[10px] font-bold text-black uppercase tracking-wider text-center font-['Inter']">
                                                 Section</th>
-                                            <th
-                                                class="w-[120px] px-4 py-4 text-[10px] font-normal text-black uppercase tracking-widest text-center font-['Inter']">
+                                            <th class="px-6 py-4 text-[10px] font-bold text-black uppercase tracking-wider text-center font-['Inter']">
                                                 Grade Level</th>
-                                            <th
-                                                class="px-6 py-4 text-[10px] font-normal text-black uppercase tracking-widest font-['Inter']">
+                                            <th class="px-6 py-4 text-[10px] font-bold text-black uppercase tracking-wider text-center font-['Inter']">
                                                 Subject</th>
-                                            <th
-                                                class="px-6 py-4 text-[10px] font-normal text-black uppercase tracking-widest font-['Inter']">
+                                            <th class="px-6 py-4 text-[10px] font-bold text-black uppercase tracking-wider text-center font-['Inter']">
                                                 Teacher</th>
-                                            <th
-                                                class="px-6 py-4 text-[10px] font-normal text-black uppercase tracking-widest text-center font-['Inter']">
+                                            <th class="px-6 py-4 text-[10px] font-bold text-black uppercase tracking-wider text-center font-['Inter']">
                                                 Room</th>
-                                            <th
-                                                class="px-6 py-4 text-[10px] font-normal text-black uppercase tracking-widest text-center font-['Inter']">
+                                            <th class="px-6 py-4 text-[10px] font-bold text-black uppercase tracking-wider text-center font-['Inter']">
                                                 Students</th>
-                                            <th
-                                                class="px-6 py-4 text-[10px] font-normal text-black uppercase tracking-widest text-center font-['Inter']">
+                                            <th class="px-6 py-4 text-[10px] font-bold text-black uppercase tracking-wider text-center font-['Inter']">
                                                 S.Y.</th>
-                                            <th
-                                                class="px-6 py-4 text-[10px] font-normal text-black uppercase tracking-widest text-center font-['Inter']">
+                                            <th class="px-6 py-4 text-[10px] font-bold text-black uppercase tracking-wider text-center font-['Inter']">
                                                 Status</th>
-                                            <th
-                                                class="px-6 py-4 text-[10px] font-normal text-black uppercase tracking-widest text-right font-['Inter']">
+                                            <th class="px-6 py-4 text-[10px] font-bold text-black uppercase tracking-wider text-center font-['Inter']">
                                                 Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="sectionTableBody" class="divide-y divide-slate-50">
+                                    <tbody id="sectionTableBody" class="divide-y divide-slate-100">
                                         <!-- Dynamic Sections will be rendered here -->
                                     </tbody>
                                 </table>
+                                <div id="section-pagination-container" class="px-10 py-6 border-t border-slate-100 flex items-center justify-between bg-white"></div>
                             </div>
-                        </div>
-                    </div>
                 </section>
 
                 <!-- SCHOOL SUBJECTS VIEW -->
                 <section id="school-subjects-view" class="dynamic-section hidden">
-                    <div class="mx-auto max-w-[1024px] w-full">
-                        <div
-                            class="bg-white border-x border-slate-200 min-h-[calc(100vh-82px)] p-0 relative flex flex-col">
+                    <div class="flex flex-col h-full bg-white min-h-screen border-b border-slate-200">
                             <!-- Page Header -->
                             <div class="px-10 py-8 flex justify-between items-center">
                                 <h1 class="text-2xl font-bold text-black tracking-tight">Subjects</h1>
@@ -3365,9 +3261,9 @@
                                                 <span
                                                     class="text-[10px] font-bold text-black uppercase tracking-widest">Search
                                                     Code</span>
-                                                <input type="checkbox" checked
-                                                    onchange="document.getElementById('subject-field-code').classList.toggle('hidden', !this.checked)"
-                                                    class="w-4 h-4 rounded border-2 border-slate-200 checked:bg-black checked:border-black transition-all cursor-pointer">
+                                                <input type="checkbox" id="subject-check-code" checked
+                                                    onchange="window.toggleAdminSearchField('subject', 'code', this.checked)"
+                                                    class="w-4 h-4 rounded border-2 border-slate-200 checked:bg-[#15803d] checked:border-[#15803d] transition-all cursor-pointer">
                                             </label>
 
                                             <label
@@ -3375,9 +3271,9 @@
                                                 <span
                                                     class="text-[10px] font-bold text-black uppercase tracking-widest">Search
                                                     Name</span>
-                                                <input type="checkbox"
-                                                    onchange="document.getElementById('subject-field-name').classList.toggle('hidden', !this.checked)"
-                                                    class="w-4 h-4 rounded border-2 border-slate-200 checked:bg-black checked:border-black transition-all cursor-pointer">
+                                                <input type="checkbox" id="subject-check-name" checked
+                                                    onchange="window.toggleAdminSearchField('subject', 'name', this.checked)"
+                                                    class="w-4 h-4 rounded border-2 border-slate-200 checked:bg-[#15803d] checked:border-[#15803d] transition-all cursor-pointer">
                                             </label>
 
                                             <label
@@ -3385,9 +3281,9 @@
                                                 <span
                                                     class="text-[10px] font-bold text-black uppercase tracking-widest">Filter
                                                     Type</span>
-                                                <input type="checkbox"
-                                                    onchange="document.getElementById('subject-field-type').classList.toggle('hidden', !this.checked)"
-                                                    class="w-4 h-4 rounded border-2 border-slate-200 checked:bg-black checked:border-black transition-all cursor-pointer">
+                                                <input type="checkbox" id="subject-check-type" checked
+                                                    onchange="window.toggleAdminSearchField('subject', 'type', this.checked)"
+                                                    class="w-4 h-4 rounded border-2 border-slate-200 checked:bg-[#15803d] checked:border-[#15803d] transition-all cursor-pointer">
                                             </label>
                                         </div>
                                     </div>
@@ -3401,45 +3297,32 @@
 
                             <!-- Standardized Institutional Table -->
                             <div class="flex-1 pb-16">
-                                <table class="w-full text-left border-collapse table-fixed">
-                                    <colgroup>
-                                        <col style="width: 15%;"> <!-- Code -->
-                                        <col style="width: 35%;"> <!-- Subject -->
-                                        <col style="width: 17%;"> <!-- Type -->
-                                        <col style="width: 10%;"> <!-- Units -->
-                                        <col style="width: 13%;"> <!-- Status -->
-                                        <col style="width: 10%;"> <!-- Actions -->
-                                    </colgroup>
+                                <table class="w-full text-left border-collapse admin-table-striped">
                                     <thead class="sticky top-0 bg-slate-50 z-10 border-b border-slate-200">
                                         <tr>
-                                            <th
-                                                class="px-8 py-4 text-[10px] font-bold text-black uppercase tracking-widest text-center">
+                                            <th class="px-4 py-4 text-[10px] font-bold text-black uppercase tracking-wider text-center font-['Inter']">
+                                                No.</th>
+                                            <th class="px-8 py-4 text-[10px] font-bold text-black uppercase tracking-wider text-center font-['Inter']">
                                                 Code</th>
-                                            <th
-                                                class="px-8 py-4 text-[10px] font-bold text-black uppercase tracking-widest text-center">
+                                            <th class="px-8 py-4 text-[10px] font-bold text-black uppercase tracking-wider text-center font-['Inter']">
                                                 Subject</th>
-                                            <th
-                                                class="px-8 py-4 text-[10px] font-bold text-black uppercase tracking-widest text-center">
+                                            <th class="px-8 py-4 text-[10px] font-bold text-black uppercase tracking-wider text-center font-['Inter']">
                                                 Type</th>
-                                            <th
-                                                class="px-8 py-4 text-[10px] font-bold text-black uppercase tracking-widest text-center">
+                                            <th class="px-8 py-4 text-[10px] font-bold text-black uppercase tracking-wider text-center font-['Inter']">
                                                 Units</th>
-                                            <th
-                                                class="px-8 py-4 text-[10px] font-bold text-black uppercase tracking-widest text-center">
+                                            <th class="px-8 py-4 text-[10px] font-bold text-black uppercase tracking-wider text-center font-['Inter']">
                                                 Status</th>
-                                            <th
-                                                class="px-8 py-4 text-[10px] font-bold text-black uppercase tracking-widest text-center">
+                                            <th class="px-8 py-4 text-[10px] font-bold text-black uppercase tracking-wider text-center font-['Inter']">
                                                 Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="subjectTableBody"
-                                        class="divide-y divide-slate-100 [&_tr:nth-child(even)]:bg-slate-50/50">
+                                        class="divide-y divide-slate-100">
                                         <!-- Will be populated by JS -->
                                     </tbody>
                                 </table>
+                                <div id="subject-pagination-container" class="px-10 py-6 border-t border-slate-100 flex items-center justify-between bg-white"></div>
                             </div>
-                        </div>
-                    </div>
                 </section>
 
                 <!-- USER PERMISSIONS OVERLAY (Outer Layer Workstation) -->
@@ -3456,7 +3339,7 @@
                     <div class="mx-auto max-w-[1024px] w-full p-0 animate-in slide-in-from-top-4 duration-500">
                         <!-- White Panel (Full Height Column) -->
                         <div
-                            class="bg-white border-x border-slate-200 min-h-screen p-0 shadow-sm relative flex flex-col overflow-y-auto">
+                            class="bg-white border-x border-slate-200 min-h-screen p-0 shadow-sm relative flex flex-col">
 
                             <!-- Internal Header -->
                             <div class="border-b border-slate-50">
@@ -3498,17 +3381,7 @@
                                                 </div>
                                             </div>
                                         </label>
-                                        <label id="perm-role-pass-container"
-                                            class="flex items-center justify-between group cursor-pointer py-3 border-b border-slate-50 hover:bg-slate-50 transition-all rounded-lg px-2 hidden">
-                                            <div class="flex flex-col">
-                                                <span class="text-sm font-bold text-black font-['Inter']">Pass Master Ownership</span>
-                                                <span class="text-[10px] text-slate-400 font-medium">Transfer your Master Admin status to this account.</span>
-                                            </div>
-                                            <button type="button" onclick="window.passMasterAdmin(window.currentEditingUserId)"
-                                                class="px-4 py-2 bg-[#FFD000] text-black text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-[#ffe047] transition-all">
-                                                Transfer
-                                            </button>
-                                        </label>
+
                                     </div>
                                 </div>
 
@@ -3587,7 +3460,7 @@
                 <section id="reports-ai-view" class="dynamic-section hidden">
                     <div class="mx-auto max-w-[1024px] w-full">
                         <div
-                            class="bg-white border-x border-slate-200 min-h-[calc(100vh-82px)] p-0 relative flex flex-col">
+                            class="bg-white border-x border-b border-slate-200 min-h-screen p-0 standard-panel-shadow relative flex flex-col">
                             <div class="px-10 py-8 border-b border-slate-100">
                                 <h1 class="text-2xl font-bold text-black tracking-tight">AI Reports</h1>
                                 <p class="text-xs text-slate-400 mt-1 font-medium">AI-generated analytics across
@@ -3869,7 +3742,7 @@
                 <section id="reports-attendance-view" class="dynamic-section hidden">
                     <div class="mx-auto max-w-[1024px] w-full">
                         <div
-                            class="bg-white border-x border-slate-200 min-h-[calc(100vh-82px)] p-0 relative flex flex-col">
+                            class="bg-white border-x border-b border-slate-200 min-h-screen p-0 standard-panel-shadow relative flex flex-col">
                             <div class="px-10 py-8 border-b border-slate-100">
                                 <h1 class="text-2xl font-bold text-black tracking-tight">Attendance Reports</h1>
                                 <p class="text-xs text-slate-400 mt-1 font-medium">Student attendance tracking and
@@ -4035,7 +3908,7 @@
                 <section id="reports-performance-view" class="dynamic-section hidden">
                     <div class="mx-auto max-w-[1024px] w-full">
                         <div
-                            class="bg-white border-x border-slate-200 min-h-[calc(100vh-82px)] p-0 relative flex flex-col">
+                            class="bg-white border-x border-b border-slate-200 min-h-screen p-0 standard-panel-shadow relative flex flex-col">
                             <div class="px-10 py-8 border-b border-slate-100">
                                 <h1 class="text-2xl font-bold text-black tracking-tight">Performance Reports</h1>
                                 <p class="text-xs text-slate-400 mt-1 font-medium">Student assessments and grades
@@ -4262,7 +4135,7 @@
                 <section id="resources-view" class="dynamic-section hidden">
                     <div class="mx-auto max-w-[1024px] w-full">
                         <div
-                            class="bg-white border-x border-slate-200 min-h-[calc(100vh-82px)] p-0 relative flex flex-col">
+                            class="bg-white border-x border-b border-slate-200 min-h-screen p-0 standard-panel-shadow relative flex flex-col">
                             <!-- No Page Header: Content starts immediately -->
                             <div class="px-10 py-8 space-y-8">
                                 <!-- Top Actions -->
@@ -4401,8 +4274,8 @@
                                                         <div class="flex items-center gap-2">
                                                             <div
                                                                 class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[8px] font-bold text-slate-500 shrink-0">
-                                                                SA</div>
-                                                            <p class="text-xs font-medium text-slate-600">Super Admin
+                                                                MA</div>
+                                                            <p class="text-xs font-medium text-slate-600">Master Admin
                                                             </p>
                                                         </div>
                                                     </td>
@@ -4441,8 +4314,8 @@
                                                         <div class="flex items-center gap-2">
                                                             <div
                                                                 class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[8px] font-bold text-slate-500 shrink-0">
-                                                                SA</div>
-                                                            <p class="text-xs font-medium text-slate-600">Super Admin
+                                                                MA</div>
+                                                            <p class="text-xs font-medium text-slate-600">Master Admin
                                                             </p>
                                                         </div>
                                                     </td>
@@ -4481,8 +4354,8 @@
                                                         <div class="flex items-center gap-2">
                                                             <div
                                                                 class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[8px] font-bold text-slate-500 shrink-0">
-                                                                SA</div>
-                                                            <p class="text-xs font-medium text-slate-600">Super Admin
+                                                                MA</div>
+                                                            <p class="text-xs font-medium text-slate-600">Master Admin
                                                             </p>
                                                         </div>
                                                     </td>
@@ -4522,7 +4395,7 @@
                                                             <div
                                                                 class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[8px] font-bold text-slate-500 shrink-0">
                                                                 SA</div>
-                                                            <p class="text-xs font-medium text-slate-600">Super Admin
+                                                            <p class="text-xs font-medium text-slate-600">Master Admin
                                                             </p>
                                                         </div>
                                                     </td>
@@ -4551,7 +4424,7 @@
                 <section id="audit-ai-view" class="dynamic-section hidden">
                     <div class="mx-auto max-w-[1024px] w-full">
                         <div
-                            class="bg-white border-x border-slate-200 min-h-[calc(100vh-82px)] p-0 relative flex flex-col">
+                            class="bg-white border-x border-b border-slate-200 min-h-screen p-0 standard-panel-shadow relative flex flex-col">
                             <div class="px-10 py-8 border-b border-slate-100">
                                 <h1 class="text-2xl font-bold text-black tracking-tight font-['Inter']">AI Logs</h1>
                             </div>
@@ -4620,7 +4493,7 @@
                 <section id="audit-activity-view" class="dynamic-section hidden">
                     <div class="mx-auto max-w-[1024px] w-full">
                         <div
-                            class="bg-white border-x border-slate-200 min-h-[calc(100vh-82px)] p-0 relative flex flex-col">
+                            class="bg-white border-x border-b border-slate-200 min-h-screen p-0 standard-panel-shadow relative flex flex-col">
                             <div class="px-10 py-8 border-b border-slate-100">
                                 <h1 class="text-2xl font-bold text-black tracking-tight font-['Inter']">Activity Logs</h1>
                             </div>
@@ -4640,9 +4513,9 @@
                                             <tr class="hover:bg-slate-50 transition-colors">
                                                 <td class="px-8 py-6">
                                                     <div class="flex items-center gap-3">
-                                                        <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600">SA</div>
+                                                        <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600">MA</div>
                                                         <div>
-                                                            <p class="text-xs font-bold text-black">Super Admin</p>
+                                                            <p class="text-xs font-bold text-black">Master Admin</p>
                                                             <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Administrator</p>
                                                         </div>
                                                     </div>
@@ -4689,7 +4562,7 @@
                 <section id="audit-auth-view" class="dynamic-section hidden">
                     <div class="mx-auto max-w-[1024px] w-full">
                         <div
-                            class="bg-white border-x border-slate-200 min-h-[calc(100vh-82px)] p-0 relative flex flex-col">
+                            class="bg-white border-x border-b border-slate-200 min-h-screen p-0 standard-panel-shadow relative flex flex-col">
                             <div class="px-10 py-8 border-b border-slate-100">
                                 <h1 class="text-2xl font-bold text-black tracking-tight font-['Inter']">Authentication Logs</h1>
                             </div>
@@ -4780,7 +4653,7 @@
 
                 <div class="mx-auto max-w-[1024px] w-full p-0 animate-in slide-in-from-top-4 duration-500">
                     <!-- White Panel (Full Height Column) -->
-                    <div class="bg-white border-x border-slate-200 min-h-screen p-0 shadow-sm relative flex flex-col">
+                    <div class="bg-white border-x border-slate-200 min-h-screen p-0 standard-panel-shadow relative flex flex-col">
                         <div class="border-b border-slate-50 sticky top-0 bg-white z-20">
                             <div class="px-10 pt-8 pb-4 flex items-center justify-between">
                                 <h1 id="section-modal-title" class="text-2xl font-bold text-black tracking-tight">
@@ -5110,14 +4983,14 @@
                     <div id="subject-edit-form-body" class="flex-1 p-10 pt-8 space-y-8">
                         <!-- Step 1: Create Subject -->
                         <div id="subject-step-1" class="space-y-8">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-8">
                                 <div class="space-y-2">
                                     <label
                                         class="text-[10px] font-bold text-black uppercase tracking-widest ml-1">Subject
                                         Code</label>
                                     <input type="text" id="edit-subject-code" maxlength="20" placeholder="e.g. MATH101"
                                         oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase(); window.checkSubjectDraftStatus(); window.checkSubjectFormValidity()"
-                                        class="w-full bg-slate-50 border border-slate-200 px-5 py-3 rounded-xl text-sm font-medium text-black outline-none focus:border-black transition-all">
+                                        class="w-full bg-slate-50 border border-slate-200 px-5 py-4 rounded-xl text-sm font-medium text-black outline-none focus:border-black transition-all">
                                 </div>
                                 <div class="space-y-2">
                                     <label
@@ -5126,28 +4999,31 @@
                                     <input type="text" id="edit-subject-name" maxlength="50"
                                         oninput="this.value = this.value.replace(/[^a-zA-Z0-9\s]/g, ''); window.checkSubjectDraftStatus(); window.checkSubjectFormValidity()"
                                         placeholder="Full Subject Name"
-                                        class="w-full bg-slate-50 border border-slate-200 px-5 py-3 rounded-xl text-sm font-medium text-black outline-none focus:border-black transition-all">
+                                        class="w-full bg-slate-50 border border-slate-200 px-5 py-4 rounded-xl text-sm font-medium text-black outline-none focus:border-black transition-all">
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div class="space-y-2">
                                     <label
                                         class="text-[10px] font-bold text-black uppercase tracking-widest ml-1">Units</label>
                                     <input type="text" id="edit-subject-units" maxlength="2" placeholder="e.g. 3"
                                         oninput="this.value = this.value.replace(/[^0-9]/g, ''); window.checkSubjectDraftStatus(); window.checkSubjectFormValidity()"
-                                        class="w-full bg-slate-50 border border-slate-200 px-5 py-3 rounded-xl text-sm font-medium text-black outline-none focus:border-black transition-all">
+                                        class="w-full bg-slate-50 border border-slate-200 px-5 py-4 rounded-xl text-sm font-medium text-black outline-none focus:border-black transition-all">
                                 </div>
                                 <div class="space-y-2">
                                     <label
                                         class="text-[10px] font-bold text-black uppercase tracking-widest ml-1">Subject
                                         Type</label>
-                                    <select id="edit-subject-type" onchange="window.handleSubjectTypeChange()"
-                                        class="w-full bg-slate-50 border border-slate-200 px-5 py-3 rounded-xl text-sm font-medium text-black outline-none focus:border-black transition-all appearance-none cursor-pointer">
-                                        <option value="Core">Core Subject</option>
-                                        <option value="Applied">Applied Subject</option>
-                                        <option value="Specialized">Specialized Subject</option>
-                                    </select>
+                                    <div class="relative w-full">
+                                        <select id="edit-subject-type" onchange="window.handleSubjectTypeChange()"
+                                            class="w-full bg-slate-50 border border-slate-200 px-5 py-4 rounded-xl text-sm font-medium text-black outline-none focus:border-black transition-all appearance-none cursor-pointer">
+                                            <option value="Core">Core Subject</option>
+                                            <option value="Applied">Applied Subject</option>
+                                            <option value="Specialized">Specialized Subject</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-black text-[10px] pointer-events-none"></i>
+                                    </div>
                                 </div>
                             </div>
 
@@ -5359,43 +5235,37 @@
         <!-- USER ACCOUNT CREATE/EDIT OVERLAY (Branch-Style Workstation) -->
         <div id="user-edit-overlay"
             class="branch-edit-overlay fixed inset-0 bg-[#f8fafc] z-[1000] hidden flex flex-col items-center p-0 overflow-y-auto">
-
-            <!-- Exit Control (Far Right) -->
-            <button type="button" onclick="window.handleUserExit()"
-                class="fixed top-10 right-10 w-12 h-12 rounded-full hover:bg-slate-200 flex items-center justify-center text-black transition-all z-[1001]"
-                title="Exit Editor">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
-
-            <div class="branch-edit-shell mx-auto w-full">
+            <div class="branch-edit-shell mx-auto w-full h-full max-w-6xl">
                 <div
-                    class="branch-edit-panel bg-white border border-slate-200 min-h-screen p-0 shadow-sm relative flex flex-col">
+                    class="branch-edit-panel bg-white border-x border-slate-200 min-h-screen standard-panel-shadow relative flex flex-col">
                     <!-- Header -->
-                    <div class="border-b border-slate-50">
-                        <!-- Title row -->
-                        <div class="px-10 pt-8 pb-4">
-                            <h1 id="user-editor-title" class="text-2xl font-bold text-black tracking-tight">
-                                Create User Account</h1>
+                    <div class="border-b border-slate-100 bg-white sticky top-0 z-20">
+                        <div class="px-10 py-8 flex justify-between items-center">
+                            <h2 class="text-2xl font-black text-black tracking-tight uppercase">Create User Account</h2>
+                            <button type="button" onclick="window.toggleUserOverlay(false)"
+                                class="w-12 h-12 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-all group">
+                                <i class="fa-solid fa-xmark text-black text-lg"></i>
+                            </button>
                         </div>
-                        <!-- 3-Bar Step Progress (below title, spans full width) -->
+                        <!-- 3-Bar Step Progress -->
                         <div class="flex w-full">
-                            <div class="flex-1 flex flex-col gap-1.5 px-6 pb-0">
+                            <div class="flex-1 flex flex-col gap-1.5 px-10 pb-0">
                                 <span id="step-bar-1-label"
-                                    class="text-[9px] font-medium uppercase tracking-[0.18em] text-[#15803d]">Account</span>
+                                    class="text-[9px] font-black uppercase tracking-[0.2em] text-black">Account</span>
                                 <div id="step-bar-1-track"
                                     class="h-[3px] w-full bg-[#15803d] rounded-full transition-all duration-300">
                                 </div>
                             </div>
-                            <div class="flex-1 flex flex-col gap-1.5 px-6 pb-0">
+                            <div class="flex-1 flex flex-col gap-1.5 px-10 pb-0">
                                 <span id="step-bar-2-label"
-                                    class="text-[9px] font-medium uppercase tracking-[0.18em] text-slate-400">Credentials</span>
+                                    class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Credentials</span>
                                 <div id="step-bar-2-track"
                                     class="h-[3px] w-full bg-slate-200 rounded-full transition-all duration-300">
                                 </div>
                             </div>
-                            <div class="flex-1 flex flex-col gap-1.5 px-6 pb-0">
+                            <div class="flex-1 flex flex-col gap-1.5 px-10 pb-0">
                                 <span id="step-bar-3-label"
-                                    class="text-[9px] font-medium uppercase tracking-[0.18em] text-slate-400">Send</span>
+                                    class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Send</span>
                                 <div id="step-bar-3-track"
                                     class="h-[3px] w-full bg-slate-200 rounded-full transition-all duration-300">
                                 </div>
@@ -5405,26 +5275,10 @@
 
                     <!-- Form Body -->
                     <div id="user-edit-form-body" class="flex-1 p-10">
+                        <!-- STEP 1: ACCOUNT -->
                         <div id="user-step-1" class="space-y-10">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div class="space-y-2">
-                                    <label
-                                        class="text-[10px] font-medium text-slate-500 uppercase tracking-widest ml-1 block">Institutional
-                                        Role</label>
-                                    <div class="relative">
-                                        <select id="edit-user-role" onchange="window.handleRoleChange(this.value)"
-                                            class="w-full bg-slate-50 border border-slate-200 px-5 py-3 rounded-xl text-sm text-slate-600 outline-none focus:border-slate-400 transition-all appearance-none cursor-pointer">
-                                            <option value="" disabled selected hidden>Select Role</option>
-                                            <option value="Admin">Admin</option>
-                                            <option value="Teacher">Teacher</option>
-                                            <option value="Student">Student</option>
-                                        </select>
-                                        <i
-                                            class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-black text-[10px] pointer-events-none"></i>
-                                    </div>
-                                </div>
-
-                                <div class="space-y-2">
+                            <div class="space-y-6">
+                                <div class="space-y-2 max-w-md">
                                     <label
                                         class="text-[10px] font-bold text-black uppercase tracking-widest ml-1 block">School
                                         Branch</label>
@@ -5439,10 +5293,25 @@
                                     </div>
                                 </div>
 
-
+                                <div class="space-y-2 max-w-md">
+                                    <label
+                                        class="text-[10px] font-bold text-black uppercase tracking-widest ml-1 block">Institutional
+                                        Role</label>
+                                    <div class="relative">
+                                        <select id="edit-user-role" onchange="window.handleRoleChange(this.value)"
+                                            class="w-full bg-slate-50 border border-slate-200 px-5 py-3 rounded-xl text-sm text-slate-600 outline-none focus:border-slate-400 transition-all appearance-none cursor-pointer">
+                                            <option value="" disabled selected hidden>Select Role</option>
+                                            <option value="Admin">Admin</option>
+                                            <option value="Teacher">Teacher</option>
+                                            <option value="Student">Student</option>
+                                        </select>
+                                        <i
+                                            class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-black text-[10px] pointer-events-none"></i>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4 border-t border-slate-50">
                                 <div class="space-y-2">
                                     <label
                                         class="text-[10px] font-bold text-black uppercase tracking-widest ml-1 block">Firstname</label>
@@ -5467,74 +5336,75 @@
                                         oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, ''); this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1)"
                                         class="w-full bg-slate-50 border border-slate-200 px-5 py-3 rounded-xl text-sm font-medium text-black outline-none focus:border-black transition-all placeholder:font-normal">
                                 </div>
-                                <div class="space-y-2">
-                                    <label
-                                        class="text-[10px] font-medium text-black uppercase tracking-widest ml-1 block">Gender</label>
-                                    <div class="relative">
-                                        <select id="edit-user-gender"
-                                            class="w-full bg-slate-50 border border-slate-200 px-5 py-3 rounded-xl text-sm font-medium text-black outline-none focus:border-black transition-all appearance-none cursor-pointer">
-                                            <option value="" disabled selected hidden>Select Gender</option>
-                                            <option value="Male">Male</option>
-                                            <option value="Female">Female</option>
-                                        </select>
-                                        <i
-                                            class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-black text-[10px] pointer-events-none"></i>
-                                    </div>
+                            </div>
+
+                            <div class="space-y-2 pt-4">
+                                <label
+                                    class="text-[10px] font-bold text-black uppercase tracking-widest ml-1 block">Gender</label>
+                                <div class="relative max-w-[200px]">
+                                    <select id="edit-user-gender"
+                                        class="w-full bg-slate-50 border border-slate-200 px-5 py-3 rounded-xl text-sm font-medium text-black outline-none focus:border-black transition-all appearance-none cursor-pointer">
+                                        <option value="" disabled selected hidden>Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
+                                    <i
+                                        class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-black text-[10px] pointer-events-none"></i>
                                 </div>
                             </div>
                         </div>
 
-                        <div id="user-step-2" class="space-y-10 hidden">
+                        <!-- STEP 2: CREDENTIALS -->
+                        <div id="user-step-2" class="hidden space-y-10 min-h-[400px]">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div class="space-y-2">
                                     <label
-                                        class="text-[10px] font-medium text-black uppercase tracking-widest ml-1 block">ID
-                                        number</label>
-                                    <input type="text" id="edit-user-id" placeholder="Select Role to Generate ID"
-                                        readonly
-                                        class="w-full bg-slate-100 border border-slate-200 px-5 py-3 rounded-xl text-sm font-medium text-slate-500 cursor-not-allowed placeholder:font-normal">
+                                        class="text-[10px] font-bold text-black uppercase tracking-widest ml-1 block">ID
+                                        Number</label>
+                                    <input type="text" id="edit-user-id" placeholder="ID Number"
+                                        readonly disabled
+                                        class="w-full bg-slate-100 border border-slate-200 px-5 py-4 rounded-xl text-sm font-bold text-slate-500 cursor-not-allowed placeholder:font-normal">
                                 </div>
 
                                 <div class="space-y-2">
                                     <label
-                                        class="text-[10px] font-medium text-black uppercase tracking-widest ml-1 block">Gmail</label>
+                                        class="text-[10px] font-bold text-black uppercase tracking-widest ml-1 block">Gmail</label>
                                     <div class="flex items-center gap-2">
-                                        <input type="text" id="edit-user-email" placeholder="Enter Gmail username"
+                                        <input type="text" id="edit-user-email" placeholder="gmail username"
                                             maxlength="64"
                                             oninput="this.value = this.value.replace(/[^a-zA-Z0-9.]/g, '').toLowerCase(); window.validateUserStep2()"
-                                            class="flex-1 bg-slate-50 border border-slate-200 px-5 py-3 rounded-xl text-sm font-medium text-black outline-none focus:border-black transition-all placeholder:font-normal">
+                                            class="flex-1 bg-slate-50 border border-slate-200 px-5 py-4 rounded-xl text-sm font-medium text-black outline-none focus:border-black transition-all placeholder:font-normal">
                                         <span class="text-sm font-medium text-black whitespace-nowrap">@gmail.com</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-8">
                                 <div class="space-y-2">
                                     <label
-                                        class="text-[10px] font-medium text-black uppercase tracking-widest ml-1 block">Password</label>
-                                    <input type="text" id="edit-user-password" placeholder="Last name + generated ID"
-                                        readonly
-                                        class="w-full bg-slate-100 border border-slate-200 px-5 py-3 rounded-xl text-sm font-medium text-slate-500 cursor-not-allowed placeholder:font-normal">
+                                        class="text-[10px] font-bold text-black uppercase tracking-widest ml-1 block">Temporary Password</label>
+                                    <input type="text" id="edit-user-password" placeholder="Password"
+                                        readonly disabled
+                                        class="w-full bg-slate-100 border border-slate-200 px-5 py-4 rounded-xl text-sm font-bold text-slate-500 cursor-not-allowed placeholder:font-normal">
                                 </div>
 
-                                <div class="space-y-2">
+                                <div class="pt-8 border-t border-slate-100">
                                     <label
-                                        class="text-[10px] font-medium text-black uppercase tracking-widest ml-1 block">Preview</label>
+                                        class="text-[11px] font-black text-black uppercase tracking-[0.2em] mb-6 block">Account Preview</label>
                                     <div
-                                        class="rounded-2xl bg-white border border-slate-200 px-5 py-4 space-y-3 min-h-[52px]">
-                                        <div class="flex items-center justify-between gap-4">
+                                        class="max-w-xl rounded-[24px] bg-slate-50 border border-slate-200 p-8 space-y-6 shadow-sm">
+                                        <div class="flex items-center justify-between gap-6">
                                             <span
-                                                class="text-[10px] font-medium uppercase tracking-[0.25em] text-black/40">Login
-                                                ID</span>
-                                            <span id="user-preview-id" class="text-sm font-medium text-black">Not
-                                                generated yet</span>
+                                                class="text-[10px] font-black uppercase tracking-[0.2em] text-black">Login id</span>
+                                            <span id="user-preview-id" class="text-xl font-medium text-black tracking-tight">Not
+                                                Generated</span>
                                         </div>
-                                        <div class="flex items-center justify-between gap-4">
+                                        <div class="h-px bg-slate-200/50"></div>
+                                        <div class="flex items-center justify-between gap-6">
                                             <span
-                                                class="text-[10px] font-medium uppercase tracking-[0.25em] text-black/40">Password</span>
+                                                class="text-[10px] font-black uppercase tracking-[0.2em] text-black">Password</span>
                                             <span id="user-preview-password"
-                                                class="text-sm font-medium text-black">Waiting
-                                                for last name</span>
+                                                class="text-xl font-medium text-black tracking-tight">Waiting</span>
                                         </div>
                                     </div>
                                 </div>
@@ -5543,10 +5413,6 @@
 
                         <div id="user-step-3" class="space-y-8 hidden">
                             <div class="text-center space-y-2">
-                                <div
-                                    class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fa-solid fa-check text-xl"></i>
-                                </div>
                                 <h3 class="text-2xl font-bold text-black tracking-tight">Account Created
                                     Successfully!</h3>
                                 <p class="text-sm text-slate-500">The credentials have been generated and saved to
@@ -5626,7 +5492,7 @@
                                 <span id="user-save-label">Create Account</span>
                                 <i class="fa-solid fa-circle-notch fa-spin hidden" id="user-save-loading"></i>
                             </button>
-                            <button type="button" id="user-finish-btn" onclick="window.toggleUserOverlay(false)"
+                            <button type="button" id="user-finish-btn" onclick="window.finishUserCreation()"
                                 class="hidden min-w-[160px] px-10 py-4 bg-[#15803d] text-white rounded-xl text-[10px] font-medium uppercase tracking-widest hover:ring-2 hover:ring-slate-200 transition-none">
                                 <span>Close & Finish</span>
                             </button>
@@ -5635,9 +5501,6 @@
                 </div>
             </div>
         </div>
-    </div>
-    </div>
-    </div>
 
 
     <!-- Custom Exit Confirmation Modal -->
@@ -5858,19 +5721,17 @@
         class="header-panel hidden fixed right-0 top-[82px] h-[calc(100vh-82px)] w-[400px] bg-white shadow-[-20px_0_40px_rgba(0,0,0,0.08)] border-l border-slate-200 flex flex-col z-[300] rounded-l-[24px] overflow-hidden font-['Inter']">
         <!-- Header: Removed border-b -->
         <div class="px-8 py-6 bg-gray-50/50 flex-shrink-0">
-            <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center justify-between mb-8 gap-3">
+                <button id="calendarDropdownPrevMonthBtn"
+                    class="w-8 h-8 rounded-full bg-[#15803d] border border-[#15803d] hover:bg-[#166534] flex items-center justify-center text-white flex-shrink-0">
+                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                </button>
                 <h3 id="calendarDropdownMonthYear"
-                    class="text-[15px] font-black text-black leading-none uppercase tracking-widest">April 2026</h3>
-                <div class="flex gap-1">
-                    <button id="calendarDropdownPrevMonthBtn"
-                        class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 hover:bg-slate-200 flex items-center justify-center text-black transition-all">
-                        <i class="fa-solid fa-chevron-left text-[10px]"></i>
-                    </button>
-                    <button id="calendarDropdownNextMonthBtn"
-                        class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 hover:bg-slate-200 flex items-center justify-center text-black transition-all">
-                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                    </button>
-                </div>
+                    class="text-[15px] font-black text-[#15803d] leading-none tracking-widest text-center flex-1">April 2026</h3>
+                <button id="calendarDropdownNextMonthBtn"
+                    class="w-8 h-8 rounded-full bg-[#15803d] border border-[#15803d] hover:bg-[#166534] flex items-center justify-center text-white flex-shrink-0">
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
             </div>
             <div class="grid grid-cols-7 gap-1 text-center border-t border-slate-100 pt-4 mb-2">
                 <div class="text-[10px] font-normal text-black uppercase tracking-tighter">Sun</div>
@@ -5896,7 +5757,7 @@
                     }
                 </style>
                 <a href="#"
-                    class="view-calendar-anchor font-['Inter',_sans-serif] text-black text-[11px] font-black uppercase tracking-[0.2em] cursor-pointer no-underline outline-none"
+                    class="view-calendar-anchor font-['Inter',_sans-serif] text-[#15803d] text-[11px] font-black uppercase tracking-[0.2em] cursor-pointer no-underline outline-none"
                     style="font-family: 'Inter', sans-serif !important; pointer-events: auto !important;">
                     View Calendar →
                 </a>
@@ -5931,7 +5792,7 @@
                     </div>
                 </a>
                 <!-- Settings (Integrated into list) -->
-                <a href="#" onclick="switchTab('nav-settings'); hideHeaderOverlays();"
+                <a href="#" onclick="window.showMyProfile(event); hideHeaderOverlays();"
                     class="flex items-center gap-4 px-8 py-5 text-slate-700 hover:bg-gray-100 transition-all group no-underline">
                     <div class="w-10 h-10 flex items-center justify-center text-black">
                         <i class="fa-solid fa-gear text-[13px]"></i>
@@ -6168,6 +6029,67 @@
         // Global SY Context (Wireframe)
         const sy = "SY 2026-2027";
     </script>
+    <!-- API VAULT UNLOCK OVERLAY -->
+    <div id="vault-unlock-overlay"
+        class="hidden fixed inset-0 bg-white/90 backdrop-blur-md z-[1000] flex items-center justify-center p-6 animate-in fade-in duration-500">
+        <div class="w-full max-w-[400px] bg-white rounded-none shadow-2xl border border-black p-8 relative">
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="text-[14px] font-black text-black uppercase tracking-[0.2em]">Institutional Authentication</h3>
+                <button onclick="window.closeVaultModal()" class="text-black">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Verify Password</label>
+                    <input type="password" id="vault-auth-pass"
+                        placeholder="Institutional Password"
+                        class="w-full bg-slate-50 border border-slate-200 px-6 py-4 rounded-none text-sm font-bold text-black outline-none focus:border-black transition-all">
+                </div>
+
+                <div id="vault-auth-error" class="hidden text-[10px] font-bold text-red-500 uppercase tracking-widest">
+                    Password Failed. Access Denied.</div>
+
+                <div class="pt-4">
+                    <button onclick="window.verifyVaultModal()"
+                        class="w-full bg-[#15803d] text-white py-4 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#166534] transition-all flex items-center justify-center gap-3">
+                        <span>Unlock Vault</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INSTITUTIONAL PASSWORD EDIT OVERLAY -->
+    <div id="vault-password-edit-overlay"
+        class="hidden fixed inset-0 bg-white/90 backdrop-blur-md z-[1000] flex items-center justify-center p-6 animate-in fade-in duration-500">
+        <div class="w-full max-w-[400px] bg-white rounded-none shadow-2xl border border-black p-8 relative">
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="text-[14px] font-black text-black uppercase tracking-[0.2em]">Change Institutional Password</h3>
+                <button onclick="window.closePasswordChange()" class="text-black">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">New Password</label>
+                    <input type="password" id="new-vault-password" maxlength="30"
+                        placeholder="Enter new password (Max 30 chars)"
+                        class="w-full bg-slate-50 border border-slate-200 px-6 py-4 rounded-none text-sm font-bold text-black outline-none focus:border-black transition-all">
+                </div>
+
+                <div class="pt-4">
+                    <button id="vault-password-save-btn" onclick="window.updateVaultPassword()"
+                        class="w-full bg-[#15803d] text-white py-4 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#166534] transition-all flex items-center justify-center gap-3">
+                        <span id="vault-password-save-label">Update Global Password</span>
+                        <i id="vault-password-save-loading" class="fa-solid fa-circle-notch fa-spin hidden"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

@@ -284,9 +284,42 @@ input::-webkit-credentials-auto-fill-button {
     padding: 0;
 }
 
+/* Global Typography: Inter for text, preserve Font Awesome for icons */
+body,
+button,
+input,
+select,
+textarea,
+div,
+p,
+span,
+a,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+td,
+th {
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* Ensure icons use Font Awesome */
+.fa-solid,
+.fa-regular,
+.fa-light,
+.fa-thin,
+.fa-duotone,
+.fa-brands,
+.fa,
+i {
+    font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
+}
+
 body,
 html {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', sans-serif !important;
     min-height: 100vh;
     width: 100%;
     margin: 0;
@@ -431,7 +464,6 @@ main {
    DESKTOP STYLES (min-width: 1024px)
    Login panel with white background on the right side
    ============================================================= */
-}
 
 /* LOGIN INPUTS — Universal (Mobile, Tablet, Desktop) */
 .login-panel input {
@@ -767,24 +799,6 @@ main {
         margin-bottom: 0.25rem !important;
     }
 
-    /* LOGIN INPUT — compact inputs */
-    .login-panel input {
-        padding: 0.5rem 0.75rem !important;
-        font-size: 0.85rem !important;
-    }
-
-    /* LOGIN BUTTON — compact button */
-    .login-panel .sign-in-btn {
-        padding: 0.5rem !important;
-        font-size: 0.85rem !important;
-    }
-
-    /* LOGIN FORM SPACING — tighter gaps between fields */
-    .login-panel .login-form-shell .mb-5,
-    .login-panel .login-form-shell .mb-6 {
-        margin-bottom: 0.5rem !important;
-    }
-
     /* FORGOT LINK — smaller text and tighter spacing */
     .login-panel .forgot-link {
         font-size: 0.8rem !important;
@@ -795,4 +809,13 @@ main {
     .login-panel .mt-6 {
         margin-top: 0.5rem !important;
     }
+}
+
+/* GRADEBOOK REFRESH ANIMATION */
+@keyframes gradebookFadeIn {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
+}
+.gradebook-refresh-anim {
+    animation: gradebookFadeIn 0.3s ease-out;
 }

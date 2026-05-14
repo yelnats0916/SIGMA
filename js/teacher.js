@@ -1,8 +1,47 @@
 /* TEACHER DASHBOARD CORE LOGIC */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', initTeacherPortal);
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
+    initTeacherPortal();
+}
+
+function initTeacherPortal() {
+    if (window.teacherPortalInitialized) return;
+    window.teacherPortalInitialized = true;
+
     // Disable transitions during initialization
     document.documentElement.classList.add('no-transition');
+
+    // --- GLOBAL CONSTANTS & STATE ---
+    const ANNOUNCEMENT_STORAGE_KEY = 'sigma-admin-announcements-v1';
+    let activeHomeAnnouncementTab = 'all';
+    window._tcAssessmentDetailIdx = null;
+
+    const sectionMap = {
+        'nav-dashboard': 'section-dashboard',
+        'nav-profile': 'user-profile-view',
+        'nav-classes': 'section-classes',
+        'nav-subjects': 'section-subjects',
+        'nav-materials': 'section-materials',
+        'nav-assessments': 'section-assessments',
+        'nav-grades': 'section-grades',
+        'nav-analytics': 'section-analytics',
+        'nav-attendance': 'section-attendance',
+        'nav-topic-detail': 'section-topic-detail',
+        'nav-topic-content': 'section-topic-content'
+    };
+
+    const navIdByPage = {
+        'dashboard': 'nav-dashboard',
+        'classes': 'nav-classes',
+        'materials': 'nav-materials',
+        'assessments': 'nav-assessments',
+        'grades': 'nav-grades',
+        'attendance': 'nav-attendance',
+        'analytics': 'nav-analytics',
+        'subjects': 'nav-subjects',
+        'profile': 'nav-profile'
+    };
 
     // --- BRANDING LOGO SYNC ---
     const customNavLogo = localStorage.getItem('sigma-custom-nav-logo');
@@ -22,9 +61,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const layoutWrapper = document.getElementById('layout-wrapper');
     const navLinks = document.querySelectorAll('#sidebar nav a');
     const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+    let isMobileStatus = window.innerWidth < 1024;
+    let overlay = document.getElementById('sidebar-overlay');
 
     window.toggleSidebar = function () {
         const overlay = document.getElementById('sidebar-overlay');
+        const sidebar = document.getElementById('sidebar');
         if (window.innerWidth < 1024) {
             if (sidebar) {
                 const isVisible = sidebar.classList.toggle('sidebar-visible');
@@ -33,6 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             document.body.classList.toggle('sidebar-collapsed');
             if (sidebar) sidebar.classList.toggle('sidebar-collapsed');
+            // Force hide overlay on desktop
+            if (overlay) overlay.classList.add('hidden');
         }
         if (typeof updateLayout === 'function') updateLayout();
     };
@@ -40,15 +84,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close sidebar on link click (Mobile)
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
-            if (link.id === 'nav-subjects') return; // Don't close on submenu toggle
+            if (window.innerWidth >= 1024) return;
+            // Subjects: has its own overlay/toggle logic &mdash; skip
+            if (link.id === 'nav-subjects') return;
+            // Sections: skip when inside a room (handled by nav-classes click handler)
+            if (link.id === 'nav-classes' && currentClassroomKey) return;
 
-            if (window.innerWidth < 1024) {
-                if (sidebar) sidebar.classList.remove('sidebar-visible');
-                const overlay = document.getElementById('sidebar-overlay');
-                if (overlay) overlay.classList.add('hidden');
-            }
+            const sidebar = document.getElementById('sidebar');
+            const overlayEl = document.getElementById('sidebar-overlay');
+            if (sidebar) sidebar.classList.remove('sidebar-visible');
+            if (overlayEl) overlayEl.classList.add('hidden');
         });
     });
+
 
     // Sidebar Overlay Click
     const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -61,20 +109,56 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateLayout() {
         if (!layoutWrapper) return;
         if (window.innerWidth < 1024) {
-            layoutWrapper.style.marginLeft = '0';
-            layoutWrapper.style.width = '100%';
+            layoutWrapper.style.setProperty('margin-left', '0', 'important');
+            layoutWrapper.style.setProperty('width', '100%', 'important');
             return;
         }
+
         const isCollapsed = document.body.classList.contains('sidebar-collapsed');
+        const subSidebar = document.getElementById('sub-sidebar');
         const isSubVisible = subSidebar && !subSidebar.classList.contains('hidden') && !subSidebar.classList.contains('subjects-hover-subsidebar');
+
+        // CHECK: Are we in the classroom room detail view?
+        const sectionDetail = document.getElementById('section-classroom-detail');
+        const isRoomDetailView = sectionDetail && !sectionDetail.classList.contains('hidden');
+
         const mainWidth = isCollapsed ? 82 : 280;
-        const subWidth = isSubVisible ? 240 : 0;
-        layoutWrapper.style.marginLeft = (mainWidth + subWidth) + 'px';
-        layoutWrapper.style.width = `calc(100% - ${mainWidth + subWidth}px)`;
+
+        // If we are in room detail view, the sub-sidebar should act as an overlay (don't shift content)
+        const subWidth = (isSubVisible && !isRoomDetailView) ? 240 : 0;
+
+        layoutWrapper.style.setProperty('margin-left', (mainWidth + subWidth) + 'px', 'important');
+        layoutWrapper.style.setProperty('width', `calc(100% - ${mainWidth + subWidth}px)`, 'important');
+
+        if (subSidebar) {
+            subSidebar.style.left = mainWidth + 'px';
+            // Ensure overlay mode looks correct when in room view
+            if (isRoomDetailView && isSubVisible) {
+                subSidebar.classList.add('sub-sidebar-overlay-mode');
+                subSidebar.style.zIndex = '900'; // Match student portal z-index for consistency
+                subSidebar.style.boxShadow = '15px 0 30px rgba(0,0,0,0.08)';
+            } else {
+                subSidebar.classList.remove('sub-sidebar-overlay-mode');
+                subSidebar.style.zIndex = '';
+                subSidebar.style.boxShadow = '';
+            }
+        }
     }
 
     window.addEventListener('resize', updateLayout);
     updateLayout();
+    window.addEventListener('pageshow', () => {
+        updateLayout();
+        if (typeof renderTeacherAnnouncements === 'function') renderTeacherAnnouncements();
+        if (typeof renderTeacherHomeDashboardPanels === 'function') renderTeacherHomeDashboardPanels();
+    });
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            updateLayout();
+            if (typeof renderTeacherAnnouncements === 'function') renderTeacherAnnouncements();
+            if (typeof renderTeacherHomeDashboardPanels === 'function') renderTeacherHomeDashboardPanels();
+        }
+    });
 
     if (sidebarToggleBtn) {
         sidebarToggleBtn.addEventListener('click', (e) => {
@@ -132,24 +216,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 link.classList.toggle('active', link.dataset.programKey === activeProgram);
             });
         };
+        window.resetTeacherSubjectSidebarState = () => {
+            activeProgram = null;
+            activeGroup = null;
+            activeSubjectId = null;
+            open = false;
+            syncSelectedSubject();
+            syncInline();
+        };
+        window.setTeacherActiveSubject = (id) => {
+            activeSubjectId = id;
+            syncSelectedSubject();
+        };
         const openSubjectTopic = (programKey, subjectId, label) => {
             activeProgram = programKey;
             activeGroup = programKey;
             activeSubjectId = subjectId;
-            
-            // Close mobile sidebar before navigating
-            if (window.innerWidth < 1024) {
-                sidebar?.classList.remove('sidebar-visible');
-                document.getElementById('sidebar-overlay')?.classList.add('hidden');
-            }
-            
-            switchToTopicPage(resolveTeacherSubjectId(programKey, subjectId, label));
 
-            // Restore expanded state on desktop if needed
-            if (window.innerWidth >= 1024 && !document.body.classList.contains('sidebar-collapsed')) {
-                sidebar?.classList.remove('sidebar-collapsed');
+            // Close mobile sidebar when navigating to a subject
+            if (window.innerWidth < 1024) {
+                const sidebar = document.getElementById('sidebar');
+                const sidebarOverlay = document.getElementById('sidebar-overlay');
+                if (sidebar) sidebar.classList.remove('sidebar-visible');
+                if (sidebarOverlay) sidebarOverlay.classList.add('hidden');
             }
-            
+
+            switchToTopicPage(resolveTeacherSubjectId(programKey, subjectId, label));
+            activeSubjectId = subjectId;
+
+            // Restore expanded state on desktop if needed removed
+
             parent.classList.add('active');
             document.querySelectorAll('#subjects-submenu .nav-sublink').forEach(link => {
                 link.classList.toggle('active', link.dataset.programKey === programKey);
@@ -170,7 +266,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="subject-nav-children ${isOpen ? '' : 'hidden'}">
                         ${subjects.map(subject => `
                             <button type="button" class="subject-nav-child ${activeSubjectId === subject.id ? 'active' : ''}" data-subject-program="${item.key}" data-subject-id="${escapeText(subject.id)}" data-subject-label="${escapeText(subject.label)}">
-                                ${escapeText(subject.label)}
+                                <i class="fa-solid fa-book subject-nav-child-icon" aria-hidden="true"></i>
+                                <span>${escapeText(subject.label)}</span>
                             </button>
                         `).join('')}
                     </div>
@@ -192,13 +289,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.addEventListener('click', event => {
                     event.preventDefault();
                     event.stopPropagation();
-                    
+
                     // Close mobile sidebar before navigating
-                    if (window.innerWidth < 1024) {
-                        sidebar?.classList.remove('sidebar-visible');
-                        document.getElementById('sidebar-overlay')?.classList.add('hidden');
-                    }
-                    
+                    // Close mobile sidebar removed
+
                     openSubjectTopic(btn.dataset.subjectProgram, btn.dataset.subjectId, btn.dataset.subjectLabel);
                 });
             });
@@ -223,6 +317,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 hideOverlay();
                 return;
             }
+
+            // Topic names belong only in topic content. The topic overview page keeps the subject list.
+            const isTopicContent = !document.getElementById('section-topic-content')?.classList.contains('hidden');
+            const topicSubjectId = isTopicContent ? (currentTopicState.subjectId || activeSubjectId) : activeSubjectId;
+            if (isTopicContent && topicSubjectId) {
+                const subject = getTopicSubject(topicSubjectId);
+                const data = getTopicData(topicSubjectId);
+                if (subject && data) {
+                    const statusIconClass = {
+                        completed: 'fa-check-circle text-green-500',
+                        'in-progress': 'fa-circle-half-stroke text-yellow-500',
+                        'not-started': 'fa-circle text-gray-300'
+                    };
+                    loadTopicSubSidebar(subject, data, statusIconClass, currentTopicState.subjectId === topicSubjectId ? currentTopicState.topicIdx : null);
+                    subSidebar.classList.remove('hidden');
+                    subSidebar.classList.add('sub-sidebar-visible');
+                    subSidebar.classList.add('subjects-hover-subsidebar');
+                    return;
+                }
+            }
+
             if (subTitle) subTitle.textContent = 'Subjects';
             subHeader?.classList.remove('hidden');
             subContent.innerHTML = items.map(item => renderGroup(item, 'overlay')).join('');
@@ -255,9 +370,9 @@ document.addEventListener('DOMContentLoaded', () => {
             open = !open;
             if (open && !activeGroup) activeGroup = 'core-subjects';
             syncInline();
-            
+
             // On mobile: keep sidebar open, just toggle submenu
-            if (window.innerWidth >= 1024) switchTab('nav-subjects');
+            // switchTab('nav-subjects') removed to prevent blank page on toggle
         }, true);
         document.querySelectorAll('#subjects-submenu .nav-sublink').forEach(link => {
             link.addEventListener('click', event => {
@@ -309,6 +424,142 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     initSubjectParentSidebar();
 
+    function initGradesParentSidebar() {
+        const parent = document.getElementById('nav-grades');
+        const submenu = document.getElementById('grades-submenu');
+        const chevron = parent?.querySelector('.sidebar-group-chevron');
+        const sidebar = document.getElementById('sidebar');
+        const subSidebar = document.getElementById('sub-sidebar');
+        const subContent = document.getElementById('sub-sidebar-content');
+        const subTitle = document.getElementById('sub-sidebar-title');
+        const subHeader = document.getElementById('sub-sidebar-header');
+
+        if (!parent || !submenu || !subSidebar || !subContent) return;
+
+        let open = false;
+        let hoverTimer = null;
+        let activeTab = null;
+        const collapsed = () => document.body.classList.contains('sidebar-collapsed') && window.innerWidth >= 1024;
+
+        const gradesTabs = [
+            { id: 'nav-grades-analytics', key: 'analytics', label: 'Performance', icon: 'fa-chart-pie' },
+            { id: 'nav-grades-gradebook', key: 'gradebook', label: 'Gradebooks', icon: 'fa-table-list' }
+        ];
+
+        const syncActive = () => {
+            document.querySelectorAll('#grades-submenu .nav-sublink').forEach(link => {
+                link.classList.toggle('active', link.dataset.gradesTab === activeTab);
+            });
+        };
+
+        const syncInline = () => {
+            submenu.classList.toggle('hidden', collapsed() || !open);
+            chevron?.classList.toggle('rotate-90', open);
+        };
+
+        const hideOverlay = () => {
+            subSidebar.classList.add('hidden');
+            subSidebar.classList.remove('sub-sidebar-visible');
+        };
+
+        const renderOverlay = () => {
+            if (!collapsed() || window.innerWidth < 1024) {
+                hideOverlay();
+                return;
+            }
+            if (subTitle) subTitle.textContent = 'Grades';
+            subHeader?.classList.remove('hidden');
+            subContent.innerHTML = gradesTabs.map(tab => `
+                <a href="#" class="subject-nav-child sub-sidebar-link grades-overlay-link ${activeTab === tab.key ? 'active' : ''}"
+                   data-grades-tab="${tab.key}">
+                    <i class="fa-solid ${tab.icon} subject-nav-child-icon"></i>
+                    <span>${tab.label}</span>
+                </a>
+            `).join('');
+            subContent.querySelectorAll('.grades-overlay-link').forEach(link => {
+                link.addEventListener('click', event => {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    openGradesTab(link.dataset.gradesTab);
+                    hideOverlay();
+                });
+            });
+            subSidebar.classList.remove('hidden');
+            subSidebar.classList.add('sub-sidebar-visible');
+        };
+
+        const openGradesTab = (tabKey) => {
+            activeTab = tabKey;
+            switchTab('nav-grades');
+            requestAnimationFrame(() => {
+                if (typeof window.switchGradesSubTab === 'function') {
+                    window.switchGradesSubTab(tabKey);
+                }
+            });
+            syncActive();
+            if (!collapsed()) hideOverlay();
+        };
+
+        parent.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            if (collapsed()) {
+                renderOverlay();
+                return;
+            }
+            open = !open;
+            syncInline();
+            if (open && !activeTab) {
+                // Navigate to grades on first open
+                switchTab('nav-grades');
+                requestAnimationFrame(() => {
+                    if (typeof window.switchGradesSubTab === 'function') {
+                        window.switchGradesSubTab('analytics');
+                    }
+                });
+                activeTab = 'analytics';
+                syncActive();
+            }
+        }, true);
+
+        document.querySelectorAll('#grades-submenu .nav-sublink').forEach(link => {
+            link.addEventListener('click', event => {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                open = true;
+                syncInline();
+                openGradesTab(link.dataset.gradesTab);
+            }, true);
+        });
+
+        parent.addEventListener('mouseenter', () => {
+            if (hoverTimer) clearTimeout(hoverTimer);
+            if (collapsed()) renderOverlay();
+        });
+        sidebar?.addEventListener('mouseleave', () => {
+            if (!collapsed()) return;
+            hoverTimer = setTimeout(hideOverlay, 160);
+        });
+        subSidebar.addEventListener('mouseenter', () => {
+            if (hoverTimer) clearTimeout(hoverTimer);
+        });
+        subSidebar.addEventListener('mouseleave', event => {
+            if (!collapsed() || sidebar?.contains(event.relatedTarget)) return;
+            hideOverlay();
+        });
+
+        window.resetTeacherGradesSidebarState = () => {
+            activeTab = null;
+            open = false;
+            syncInline();
+            syncActive();
+            hideOverlay();
+        };
+
+        syncInline();
+    }
+    initGradesParentSidebar();
+
     // SIGMA AI Elements
     const sigmaAiNotch = document.getElementById('sigmaAiNotch');
     const sigmaAiPanel = document.getElementById('sigmaAiPanel');
@@ -340,26 +591,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let sigmaSortable = null;
 
     // --- Navigation Setup ---
-    const sectionMap = {
-        'nav-dashboard': 'section-dashboard',
-        'nav-profile': 'user-profile-view',
-        'nav-classes': 'section-classes',
-        'nav-subjects': 'section-subjects',
-        'nav-materials': 'section-materials',
-        'nav-assessments': 'section-assessments',
-        'nav-grades': 'section-grades',
-        'nav-analytics': 'section-analytics',
-        'nav-attendance': 'section-attendance',
-        'nav-topic-detail': 'section-topic-detail',
-        'nav-topic-content': 'section-topic-content'
-    };
-
-    const navIdByPage = {
-        'dashboard': 'nav-dashboard', 'classes': 'nav-classes', 'subjects': 'nav-subjects',
-        'materials': 'nav-materials', 'assessments': 'nav-assessments', 'grades': 'nav-grades',
-        'attendance': 'nav-attendance'
-    };
-
     // Header Logo Link
     const navLogoBtn = document.getElementById('nav-logo-btn');
     if (navLogoBtn) {
@@ -383,12 +614,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Sidebar Default State ---
-    // Start collapsed on desktop, similar to student page
-    const isMobile = window.innerWidth < 1024;
-    if (!isMobile) {
+    isMobileStatus = window.innerWidth < 1024;
+    overlay = document.getElementById('sidebar-overlay');
+
+    if (!isMobileStatus) {
         document.body.classList.add('sidebar-collapsed');
-        if (sidebar) sidebar.classList.add('sidebar-collapsed');
+        if (sidebar) {
+            sidebar.classList.add('sidebar-collapsed');
+            sidebar.classList.remove('sidebar-visible');
+        }
+        if (overlay) overlay.classList.add('hidden');
+    } else {
+        // Ensure clean mobile start
+        if (sidebar) sidebar.classList.remove('sidebar-visible');
+        if (overlay) overlay.classList.add('hidden');
     }
+
+    if (typeof updateLayout === 'function') updateLayout();
 
     const schoolYearQuarterOrder = {
         '1st Quarter': 1,
@@ -490,9 +732,9 @@ document.addEventListener('DOMContentLoaded', () => {
             display.textContent = '';
         } else if (anyQuarterStarted && !allQuartersEnded) {
             const quarterText = currentQuarter ? currentQuarter.toUpperCase() : 'TRANSITION';
-            display.textContent = `SY ${yearRange} • ${quarterText}`;
+            display.textContent = `SY ${yearRange}   ${quarterText}`;
         } else if (!anyQuarterStarted) {
-            display.textContent = `SY ${yearRange} • UPCOMING`;
+            display.textContent = `SY ${yearRange}   UPCOMING`;
         } else {
             display.textContent = '';
         }
@@ -512,7 +754,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // SIGMA AI Dashboard Cards (Removed)
 
-    // ─── Calendar Logic (Admin Copy) ──────────────────────────
+    // â”€â”€â”€ Calendar Logic (Admin Copy) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     let currentCalDate = new Date();
 
     function renderCalendar() {
@@ -533,7 +775,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let day = 1; day <= daysInMonth; day++) {
             const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
-            const baseClasses = "w-9 h-9 flex items-center justify-center text-[12px] font-bold transition-all cursor-pointer rounded-lg mx-auto";
+            const baseClasses = "w-9 h-9 flex items-center justify-center text-[12px] font-bold transition-all cursor-pointer rounded-full mx-auto";
             const stateClasses = isToday ? "bg-[#15803d] text-white" : "text-black hover:bg-slate-100";
             html += `<div class="${baseClasses} ${stateClasses}">${day}</div>`;
         }
@@ -590,7 +832,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         sigmaSortable = new Sortable(container, {
             animation: 150,
-            delay: 150, // "Drag and Hold" feel
+            delay: 50, // More responsive feel
             delayOnTouchOnly: false,
             touchStartThreshold: 5,
             forceFallback: true, // Match admin portal
@@ -616,16 +858,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Force layout update on load
     updateLayout();
-    setTimeout(() => switchTab('nav-dashboard'), 0);
 
     // --- Sample Data ---
     window.subjectsData = {
         core: [
-            { id: 'subj-effcomm', name: 'Effective Communication', icon: 'fa-solid fa-comments', grade: 'Grade 11', programKey: 'core-subjects', sections: ['Grade 11 - ICT A'] },
-            { id: 'subj-lifecareer', name: 'Life and Career Skills', icon: 'fa-solid fa-heart-circle-check', grade: 'Grade 11', programKey: 'core-subjects', sections: ['Grade 11 - ICT B'] },
-            { id: 'subj-genmath', name: 'General Mathematics', icon: 'fa-solid fa-square-root-variable', grade: 'Grade 11', programKey: 'core-subjects', sections: ['Grade 11 - STEM A'] },
-            { id: 'subj-gensci', name: 'General Science', icon: 'fa-solid fa-flask', grade: 'Grade 11', programKey: 'core-subjects', sections: ['Grade 11 - STEM B'] },
-            { id: 'subj-history', name: 'Pag-aaral ng Kasaysayan at Lipunang Pilipino', icon: 'fa-solid fa-landmark', grade: 'Grade 11', programKey: 'core-subjects', sections: ['Grade 11 - HUMSS A'] }
+            { id: 'core-effective-communication', name: 'Effective Communication', icon: 'fa-solid fa-comments', grade: 'Grade 11', programKey: 'core-subjects', sections: ['Grade 11 - ICT A'] },
+            { id: 'core-life-and-career-skills', name: 'Life and Career Skills', icon: 'fa-solid fa-heart-circle-check', grade: 'Grade 11', programKey: 'core-subjects', sections: ['Grade 11 - ICT B'] },
+            { id: 'core-general-mathematics', name: 'General Mathematics', icon: 'fa-solid fa-square-root-variable', grade: 'Grade 11', programKey: 'core-subjects', sections: ['Grade 11 - STEM A'] },
+            { id: 'core-general-science', name: 'General Science', icon: 'fa-solid fa-flask', grade: 'Grade 11', programKey: 'core-subjects', sections: ['Grade 11 - STEM B'] },
+            { id: 'core-history-society', name: 'Pag-aaral ng Kasaysayan at Lipunang Pilipino', icon: 'fa-solid fa-landmark', grade: 'Grade 11', programKey: 'core-subjects', sections: ['Grade 11 - HUMSS A'] }
+
         ],
         academic: [
             { id: 'subj-arts-1', name: 'Arts 1 - Creative Industries', icon: 'fa-solid fa-palette', grade: 'Grade 11', programKey: 'applied-subjects', sections: ['Grade 11 - Arts A'] },
@@ -633,14 +875,12 @@ document.addEventListener('DOMContentLoaded', () => {
             { id: 'subj-civic', name: 'Citizenship and Civic Engagement', icon: 'fa-solid fa-people-arrows', grade: 'Grade 12', programKey: 'applied-subjects', sections: ['Grade 12 - GAS A'] }
         ],
         techpro: [
-            { id: 'subj-prog1', name: 'Programming 1', icon: 'fa-solid fa-code', grade: 'Grade 11', programKey: 'applied-subjects', sections: ['Grade 11 - ICT C'] },
-            { id: 'subj-dbms', name: 'Database Management', icon: 'fa-solid fa-database', grade: 'Grade 11', programKey: 'applied-subjects', sections: ['Grade 11 - ICT D'] },
-            { id: 'subj-css', name: 'Computer Systems Servicing', icon: 'fa-solid fa-screwdriver-wrench', grade: 'Grade 11', programKey: 'applied-subjects', sections: ['Grade 11 - ICT E'] },
-            { id: 'subj-anim', name: 'Animation', icon: 'fa-solid fa-clapperboard', grade: 'Grade 11', programKey: 'applied-subjects', sections: ['Grade 11 - ICT F'] }
+            { id: 'subj-prog1', name: 'Programming 1', icon: 'fa-solid fa-code', grade: 'Grade 11', programKey: 'specialized-subjects', sections: ['Grade 11 - ICT C'] },
+            { id: 'subj-dbms', name: 'Database Management', icon: 'fa-solid fa-database', grade: 'Grade 11', programKey: 'specialized-subjects', sections: ['Grade 11 - ICT D'] },
+            { id: 'subj-css', name: 'Computer Systems Servicing', icon: 'fa-solid fa-screwdriver-wrench', grade: 'Grade 11', programKey: 'specialized-subjects', sections: ['Grade 11 - ICT E'] },
+            { id: 'subj-anim', name: 'Animation', icon: 'fa-solid fa-clapperboard', grade: 'Grade 11', programKey: 'specialized-subjects', sections: ['Grade 11 - ICT F'] }
         ],
-        completed: [
-            { id: 'subj-intro-ict', name: 'Intro to ICT', icon: 'fa-solid fa-laptop', grade: 'Grade 10', programKey: 'core-subjects', type: 'applied', sections: ['Grade 10 - ICT A'] }
-        ]
+        completed: []
     };
 
     const currentStudentCurriculumLabel = 'MATATAG Curriculum';
@@ -776,7 +1016,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const curriculumTopicCatalog = {
         'core-effective-communication': {
             text: 'Effective Communication',
-            subtitle: 'Core Subject • Grade 11',
+            subtitle: 'Core Subject &bull; Grade 11',
             instructor: 'DepEd Core Curriculum',
             icon: 'fa-solid fa-comments',
             bg: 'image/book1.jpg',
@@ -794,12 +1034,14 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         'core-life-and-career-skills': {
             text: 'Life and Career Skills',
-            subtitle: 'Core Subject • Grade 11',
+            subtitle: 'Core Subject &bull; Grade 11',
             instructor: 'DepEd Core Curriculum',
             icon: 'fa-solid fa-heart-circle-check',
             bg: 'image/book4.jpg',
-            q1Percent: 100,
-            q2Percent: 100,
+            q1Percent: 85,
+            q2Percent: 60,
+            q3Percent: 0,
+            q4Percent: 0,
             summary: 'A core subject that prepares learners for career planning, self-management, financial literacy, and workplace readiness.',
             q1Topics: [
                 { title: 'Self-Assessment and Personal Strengths', status: 'completed', grades: { quiz: 91, assignment: 90, activity: 92, performance: 90 } },
@@ -812,12 +1054,14 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         'core-general-mathematics': {
             text: 'General Mathematics',
-            subtitle: 'Core Subject • Grade 11',
+            subtitle: 'Core Subject &bull; Grade 11',
             instructor: 'DepEd Core Curriculum',
             icon: 'fa-solid fa-square-root-variable',
             bg: 'image/book2.jpg',
-            q1Percent: 100,
-            q2Percent: 100,
+            q1Percent: 92,
+            q2Percent: 75,
+            q3Percent: 40,
+            q4Percent: 0,
             summary: 'A core mathematics subject focused on functions, business math, interest, loans, and logic for real-life use.',
             q1Topics: [
                 { title: 'Functions and Their Graphs', status: 'completed', grades: { quiz: 92, assignment: 90, activity: 91, performance: 89 } },
@@ -830,7 +1074,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         'core-general-science': {
             text: 'General Science',
-            subtitle: 'Core Subject • Grade 11',
+            subtitle: 'Core Subject &bull; Grade 11',
             instructor: 'DepEd Core Curriculum',
             icon: 'fa-solid fa-flask',
             bg: 'image/book3.jpg',
@@ -846,9 +1090,135 @@ document.addEventListener('DOMContentLoaded', () => {
                 { title: 'Matter, Light, and the Cosmos', status: 'in-progress', grades: { quiz: 0, assignment: 82, activity: 0, performance: 0 } }
             ]
         },
+        'subj-prog1': {
+            text: 'Programming 1',
+            subtitle: 'Applied Subject &bull; Grade 11',
+            instructor: 'Alex Reyes',
+            icon: 'fa-solid fa-code',
+            bg: 'image/techpro-track.jpg',
+            q1Percent: 75,
+            q2Percent: 0,
+            q3Percent: 0,
+            q4Percent: 0,
+            summary: 'Introduction to computer programming using Java, covering syntax, logic, and object-oriented concepts.',
+            q1Topics: [
+                { title: 'Introduction to Java', status: 'completed', grades: { quiz: 85, assignment: 92, activity: 88, performance: 90 } },
+                { title: 'Variables & Data Types', status: 'completed', grades: { quiz: 88, assignment: 85, activity: 90, performance: 87 } },
+                { title: 'Control Structures', status: 'in-progress', grades: { quiz: 0, assignment: 80, activity: 0, performance: 0 } },
+                { title: 'Methods & Functions', status: 'not-started', grades: null }
+            ]
+        },
+        'subj-dbms': {
+            text: 'Database Management',
+            subtitle: 'Specialized Subject • Grade 11',
+            instructor: 'TechPro Faculty',
+            icon: 'fa-solid fa-database',
+            bg: 'image/techpro-track.jpg',
+            q1Percent: 85,
+            q2Percent: 0,
+            summary: 'Fundamentals of database design, SQL, and data management systems.',
+            q1Topics: [
+                { title: 'Introduction to Databases', status: 'completed' },
+                { title: 'Entity Relationship Modeling', status: 'completed' },
+                { title: 'SQL Basics', status: 'in-progress' }
+            ]
+        },
+        'subj-css': {
+            text: 'Computer Systems Servicing',
+            subtitle: 'Specialized Subject • Grade 11',
+            instructor: 'TechPro Faculty',
+            icon: 'fa-solid fa-screwdriver-wrench',
+            bg: 'image/techpro-track.jpg',
+            q1Percent: 90,
+            q2Percent: 0,
+            summary: 'Installing and configuring computer systems, networking, and hardware maintenance.',
+            q1Topics: [
+                { title: 'Course Overview', status: 'completed' },
+                { title: 'Basic Logic', status: 'completed' },
+                { title: 'Principles of Writing', status: 'in-progress' },
+                { title: 'Speech Context', status: 'not-started' }
+            ]
+        },
+        'subj-lit-1': {
+            text: 'Contemporary Literature 1',
+            subtitle: 'Applied Subject • Grade 11',
+            instructor: 'Arts Faculty',
+            icon: 'fa-solid fa-book-open',
+            bg: 'image/book1.jpg',
+            q1Percent: 70,
+            q2Percent: 0,
+            summary: 'Exploring modern literature, critical analysis, and creative expression.',
+            q1Topics: [
+                { title: 'Modern Literary Movements', status: 'completed' },
+                { title: 'Analyzing Prose', status: 'in-progress' },
+                { title: 'Creative Writing Workshop', status: 'not-started' }
+            ]
+        },
+        'subj-arts-1': {
+            text: 'Arts 1 - Creative Industries',
+            subtitle: 'Applied Subject • Grade 11',
+            instructor: 'Arts Faculty',
+            icon: 'fa-solid fa-palette',
+            bg: 'image/book2.jpg',
+            q1Percent: 88,
+            q2Percent: 0,
+            summary: 'Introduction to the creative industries, visual arts, and design principles.',
+            q1Topics: [
+                { title: 'Visual Arts Fundamentals', status: 'completed' },
+                { title: 'Graphic Design Basics', status: 'in-progress' },
+                { title: 'Digital Illustration', status: 'not-started' }
+            ]
+        },
+        'subj-civic': {
+            text: 'Citizenship and Civic Engagement',
+            subtitle: 'Applied Subject • Grade 12',
+            instructor: 'Social Science Faculty',
+            icon: 'fa-solid fa-people-arrows',
+            bg: 'image/book3.jpg',
+            q1Percent: 95,
+            q2Percent: 0,
+            summary: 'Understanding civic duties, governance, and active community participation.',
+            q1Topics: [
+                { title: 'Foundations of Citizenship', status: 'completed' },
+                { title: 'Community Organizing', status: 'in-progress' },
+                { title: 'Public Policy Analysis', status: 'not-started' }
+            ]
+        },
+        'subj-anim': {
+            text: 'Animation',
+            subtitle: 'Specialized Subject • Grade 11',
+            instructor: 'Alex Reyes',
+            icon: 'fa-solid fa-clapperboard',
+            bg: 'image/techpro-track.jpg',
+            q1Percent: 80,
+            q2Percent: 45,
+            q3Percent: 0,
+            q4Percent: 0,
+            summary: 'A comprehensive course on animation techniques, covering principles, 2D/3D character design, and visual effects.',
+            q1Topics: [
+                { title: 'Principles of Animation', status: 'completed' },
+                { title: 'Storyboarding Basics', status: 'completed' },
+                { title: 'History of Animation', status: 'completed' }
+            ],
+            q2Topics: [
+                { title: '2D Character Design', status: 'completed' },
+                { title: 'Frame-by-Frame Techniques', status: 'in-progress' },
+                { title: 'Digital Ink and Paint', status: 'not-started' }
+            ],
+            q3Topics: [
+                { title: '3D Modeling Fundamentals', status: 'not-started' },
+                { title: 'Texturing and Lighting', status: 'not-started' },
+                { title: 'Keyframe Animation', status: 'not-started' }
+            ],
+            q4Topics: [
+                { title: 'Visual Effects (VFX)', status: 'not-started' },
+                { title: 'Compositing and Rendering', status: 'not-started' },
+                { title: 'Final Short Film Project', status: 'not-started' }
+            ]
+        },
         'core-history-society': {
             text: 'Pag-aaral ng Kasaysayan at Lipunang Pilipino',
-            subtitle: 'Core Subject • Grade 11',
+            subtitle: 'Core Subject &bull; Grade 11',
             instructor: 'DepEd Core Curriculum',
             icon: 'fa-solid fa-landmark',
             bg: 'image/book5.jpg',
@@ -869,14 +1239,64 @@ document.addEventListener('DOMContentLoaded', () => {
     const dynamicCurriculumSubjects = {};
 
     const topicVideos = {
-        'core-effective-communication': 'https://www.youtube.com/embed/eIrMbAQSU34',
-        'core-general-mathematics': 'https://www.youtube.com/embed/LwCRRUa8yTU'
+        default: [
+            { id: 1, title: 'Lecture 1: Introduction & Overview', duration: '24:15', teacher: 'Alex Reyes', thumb: null, url: '' },
+            { id: 2, title: 'Lecture 2: Core Concepts Explained', duration: '18:42', teacher: 'Alex Reyes', thumb: null, url: '' },
+            { id: 3, title: 'Lecture 3: Practical Demonstration', duration: '31:08', teacher: 'Alex Reyes', thumb: null, url: '' },
+        ]
     };
+
+    function getTopicOverview(title) {
+        const o = {
+            'Introduction to Java': 'Learn Java syntax, data types, and basic program structure.',
+            'Variables & Data Types': 'Explore how Java stores and manages different kinds of data.',
+            'Control Structures': 'Master program flow using conditions and loop constructs.',
+            'Methods & Functions': 'Organize code into reusable blocks using method declarations.',
+            'Arrays & Collections': 'Work with ordered data using arrays and Java collection classes.',
+            'Object-Oriented Programming': 'Apply OOP concepts: classes, objects, encapsulation, abstraction.',
+            'HTML5 Fundamentals': 'Build well-structured web pages using semantic HTML5 elements.',
+            'CSS3 & Flexbox': 'Style web layouts with modern CSS3 and the flexible box model.',
+            'Number Systems & Binary': 'Understand binary, octal, hex and their conversions.',
+            'CPU Architecture': 'Explore how the CPU executes instructions and manages data.',
+            'Nature and Elements of Communication': 'Identify how messages are created, sent, received, and interpreted in real situations.',
+            'Functions of Communication': 'See how communication informs, influences, regulates, and builds relationships.',
+            'Communication Models': 'Study common communication models and how messages move through different channels.',
+            'Communication Breakdown': 'Recognize barriers to communication and practice ways to reduce misunderstanding.',
+            'Speech Context, Style, and Act': 'Match speech behavior to audience, purpose, and communication setting.',
+            'Principles of Speech Writing and Delivery': 'Plan, organize, and present clear speeches for academic and public use.',
+            'Self-Assessment and Personal Strengths': 'Reflect on your abilities, interests, and values as the basis for career planning.',
+            'Career Choices and Pathways': 'Compare career paths, course options, and work opportunities that fit your goals.',
+            'Factors Affecting Goal Fulfillment': 'Identify personal and external factors that affect achievement and decision-making.',
+            'Work Readiness and Professional Habits': 'Practice habits, behavior, and communication expected in school-to-work settings.',
+            'Rights, Responsibilities, and Entrepreneurial Mindset': 'Understand workplace responsibilities and the basics of initiative and enterprise.',
+            'Career Portfolio and Financial Literacy': 'Build a simple career portfolio while learning how money decisions affect goals.',
+            'Functions and Their Graphs': 'Interpret function behavior and connect algebraic rules to real-life graph patterns.',
+            'Rational Functions, Equations, and Inequalities': 'Solve rational expressions and inequalities that appear in practical problem solving.',
+            'One-to-One and Inverse Functions': 'Analyze one-to-one relationships and use inverses to reverse processes.',
+            'Exponential and Logarithmic Functions': 'Model growth and decay with exponents and logarithms in real contexts.',
+            'Simple and Compound Interest': 'Compute savings and loan growth using standard interest formulas.',
+            'Stocks, Bonds, Loans, and Logic': 'Apply business math and logical reasoning to financial decisions.',
+            'Origin and Structure of the Earth': 'Explore Earth s formation, layers, and the processes that shape the planet.',
+            'Earth Materials and Processes': 'Study rocks, minerals, and the forces that change Earth s surface.',
+            'Natural Hazards, Mitigation, and Adaptation': 'Connect science to preparedness for earthquakes, floods, and other hazards.',
+            'Perpetuation of Life and Reproduction': 'Examine heredity, reproduction, and the continuity of life.',
+            'Evolution, Classification, and Ecosystems': 'Understand how organisms change, are grouped, and interact in ecosystems.',
+            'Matter, Light, and the Cosmos': 'Relate matter, energy, light, and space science to everyday phenomena.',
+            'Enculturation and Socialization': 'Trace how families, schools, and communities shape values and behavior.',
+            'How Society Is Organized': 'Study social institutions, roles, and how communities are structured.',
+            'The Philippine Constitution and Governance': 'Review the Constitution, branches of government, and civic participation.',
+            'Elections, Suffrage, and Political Parties': 'Learn how citizens vote and how political groups shape public choice.',
+            'Civil Society, Social Movements, and Citizenship': 'Explore citizen action, advocacy, and responsible participation in society.',
+            'Political Ideologies and Social Change': 'Compare political ideas and the social changes they can influence.'
+        };
+        return o[title] || 'This topic covers key concepts and practical applications essential to mastering this subject.';
+    }
 
     const topicHandouts = {
         'core-effective-communication': [
-            { name: 'Comm Basics.pdf', size: '1.2 MB', type: 'PDF' },
-            { name: 'Public Speaking.docx', size: '450 KB', type: 'DOC' }
+            { name: 'Comm Basics.pdf', size: '1.2 MB', type: 'PDF', url: 'text/07_Laboratory_Exercise_1(23).pdf' },
+            { name: 'Response Letter.docx', size: '320 KB', type: 'DOCX', url: 'text/Response Letter.docx' },
+            { name: 'TLE Presentation.pptx', size: '4.1 MB', type: 'PPTX', url: 'text/TLE.pptx' }
         ]
     };
 
@@ -893,7 +1313,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getTopicData(subjectId) {
-        return curriculumTopicCatalog[subjectId] || dynamicCurriculumSubjects[subjectId] || null;
+        let data = curriculumTopicCatalog[subjectId] || dynamicCurriculumSubjects[subjectId];
+        
+        // Failsafe: If data is missing but the subject is valid, generate fallback topics
+        // so the workstation page can still render and link correctly.
+        if (!data) {
+            const subject = getTopicSubject(subjectId);
+            if (subject) {
+                data = {
+                    text: subject.name || subject.title || 'Subject Content',
+                    subtitle: (subject.grade || 'Grade 11') + ' • ' + (subject.programKey === 'specialized-subjects' ? 'Specialized' : 'Applied') + ' Subject',
+                    instructor: 'Faculty',
+                    icon: subject.icon || 'fa-solid fa-book-open',
+                    bg: 'image/book1.jpg',
+                    q1Topics: [
+                        { title: 'Course Overview', status: 'completed' },
+                        { title: 'Basic Logic', status: 'completed' },
+                        { title: 'Principles of Writing', status: 'in-progress' },
+                        { title: 'Speech Context', status: 'not-started' }
+                    ]
+                };
+                dynamicCurriculumSubjects[subjectId] = data;
+            }
+        }
+        return data || null;
     }
 
     function getTopicSubject(subjectId) {
@@ -903,7 +1346,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (p.stages) programSubjects.push(...p.stages);
         });
         const exactMatch = programSubjects.find(s => (s.id === subjectId || s.key === subjectId));
-        if (exactMatch) return exactMatch;
+        if (exactMatch) return { ...exactMatch, name: exactMatch.title || exactMatch.text || exactMatch.name };
+
+        // Fallback 1: Check window.subjectsData (Assigned subjects)
+        const allAssigned = Object.values(window.subjectsData || {}).flat();
+        const assignedMatch = allAssigned.find(s => s.id === subjectId);
+        if (assignedMatch) return assignedMatch;
+
+        // Fallback 2: Check curriculumTopicCatalog (Catalog entries)
+        const catalogEntry = curriculumTopicCatalog[subjectId];
+        if (catalogEntry) return { id: subjectId, name: catalogEntry.text, icon: catalogEntry.icon };
 
         // Check clusters
         for (const p of Object.values(curriculumPrograms)) {
@@ -933,46 +1385,109 @@ document.addEventListener('DOMContentLoaded', () => {
     function ensureSubjectDataForTitle(title, clusterTitle) {
         const subjectId = `gen-${slugify(title)}`;
         if (!dynamicCurriculumSubjects[subjectId]) {
+            // Generate deterministic but unique-ish progress for each subject
+            const seed = (title.length * 7) % 100;
+            const q1 = 65 + (seed % 30);
+            const q2 = 20 + (seed % 40);
+
             dynamicCurriculumSubjects[subjectId] = {
                 id: subjectId,
                 text: title,
-                subtitle: `${clusterTitle} • Grade 11`,
+                subtitle: `${clusterTitle} &bull; Grade 11`,
                 instructor: 'Cluster Faculty',
                 icon: 'fa-solid fa-book-open',
                 bg: 'image/book1.jpg',
-                q1Percent: 0,
-                q2Percent: 0,
+                q1Percent: q1,
+                q2Percent: q2,
+                q3Percent: 0,
+                q4Percent: 0,
                 summary: `${title} is part of the ${clusterTitle} cluster and introduces the essential ideas, skills, and outputs learners will study in this learning path.`,
                 q1Topics: [
-                    { title: `Introduction to ${title}`, status: 'completed' },
-                    { title: `Core Concepts in ${title}`, status: 'in-progress' },
-                    { title: `Applied Practice in ${title}`, status: 'not-started' },
-                    { title: `Assessment and Reflection for ${title}`, status: 'not-started' }
+                    { title: `Module 1: Introduction to ${title}`, status: 'completed', grades: { quiz: 85 + (seed % 10), assignment: 90, activity: 88, performance: 92 } },
+                    { title: `Module 2: Core Concepts and Principles`, status: 'completed', grades: { quiz: 82 + (seed % 15), assignment: 85, activity: 87, performance: 88 } },
+                    { title: `Module 3: Specialized Applications`, status: 'in-progress', grades: { quiz: 0, assignment: 80 + (seed % 5), activity: 0, performance: 0 } },
+                    { title: `Module 4: Practical Evaluation`, status: 'not-started', grades: null }
                 ]
             };
         }
         return dynamicCurriculumSubjects[subjectId];
     }
 
+    // Add specialized subjects stages to the catalog for completeness
+    curriculumTopicCatalog['immersion-stage-1'] = {
+        text: 'Pre-Immersion',
+        subtitle: 'Specialized Stage &bull; Grade 12',
+        instructor: 'Immersion Coordinator',
+        icon: 'fa-solid fa-user-clock',
+        bg: 'image/book6.jpg',
+        q1Percent: 100,
+        q2Percent: 0,
+        summary: 'Orientation and readiness for work immersion placement.',
+        q1Topics: [
+            { title: 'Orientation and Clearance', status: 'completed', grades: { quiz: 95, assignment: 98, activity: 100, performance: 100 } },
+            { title: 'Forms and Safety Rules', status: 'completed', grades: { quiz: 92, assignment: 95, activity: 98, performance: 95 } }
+        ]
+    };
+    curriculumTopicCatalog['immersion-stage-2'] = {
+        text: 'Immersion Proper',
+        subtitle: 'Specialized Stage &bull; Grade 12',
+        instructor: 'Company Supervisor',
+        icon: 'fa-solid fa-briefcase',
+        bg: 'image/book7.jpg',
+        q1Percent: 45,
+        q2Percent: 0,
+        summary: 'Supervised performance and practical training in a real work environment.',
+        q1Topics: [
+            { title: 'Attendance Logs and Weekly Reports', status: 'in-progress', grades: { quiz: 0, assignment: 88, activity: 0, performance: 0 } },
+            { title: 'Assigned Technical Tasks', status: 'not-started', grades: null }
+        ]
+    };
+    curriculumTopicCatalog['immersion-stage-3'] = {
+        text: 'Post-Immersion',
+        subtitle: 'Specialized Stage &bull; Grade 12',
+        instructor: 'Immersion Coordinator',
+        icon: 'fa-solid fa-graduation-cap',
+        bg: 'image/book8.jpg',
+        q1Percent: 0,
+        q2Percent: 0,
+        summary: 'Final evaluation and portfolio building after the immersion period.',
+        q1Topics: [
+            { title: 'Reflection Journal and Portfolio', status: 'not-started', grades: null },
+            { title: 'Final Presentation and Evaluation', status: 'not-started', grades: null }
+        ]
+    };
+
     function slugify(text) {
         return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     }
 
 
-    const studentsBySection = {
-        'Grade 11 - ICT A': Array.from({ length: 25 }, (_, i) => ({
-            id: `2026-${String(i + 1).padStart(3, '0')}`,
-            name: `${['Abad', 'Bautista', 'Cruz', 'Dela Cruz', 'Estacio', 'Ferrer', 'Garcia', 'Hernandez', 'Ignacio', 'Jimenez', 'Lozano', 'Mendoza', 'Navarro', 'Ocampo', 'Perez', 'Quinto', 'Ramos', 'Santos', 'Torres', 'Umali', 'Valdez', 'Villanueva', 'Wong', 'Yabut', 'Zosa'][i % 25]}, ${['Juan', 'Maria', 'Jose', 'Ana', 'Ricardo', 'Liza', 'Antonio', 'Elena', 'Fernando', 'Gloria', 'Gabriel', 'Hilda', 'Ismael', 'Juliana', 'Kevin', 'Lourdes', 'Manuel', 'Nina', 'Oscar', 'Pilar', 'Quentin', 'Rosa', 'Samuel', 'Teresa', 'Victor'][i % 25]}`,
-            status: Math.random() > 0.1 ? 'Active' : 'At Risk',
-            attendance: Math.floor(Math.random() * 20) + 80 // 80-100%
-        })),
-        'Grade 11 - STEM A': Array.from({ length: 25 }, (_, i) => ({
-            id: `2026-S-${String(i + 1).padStart(3, '0')}`,
-            name: `Student ${i + 1}`,
-            status: 'Active',
-            attendance: 95
-        }))
-    };
+    const sectionNames = [
+        'Grade 11 - ICT A', 'Grade 11 - ICT B', 'Grade 11 - ICT C', 'Grade 11 - ICT D',
+        'Grade 11 - ICT E', 'Grade 11 - ICT F', 'Grade 11 - STEM A', 'Grade 11 - STEM B',
+        'Grade 11 - HUMSS A', 'Grade 11 - HUMSS B', 'Grade 11 - Arts A', 'Grade 12 - GAS A',
+        'Grade 10 - ICT A'
+    ];
+
+    const studentsBySection = {};
+    sectionNames.forEach(section => {
+        studentsBySection[section] = Array.from({ length: 25 }, (_, i) => {
+            const lastNames = ['Vargas', 'Santos', 'Reyes', 'Mercado', 'Lim', 'Lopez', 'Garcia', 'Dizon', 'Castro', 'Aquino', 'Santiago', 'Pascual', 'Mendoza', 'Luna', 'Jose', 'Gomez', 'Flores', 'Estacio', 'Diaz', 'Cruz', 'Bautista', 'Arroyo', 'Alvarez', 'Abad', 'Zosa'];
+            const firstNames = ['Stanley', 'John', 'Jane', 'Mary', 'Mark', 'Paul', 'Anna', 'Beth', 'Cathy', 'Dave', 'Eric', 'Fay', 'Gary', 'Hope', 'Ian', 'Jill', 'Ken', 'Lea', 'Mike', 'Noel', 'Oma', 'Pete', 'Quinn', 'Rose', 'Seth'];
+            const middleNames = ['Vargas', 'Peralta', 'Delos Santos', 'Ramos', 'Guanzon', 'Dela Cruz', 'Marasigan', 'Bautista', 'Corpuz', 'Ocampo', 'Ignacio', 'Rivera', 'Soriano', 'Villanueva', 'Gonzales', 'Pineda', 'Roxas', 'Belmonte', 'Pangilinan', 'Estrada', 'Recto', 'Aquino', 'Legarda', 'Lapid', 'Binay'];
+
+            const lastName = lastNames[i % 25];
+            const firstName = firstNames[i % 25];
+            const middleName = middleNames[i % 25];
+
+            return {
+                id: `2026-${section.split(' ').pop()}-${String(i + 1).padStart(3, '0')}`,
+                name: `${lastName}, ${firstName}`,
+                status: 'Active',
+                attendance: 90 + (i % 10)
+            };
+        });
+    });
 
     const classroomMetaBySubject = {
         'Grade 11 - ICT A::Programming 1': { room: 'Room 302', teacher: 'Alex Reyes' },
@@ -993,8 +1508,27 @@ document.addEventListener('DOMContentLoaded', () => {
         'Grade 10 - ICT A::Intro to ICT': { room: 'Room 309', teacher: 'Elena Reyes' }
     };
 
+    const classroomScheduleBySubject = {
+        'Grade 11 - ICT A::Programming 1': 'Mon / Wed / Fri   8:00   9:30 AM',
+        'Grade 11 - ICT A::Database Management': 'Mon / Wed   11:30 AM   1:00 PM',
+        'Grade 11 - STEM A::General Mathematics': 'Mon / Wed / Fri   1:00   2:30 PM',
+        'Grade 11 - ICT B::Animation': 'Tue / Thu   1:30   3:00 PM',
+        'Grade 11 - ICT A::Effective Communication': 'Tue / Thu   8:00   9:30 AM',
+        'Grade 11 - ICT B::Life and Career Skills': 'Mon / Wed   9:45   11:15 AM',
+        'Grade 11 - STEM B::General Science': 'Tue / Thu   10:30 AM   12:00 PM',
+        'Grade 11 - HUMSS A::Pag-aaral ng Kasaysayan at Lipunang Pilipino': 'Mon / Wed   3:15   4:45 PM',
+        'Grade 11 - Arts A::Arts 1 - Creative Industries': 'Tue / Thu   1:30   3:00 PM',
+        'Grade 11 - HUMSS B::Contemporary Literature 1': 'Tue / Thu   10:30 AM   12:00 PM',
+        'Grade 12 - GAS A::Citizenship and Civic Engagement': 'Mon / Wed   1:00   2:30 PM',
+        'Grade 11 - ICT C::Programming 1': 'Mon / Wed / Fri   8:00   9:30 AM',
+        'Grade 11 - ICT D::Database Management': 'Mon / Wed   11:30 AM   1:00 PM',
+        'Grade 11 - ICT E::Computer Systems Servicing': 'Tue / Thu   9:45   11:15 AM',
+        'Grade 11 - ICT F::Animation': 'Tue / Thu   1:30   3:00 PM',
+        'Grade 10 - ICT A::Intro to ICT': 'Mon / Wed / Fri   10:00   11:30 AM'
+    };
+
     const SHARED_ANNOUNCEMENTS_KEY = 'sigma-room-announcements-v1';
-    const SHARED_ATTENDANCE_MODE_KEY = 'sigma-attendance-mode-v1';
+
     const SHARED_ATTENDANCE_RECORDS_KEY = 'sigma-attendance-records-v1';
     const SHARED_COMMENT_MODE_KEY = 'sigma-room-comment-mode-v1';
     const SHARED_ANNOUNCEMENT_COMMENTS_KEY = 'sigma-room-announcement-comments-v1';
@@ -1052,7 +1586,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        bannerImage.src = 'image/Welcome.jpg';
+        // Assign book1–book8 deterministically by subject name
+        const bookImages = ['image/book1.jpg', 'image/book2.jpg', 'image/book3.jpg', 'image/book4.jpg',
+            'image/book5.jpg', 'image/book6.jpg', 'image/book7.jpg', 'image/book8.jpg'];
+        let nameHash = 0;
+        for (let i = 0; i < subjectName.length; i++) nameHash += subjectName.charCodeAt(i);
+        bannerImage.src = bookImages[nameHash % bookImages.length];
         bannerImage.style.display = 'block';
     }
 
@@ -1074,20 +1613,260 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
         saveSharedState(SHARED_ANNOUNCEMENTS_KEY, announcementPostsByClassroom);
     }
-    let attendanceModeByClassroom = loadSharedState(SHARED_ATTENDANCE_MODE_KEY, {});
+
     let attendanceRecordsByClassroom = loadSharedState(SHARED_ATTENDANCE_RECORDS_KEY, {});
     let commentModeByClassroom = loadSharedState(SHARED_COMMENT_MODE_KEY, {});
     let announcementCommentsByClassroom = loadSharedState(SHARED_ANNOUNCEMENT_COMMENTS_KEY, {});
+
+    let attendanceViewingMonth = new Date().getMonth();
+    let attendanceViewingYear = new Date().getFullYear();
+    let expandedAttendanceCol = -1; // 1-based day index
+    let attendanceLastScrollLeft = -1; // Persistent scroll position, -1 means fresh month/tab
+
+    window.navAttendanceMonth = function (dir) {
+        attendanceViewingMonth += dir;
+        if (attendanceViewingMonth > 11) {
+            attendanceViewingMonth = 0;
+            attendanceViewingYear++;
+        } else if (attendanceViewingMonth < 0) {
+            attendanceViewingMonth = 11;
+            attendanceViewingYear--;
+        }
+        expandedAttendanceCol = -1; // Reset expansion on month change
+        renderClassroomAttendanceTab(true);
+    };
+
+    window.toggleAttendanceExpansion = function (day) {
+        let shouldScroll = false;
+        if (expandedAttendanceCol === day) {
+            expandedAttendanceCol = -1;
+            shouldScroll = false; // Stay here when closing
+        } else {
+            expandedAttendanceCol = day;
+            shouldScroll = true; // Scroll to front when opening
+        }
+        renderClassroomAttendanceTab(shouldScroll);
+    };
+
+    window.setAttendanceStatus = function (studentName, dateString, status, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const statuses = getCurrentAttendanceStatuses(dateString);
+
+        // If the same status is clicked again, clear it (toggle behavior)
+        if (statuses[studentName] === status) {
+            statuses[studentName] = '';
+        } else {
+            statuses[studentName] = status;
+        }
+
+        saveCurrentAttendanceStatuses(statuses, dateString);
+        renderClassroomAttendanceTab(false); // Do not scroll when marking
+    };
+
+    function renderClassroomAttendanceTab(shouldScroll = false) {
+        const container = document.getElementById('detail-section-attendance');
+        if (!container) return;
+
+        // Capture current scroll position from the actual DOM if it exists
+        // Only restore if we are NOT doing a fresh scroll-to-today
+        const oldSlider = container.querySelector('.attendance-grid-container');
+        if (oldSlider && !shouldScroll) {
+            attendanceLastScrollLeft = oldSlider.scrollLeft;
+        }
+
+        const students = (studentsBySection[currentClassroomSectionName] || [])
+            .sort((a, b) => a.name.localeCompare(b.name));
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const daysInMonth = new Date(attendanceViewingYear, attendanceViewingMonth + 1, 0).getDate();
+
+        let html = `
+            <div class="attendance-monthly-card">
+                <div class="attendance-monthly-header flex items-center justify-between w-full">
+                    <button class="attendance-month-btn" onclick="window.navAttendanceMonth(-1)">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <span class="attendance-month-display">
+                        ${monthNames[attendanceViewingMonth]} ${attendanceViewingYear}
+                    </span>
+                    <button class="attendance-month-btn" onclick="window.navAttendanceMonth(1)">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+                <div class="attendance-grid-container">
+                    <table class="attendance-month-table font-['Inter'] text-black">
+                        <thead>
+                            <tr>
+                                <th class="student-name-col">Students</th>
+                                ${Array.from({ length: daysInMonth }, (_, i) => {
+            const day = i + 1;
+            const date = new Date(attendanceViewingYear, attendanceViewingMonth, day);
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            const label = `${m}/${d}`;
+            const isExpanded = expandedAttendanceCol === day;
+            return `<th class="day-col ${isExpanded ? 'is-expanded' : ''}" onclick="window.toggleAttendanceExpansion(${day})">${label}</th>`;
+        }).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+
+        students.forEach(student => {
+            const nameParts = student.name.split(', ');
+            const lastName = nameParts[0];
+            const firstNameFirstPart = nameParts[1] ? nameParts[1].split(' ')[0] : '';
+            const displayName = `${lastName}, ${firstNameFirstPart}`;
+
+            html += `
+                <tr>
+                    <td class="student-name-col">
+                        <div class="flex items-center gap-3">
+                            <span class="text-[11px] md:text-[13px] font-bold text-black line-clamp-1">${displayName}</span>
+                        </div>
+                    </td>`;
+            for (let d = 1; d <= daysInMonth; d++) {
+                const date = new Date(attendanceViewingYear, attendanceViewingMonth, d);
+                const dateString = date.toISOString().split('T')[0];
+                const status = getCurrentAttendanceStatuses(dateString)[student.name] || '';
+                const statusClass = status ? `status-${status.toLowerCase()}` : '';
+                const isExpanded = expandedAttendanceCol === d;
+
+                html += `
+                    <td class="day-col ${isExpanded ? 'is-expanded' : ''}">
+                        <div class="attendance-day-cell ${isExpanded ? 'is-expanded' : ''} ${statusClass}" 
+                             onclick="${!isExpanded ? `window.toggleAttendanceExpansion(${d})` : ''}">
+                            ${isExpanded ? (
+                        status ? `
+                                    <div class="attendance-selected-label ${statusClass}" onclick="window.setAttendanceStatus('${student.name.replace(/'/g, "\\'")}', '${dateString}', '${status}', event)">
+                                        ${status === 'P' ? 'Present' : status === 'A' ? 'Absent' : 'Late'}
+                                    </div>
+                                ` : `
+                                    <div class="attendance-opt-container">
+                                        <button class="attendance-opt-btn p-btn" onclick="window.setAttendanceStatus('${student.name.replace(/'/g, "\\'")}', '${dateString}', 'P', event)">P</button>
+                                        <button class="attendance-opt-btn a-btn" onclick="window.setAttendanceStatus('${student.name.replace(/'/g, "\\'")}', '${dateString}', 'A', event)">A</button>
+                                        <button class="attendance-opt-btn l-btn" onclick="window.setAttendanceStatus('${student.name.replace(/'/g, "\\'")}', '${dateString}', 'L', event)">L</button>
+                                    </div>
+                                `
+                    ) : (status ? status[0].toUpperCase() : '')}
+                        </div>
+                    </td>
+                `;
+            }
+            html += `</tr>`;
+        });
+
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        container.innerHTML = html;
+
+        // Restore or apply auto-scroll logic
+        const slider = container.querySelector('.attendance-grid-container');
+        if (slider) {
+            if (!shouldScroll && attendanceLastScrollLeft >= 0) {
+                // Restore previous scroll position immediately
+                slider.scrollLeft = attendanceLastScrollLeft;
+                requestAnimationFrame(() => {
+                    slider.scrollLeft = attendanceLastScrollLeft;
+                });
+            } else if (expandedAttendanceCol !== -1 && shouldScroll) {
+                // Scroll to target expansion ONLY if it's not already at the front
+                const colWidth = window.innerWidth <= 768 ? 70 : 100;
+                const targetLeft = (expandedAttendanceCol - 1) * colWidth;
+
+                if (Math.abs(attendanceLastScrollLeft - targetLeft) > 5) {
+                    setTimeout(() => {
+                        slider.scrollTo({ left: targetLeft, behavior: 'smooth' });
+                    }, 50);
+                } else {
+                    // Already there, just make sure it's perfectly aligned
+                    slider.scrollLeft = targetLeft;
+                }
+            } else if (attendanceLastScrollLeft >= 0 && !shouldScroll) {
+                // Stay where we are
+                slider.scrollLeft = attendanceLastScrollLeft;
+            } else {
+                // Auto-scroll to today's column using actual DOM position
+                const now = new Date();
+                if (now.getMonth() === attendanceViewingMonth && now.getFullYear() === attendanceViewingYear) {
+                    requestAnimationFrame(() => {
+                        // Find today's <th> by its position (index = today - 1, +1 for students col)
+                        const ths = slider.querySelectorAll('thead th');
+                        const todayTh = ths[now.getDate()]; // index 0 = Students, index N = day N
+                        if (todayTh) {
+                            slider.scrollTo({ left: todayTh.offsetLeft - (ths[1] ? ths[1].offsetLeft : 0), behavior: 'smooth' });
+                        }
+                    });
+                }
+            }
+        }
+
+        initAttendanceDragScroll();
+    }
+
+    function initAttendanceDragScroll() {
+        const slider = document.querySelector('.attendance-grid-container');
+        if (!slider) return;
+
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+        let hasMoved = false;
+
+        slider.addEventListener('scroll', () => {
+            attendanceLastScrollLeft = slider.scrollLeft;
+        });
+
+        slider.addEventListener('mousedown', (e) => {
+            isDown = true;
+            hasMoved = false;
+            slider.classList.add('dragging');
+            startX = e.pageX - slider.offsetLeft;
+            scrollLeft = slider.scrollLeft;
+        });
+
+        slider.addEventListener('mouseleave', () => {
+            isDown = false;
+            slider.classList.remove('dragging');
+        });
+
+        slider.addEventListener('mouseup', () => {
+            isDown = false;
+            slider.classList.remove('dragging');
+        });
+
+        slider.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            const x = e.pageX - slider.offsetLeft;
+            const walk = (x - startX) * 1.5;
+            if (Math.abs(walk) > 5) {
+                hasMoved = true;
+                e.preventDefault();
+                slider.scrollLeft = scrollLeft - walk;
+            }
+        });
+
+        // Prevent clicks if we were dragging
+        slider.addEventListener('click', (e) => {
+            if (hasMoved) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, true);
+    }
 
     function refreshSharedAnnouncements() {
         announcementPostsByClassroom = loadSharedState(SHARED_ANNOUNCEMENTS_KEY, {});
         return announcementPostsByClassroom;
     }
 
-    function refreshAttendanceModes() {
-        attendanceModeByClassroom = loadSharedState(SHARED_ATTENDANCE_MODE_KEY, {});
-        return attendanceModeByClassroom;
-    }
+
 
     function refreshAttendanceRecords() {
         attendanceRecordsByClassroom = loadSharedState(SHARED_ATTENDANCE_RECORDS_KEY, {});
@@ -1104,31 +1883,31 @@ document.addEventListener('DOMContentLoaded', () => {
         return announcementCommentsByClassroom;
     }
 
-    function getCurrentAttendanceMode() {
-        refreshAttendanceModes();
-        return attendanceModeByClassroom[currentClassroomKey] || 'manual';
-    }
 
-    function getCurrentAttendanceStatuses() {
+
+    function getCurrentAttendanceStatuses(dateString = new Date().toISOString().split('T')[0]) {
         refreshAttendanceRecords();
-        return attendanceRecordsByClassroom[currentClassroomKey]?.statuses || {};
+        const classroomData = attendanceRecordsByClassroom[currentClassroomKey] || {};
+        if (classroomData.date === dateString) return classroomData.statuses || {};
+        return (classroomData[dateString] || {}).statuses || {};
     }
 
-    function getCurrentAttendanceExcuses() {
+    function getCurrentAttendanceExcuses(dateString = new Date().toISOString().split('T')[0]) {
         refreshAttendanceRecords();
-        return attendanceRecordsByClassroom[currentClassroomKey]?.excuses || {};
+        const classroomData = attendanceRecordsByClassroom[currentClassroomKey] || {};
+        if (classroomData.date === dateString) return classroomData.excuses || {};
+        return (classroomData[dateString] || {}).excuses || {};
     }
 
-    function saveCurrentAttendanceMode(mode) {
-        if (!currentClassroomKey) return;
-        attendanceModeByClassroom[currentClassroomKey] = mode;
-        saveSharedState(SHARED_ATTENDANCE_MODE_KEY, attendanceModeByClassroom);
-    }
 
-    function saveCurrentAttendanceStatuses(statuses, excuses = getCurrentAttendanceExcuses()) {
+
+    function saveCurrentAttendanceStatuses(statuses, dateString = new Date().toISOString().split('T')[0], excuses = getCurrentAttendanceExcuses(dateString)) {
         if (!currentClassroomKey) return;
-        attendanceRecordsByClassroom[currentClassroomKey] = {
-            mode: getCurrentAttendanceMode(),
+        refreshAttendanceRecords();
+        if (!attendanceRecordsByClassroom[currentClassroomKey]) {
+            attendanceRecordsByClassroom[currentClassroomKey] = {};
+        }
+        attendanceRecordsByClassroom[currentClassroomKey][dateString] = {
             updatedAt: new Date().toISOString(),
             statuses,
             excuses
@@ -1193,19 +1972,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.switchGradesSubTab = function (tabId) {
         const analyticsContent = document.getElementById('grades-content-analytics');
         const gradebookContent = document.getElementById('grades-content-gradebook');
-        const analyticsTab = document.getElementById('grades-tab-analytics');
-        const gradebookTab = document.getElementById('grades-tab-gradebook');
-
-        // Normalize DOM structure: ensure gradebook pane is a sibling of analytics pane.
-        // (If accidentally nested inside analytics, it will always hide when analytics is hidden.)
-        if (
-            analyticsContent &&
-            gradebookContent &&
-            analyticsContent.contains(gradebookContent) &&
-            analyticsContent.parentElement
-        ) {
-            analyticsContent.parentElement.insertBefore(gradebookContent, analyticsContent.nextSibling);
-        }
 
         if (tabId === 'gradebook' && !sectionFeatureInit.gradebook) {
             sectionFeatureInit.gradebook = true;
@@ -1216,26 +1982,35 @@ document.addEventListener('DOMContentLoaded', () => {
             analyticsContent?.classList.remove('hidden');
             gradebookContent?.classList.add('hidden');
             analyticsContent?.classList.add('flex-1', 'overflow-y-auto');
-            analyticsTab?.classList.add('text-icc', 'border-icc');
-            analyticsTab?.classList.remove('text-gray-400', 'border-transparent');
-            gradebookTab?.classList.remove('text-icc', 'border-icc');
-            gradebookTab?.classList.add('text-gray-400', 'border-transparent');
-
-            // Trigger analytics update
             setupAnalyticsTab();
         } else {
             analyticsContent?.classList.add('hidden');
             gradebookContent?.classList.remove('hidden');
             gradebookContent?.classList.add('flex-1', 'flex', 'flex-col', 'overflow-hidden');
-            analyticsTab?.classList.remove('text-icc', 'border-icc');
-            analyticsTab?.classList.add('text-gray-400', 'border-transparent');
-            gradebookTab?.classList.add('text-icc', 'border-icc');
-            gradebookTab?.classList.remove('text-gray-400', 'border-transparent');
-
-            // Re-render spreadsheet if switching to gradebook
             if (typeof renderGradebookSpreadsheet === 'function') {
                 renderGradebookSpreadsheet();
             }
+        }
+
+        // Sidebar Highlighting
+        document.querySelectorAll('#sub-sidebar .section-nav-child').forEach(el => {
+            el.classList.remove('active', 'bg-icc-light', 'text-icc');
+            const iconBox = el.querySelector('div');
+            if (iconBox) iconBox.classList.replace('bg-icc', 'bg-slate-50');
+            if (iconBox) iconBox.classList.replace('text-white', 'text-slate-400');
+            const label = el.querySelector('span');
+            if (label) label.classList.replace('text-icc', 'text-slate-600');
+        });
+
+        const activeId = `grades-nav-${tabId}`;
+        const activeLink = document.getElementById(activeId);
+        if (activeLink) {
+            activeLink.classList.add('active', 'bg-icc-light', 'text-icc');
+            const iconBox = activeLink.querySelector('div');
+            if (iconBox) iconBox.classList.replace('bg-slate-50', 'bg-icc');
+            if (iconBox) iconBox.classList.replace('text-slate-400', 'text-white');
+            const label = activeLink.querySelector('span');
+            if (label) label.classList.replace('text-slate-600', 'text-icc');
         }
     };
 
@@ -1248,6 +2023,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const header = document.getElementById('sub-sidebar-header');
 
         if (!subSidebar || !content) return;
+
+        // Don't reset visibility if we have an active classroom
+        if (currentClassroomKey) {
+            return;
+        }
 
         // Reset visibility
         if (!clusterSubjects) {
@@ -1304,6 +2084,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function renderGradesSubSidebar() {
+        const subSidebar = document.getElementById('sub-sidebar');
+        const content = document.getElementById('sub-sidebar-content');
+        const title = document.getElementById('sub-sidebar-title');
+        const header = document.getElementById('sub-sidebar-header');
+
+        if (!subSidebar || !content || !title || !header) return;
+
+        title.textContent = 'Grades';
+        header.classList.remove('hidden');
+        content.innerHTML = '';
+
+        const navItems = [
+            { id: 'grades-nav-analytics', label: 'Performance', icon: 'fa-chart-pie', tab: 'analytics' },
+            { id: 'grades-nav-gradebook', label: 'Gradebooks', icon: 'fa-table-list', tab: 'gradebook' }
+        ];
+
+        navItems.forEach(item => {
+            const btn = document.createElement('button');
+            btn.id = item.id;
+            btn.className = `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group text-left section-nav-child`;
+            btn.onclick = () => window.switchGradesSubTab(item.tab);
+
+            btn.innerHTML = `
+                <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-icc group-hover:text-white transition-all text-slate-400">
+                    <i class="fa-solid ${item.icon} text-sm"></i>
+                </div>
+                <span class="text-[13px] font-bold text-slate-600 group-hover:text-icc transition-colors">${item.label}</span>
+            `;
+
+            content.appendChild(btn);
+        });
+
+        subSidebar.classList.remove('hidden');
+        subSidebar.classList.add('sub-sidebar-visible');
+        document.body.classList.add('sub-sidebar-open');
+        updateLayout();
+    }
+
     function getTeacherSectionCards() {
         const subjectsData = window.subjectsData || { core: [], academic: [], techpro: [], completed: [] };
         const allActive = [
@@ -1321,7 +2140,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     ...subj,
                     sectionName,
                     room: classroomMetaBySubject[key]?.room || `Room ${300 + sectionCards.length}`,
-                    teacher: classroomMetaBySubject[key]?.teacher || 'Elena Reyes'
+                    teacher: classroomMetaBySubject[key]?.teacher || 'Elena Reyes',
+                    schedule: classroomScheduleBySubject[key] || 'Mon / Wed / Fri   8:00   9:30 AM'
                 });
             });
         });
@@ -1346,6 +2166,217 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         return sectionCards;
+    }
+
+    function formatClockValue(value, fallbackMeridiem = '') {
+        const raw = String(value || '').trim();
+        if (!raw) return '';
+        const match = raw.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+        if (!match) return raw;
+        let hour = Number(match[1]);
+        const minute = match[2] || '00';
+        let meridiem = (match[3] || fallbackMeridiem || '').toUpperCase();
+        if (!meridiem) meridiem = hour >= 12 ? 'PM' : 'AM';
+        if (hour > 12) hour -= 12;
+        if (hour === 0) hour = 12;
+        return `${hour}:${minute} ${meridiem}`;
+    }
+
+    function clockValueToMinutes(value, fallbackMeridiem = '') {
+        const raw = String(value || '').trim();
+        const match = raw.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+        if (!match) return 0;
+        let hour = Number(match[1]);
+        const minute = Number(match[2] || '00');
+        const meridiem = (match[3] || fallbackMeridiem || '').toUpperCase();
+        if (meridiem === 'PM' && hour < 12) hour += 12;
+        if (meridiem === 'AM' && hour === 12) hour = 0;
+        return (hour * 60) + minute;
+    }
+
+    function parseClassSchedule(schedule) {
+        const value = String(schedule || '').replace(/\s+/g, ' ').trim();
+        const matches = [...value.matchAll(/(\d{1,2}:\d{2})\s*(AM|PM)?/gi)];
+        if (matches.length < 2) {
+            return { days: value, start: '', end: '', label: value || 'Schedule TBA', startMinutes: 0 };
+        }
+        const startPeriod = (matches[0][2] || matches[1][2] || '').toUpperCase();
+        const endPeriod = (matches[1][2] || startPeriod || '').toUpperCase();
+        const days = value.slice(0, matches[0].index).trim();
+        const start = formatClockValue(matches[0][1], startPeriod || endPeriod);
+        const end = formatClockValue(matches[1][1], endPeriod);
+        return {
+            days,
+            start,
+            end,
+            label: `${start} - ${end}`,
+            startMinutes: clockValueToMinutes(matches[0][1], startPeriod || endPeriod)
+        };
+    }
+
+    function getTeacherUpcomingSectionClasses(limit = 2) {
+        const classes = getTeacherSectionCards()
+            .filter(card => !card.sectionName.includes('Grade 10'))
+            .map(card => ({ ...card, scheduleInfo: parseClassSchedule(card.schedule) }))
+            .sort((a, b) => a.scheduleInfo.startMinutes - b.scheduleInfo.startMinutes || a.name.localeCompare(b.name));
+        if (!classes.length) return [];
+        const now = new Date();
+        const nowMinutes = (now.getHours() * 60) + now.getMinutes();
+        const startIndex = classes.findIndex(item => item.scheduleInfo.startMinutes >= nowMinutes);
+        const initialIndex = startIndex >= 0 ? startIndex : 0;
+        return Array.from({ length: Math.min(limit, classes.length) }, (_, index) => classes[(initialIndex + index) % classes.length]);
+    }
+
+    function formatHomeAssessmentWhen(date, prefix = 'Submitted') {
+        if (!date) return `${prefix} date TBA`;
+        const d = date instanceof Date ? date : new Date(date);
+        if (Number.isNaN(d.getTime())) return String(date);
+        const today = new Date();
+        const sameDay = d.toDateString() === today.toDateString();
+        const dateLabel = sameDay ? `${prefix} Today` : `${prefix} ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+        const timeLabel = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        return `${dateLabel} ${timeLabel}`;
+    }
+
+    function getTeacherSubmittedAssessmentItems(limit = 3) {
+        return buildAssessmentRows()
+            .filter(row => row.status === 'waiting')
+            .sort((a, b) => b.submittedOn - a.submittedOn)
+            .slice(0, limit);
+    }
+
+    function renderTeacherHomeDashboardPanels() {
+        const combinedList = document.getElementById('teacher-home-dashboard-combined-list');
+        if (!combinedList) return;
+
+        let classes = [];
+        let dueItems = [];
+
+        try {
+            classes = getTeacherUpcomingSectionClasses(2) || [];
+        } catch (error) {
+            console.warn('Unable to load teacher upcoming classes', error);
+        }
+
+        try {
+            dueItems = (buildAssessmentRows() || []).filter(row => row.status === 'waiting');
+        } catch (error) {
+            console.warn('Unable to load teacher submission rows', error);
+        }
+
+        if (!classes.length) {
+            classes = [
+                {
+                    name: 'Effective Communication',
+                    sectionName: 'Grade 11 - ICT A',
+                    room: 'Room 301',
+                    scheduleInfo: { label: '8:00 AM - 9:30 AM' }
+                },
+                {
+                    name: 'Programming 1',
+                    sectionName: 'Grade 11 - ICT C',
+                    room: 'Room 312',
+                    scheduleInfo: { label: '8:00 AM - 9:30 AM' }
+                }
+            ];
+        }
+
+        if (!dueItems.length) {
+            dueItems = [
+                {
+                    subject: 'Effective Communication',
+                    subjectId: 'fallback-effective-communication',
+                    activity: 'Activity #3: Practical Application',
+                    submissions: new Array(12)
+                },
+                {
+                    subject: 'Life and Career Skills',
+                    subjectId: 'fallback-life-career-skills',
+                    activity: 'Activity #3: Practical Application',
+                    submissions: new Array(10)
+                }
+            ];
+        }
+
+        // Group submissions by subject
+        const groupedSubmissions = dueItems.reduce((acc, row) => {
+            if (!acc[row.subjectId]) {
+                acc[row.subjectId] = {
+                    subjectName: row.subject,
+                    subjectId: row.subjectId,
+                    activities: []
+                };
+            }
+            acc[row.subjectId].activities.push(row);
+            return acc;
+        }, {});
+
+        const submissionGroups = Object.values(groupedSubmissions);
+
+        let html = '';
+
+        if (classes.length === 0 && submissionGroups.length === 0) {
+            html = `
+                <div class="home-dashboard-card">
+                    <strong class="home-dashboard-card__title">No activity</strong>
+                    <span class="home-dashboard-card__meta">Your schedule and tasks will appear here.</span>
+                </div>
+            `;
+        } else {
+            if (classes.length > 0) {
+                html += '<div class="home-dashboard-card home-dashboard-card--combined">';
+                html += classes.map((item, index) => `
+                    <div class="home-dashboard-item">
+                        <span class="home-dashboard-card__eyebrow">${index === 0 ? 'Next Class' : 'Upcoming Class'}</span>
+                        <button type="button" class="home-dashboard-subject-link" data-home-section="${escapeHtml(item.sectionName)}" data-home-subject="${escapeHtml(item.name)}">${escapeHtml(item.name)}</button>
+                        <span class="home-dashboard-card__meta">${escapeHtml(item.sectionName)}</span>
+                        <span class="home-dashboard-card__meta">${escapeHtml(item.room)}</span>
+                        <span class="home-dashboard-card__time">${escapeHtml(item.scheduleInfo.label)}</span>
+                    </div>
+                `).join('');
+                html += '</div>';
+            }
+
+            if (submissionGroups.length > 0) {
+                html += '<div class="home-dashboard-card home-dashboard-card--combined" style="margin-top: 1.5rem;">';
+                html += `<h3 class="home-dashboard-panel-heading">Submissions</h3>`;
+                html += submissionGroups.map(group => `
+                    <div class="home-dashboard-item">
+                        <button type="button" class="home-dashboard-subject-link home-dashboard-subject-toggle" data-toggle-subject="${escapeHtml(group.subjectId)}">
+                            ${escapeHtml(group.subjectName)}
+                        </button>
+                        <div class="home-dashboard-activity-list" id="activity-list-${escapeHtml(group.subjectId)}">
+                            ${group.activities.map(act => `
+                                <div class="home-dashboard-activity-item">
+                                    <span>${escapeHtml(act.activity)}</span>
+                                    <span class="home-dashboard-activity-count">${act.submissions?.length || 12}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+                html += '</div>';
+            }
+        }
+
+        combinedList.innerHTML = html;
+
+        // Listeners for classes
+        combinedList.querySelectorAll('[data-home-section]').forEach(card => {
+            card.addEventListener('click', () => showStudentList(card.dataset.homeSection, card.dataset.homeSubject));
+        });
+
+        // Listeners for toggles
+        combinedList.querySelectorAll('.home-dashboard-subject-toggle').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const listId = `activity-list-${btn.dataset.toggleSubject}`;
+                const list = document.getElementById(listId);
+                if (list) {
+                    list.classList.toggle('home-dashboard-activity-list--visible');
+                }
+            });
+        });
     }
 
     function getCompactSectionName(sectionName) {
@@ -1382,23 +2413,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const submenu = ensureSectionsSubmenu();
         if (!submenu) return;
 
-        submenu.innerHTML = getTeacherSectionCards().map(card => {
-            const active = card.sectionName === activeClassName && card.name === activeSubject;
-            return `
+        submenu.innerHTML = getTeacherSectionCards()
+            .filter(card => !card.sectionName.includes('Grade 10'))
+            .map(card => {
+                const active = card.sectionName === activeClassName && card.name === activeSubject;
+                return `
                 <button type="button"
                     class="teacher-section-room-link ${active ? 'active' : ''}"
                     data-section-name="${card.sectionName.replace(/"/g, '&quot;')}"
                     data-section-subject="${card.name.replace(/"/g, '&quot;')}">
-                    <span class="teacher-section-room-link__title">${card.name}</span>
-                    <span class="teacher-section-room-link__meta">${getClassroomRoomSubtitle(card)}</span>
+                    <i class="fa-solid fa-door-open teacher-section-room-link__icon"></i>
+                    <span class="teacher-section-room-link__content">
+                        <span class="teacher-section-room-link__title">${card.name}</span>
+                        <span class="teacher-section-room-link__meta">${getClassroomRoomSubtitle(card)}</span>
+                    </span>
                 </button>
             `;
-        }).join('');
+            }).join('');
 
         submenu.querySelectorAll('[data-section-name][data-section-subject]').forEach(button => {
             button.addEventListener('click', event => {
                 event.preventDefault();
                 event.stopPropagation();
+                // Close mobile sidebar when selecting a section room
+                if (window.innerWidth < 1024) {
+                    const sidebar = document.getElementById('sidebar');
+                    const sidebarOverlay = document.getElementById('sidebar-overlay');
+                    if (sidebar) sidebar.classList.remove('sidebar-visible');
+                    if (sidebarOverlay) sidebarOverlay.classList.add('hidden');
+                }
                 showStudentList(button.dataset.sectionName, button.dataset.sectionSubject, 'room');
             });
         });
@@ -1410,9 +2453,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!parent || !submenu) return;
 
         const isCollapsed = document.body.classList.contains('sidebar-collapsed') && window.innerWidth >= 1024;
-        parent.classList.toggle('active', Boolean(currentClassroomKey));
+        const isGridVisible = !document.getElementById('section-classes')?.classList.contains('hidden');
+        const isDetailVisible = !document.getElementById('section-classroom-detail')?.classList.contains('hidden');
+
+        parent.classList.toggle('active', isGridVisible || isDetailVisible);
         parent.classList.toggle('open', showChildren && !isCollapsed);
-        parent.querySelector('.sidebar-group-chevron')?.classList.toggle('rotate-90', showChildren && !isCollapsed);
+
+        const chevron = parent.querySelector('.sidebar-group-chevron');
+        if (chevron) {
+            chevron.classList.toggle('hidden', !isDetailVisible);
+            chevron.classList.toggle('rotate-90', showChildren && !isCollapsed);
+        }
+
         submenu.classList.toggle('hidden', !showChildren || isCollapsed);
     }
 
@@ -1427,14 +2479,8 @@ document.addEventListener('DOMContentLoaded', () => {
         syncSectionsNavState(true);
 
         const isCollapsed = document.body.classList.contains('sidebar-collapsed') && window.innerWidth >= 1024;
-        if (isCollapsed && !showCollapsedOverlay) {
-            subSidebar.classList.add('hidden');
-            subSidebar.classList.remove('sub-sidebar-visible');
-            document.body.classList.remove('sub-sidebar-open');
-            updateLayout();
-            return;
-        }
 
+        // If sidebar is expanded (not collapsed), hide the sub-sidebar
         if (!isCollapsed) {
             subSidebar.classList.add('hidden');
             subSidebar.classList.remove('sub-sidebar-visible');
@@ -1442,6 +2488,16 @@ document.addEventListener('DOMContentLoaded', () => {
             updateLayout();
             return;
         }
+
+        // If explicitly asked to stay hidden (e.g. on refresh/load), hide it
+        if (!showCollapsedOverlay) {
+            subSidebar.classList.add('hidden');
+            subSidebar.classList.remove('sub-sidebar-visible');
+            document.body.classList.remove('sub-sidebar-open');
+            updateLayout();
+            return;
+        }
+
 
         title.textContent = 'Sections';
         header?.classList.remove('hidden');
@@ -1455,8 +2511,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             class="teacher-section-room-link ${active ? 'active' : ''}"
                             data-section-name="${card.sectionName.replace(/"/g, '&quot;')}"
                             data-section-subject="${card.name.replace(/"/g, '&quot;')}">
-                            <span class="teacher-section-room-link__title">${card.name}</span>
-                            <span class="teacher-section-room-link__meta">${getClassroomRoomSubtitle(card)}</span>
+                            <i class="fa-solid fa-door-open teacher-section-room-link__icon"></i>
+                            <span class="teacher-section-room-link__content">
+                                <span class="teacher-section-room-link__title">${card.name}</span>
+                                <span class="teacher-section-room-link__meta">${getClassroomRoomSubtitle(card)}</span>
+                            </span>
                         </button>
                     `;
         }).join('')}
@@ -1464,7 +2523,9 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         content.querySelectorAll('[data-section-name][data-section-subject]').forEach(button => {
-            button.addEventListener('click', () => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 showStudentList(button.dataset.sectionName, button.dataset.sectionSubject, 'room');
             });
         });
@@ -1475,13 +2536,25 @@ document.addEventListener('DOMContentLoaded', () => {
         updateLayout();
     }
 
+    // Track whether the sections inline submenu is open
+    let sectionsSubmenuOpen = true;
+
     document.getElementById('nav-classes')?.addEventListener('click', event => {
         if (!currentClassroomKey) return;
         event.preventDefault();
         event.stopImmediatePropagation();
         const [className = '', subject = ''] = currentClassroomKey.split('::');
         const isCollapsed = document.body.classList.contains('sidebar-collapsed') && window.innerWidth >= 1024;
-        renderClassroomSectionsSidebar(className, subject, isCollapsed);
+
+        if (isCollapsed) {
+            // Collapsed sidebar: always show overlay sub-sidebar
+            renderClassroomSectionsSidebar(className, subject, true);
+        } else {
+            // Expanded sidebar: toggle the inline submenu open/closed
+            sectionsSubmenuOpen = !sectionsSubmenuOpen;
+            renderSectionsNavChildren(className, subject);
+            syncSectionsNavState(sectionsSubmenuOpen);
+        }
     }, true);
 
     document.getElementById('nav-classes')?.addEventListener('mouseenter', () => {
@@ -1492,6 +2565,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function hideClassroomSectionsSidebar() {
+        // Never hide the sidebar when we have an active classroom
+        if (currentClassroomKey) {
+            return;
+        }
         const subSidebar = document.getElementById('sub-sidebar');
         const content = document.getElementById('sub-sidebar-content');
         const header = document.getElementById('sub-sidebar-header');
@@ -1523,6 +2600,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sectionCards.forEach((card, index) => {
             const subj = card;
             const sectionName = card.sectionName;
+            const schedule = parseClassSchedule(subj.schedule);
 
             let bgClass = 'bg-[#15803d]'; // Core
             let textClass = 'text-white';
@@ -1536,43 +2614,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let badge = '';
             if (index === 0) {
-                badge = `<span class="text-[10px] font-black tracking-widest" style="color: #dc2626 !important;">No class</span>`;
+                badge = `<span style="font-size:13px;font-weight:900;letter-spacing:.06em;color:#dc2626;font-family:'Inter',sans-serif;text-transform:uppercase;">No class</span>`;
             } else if (index === 2) {
-                badge = `<span class="text-[10px] font-black tracking-widest" style="color: #16a34a !important;">Class today</span>`;
+                badge = `<span style="font-size:13px;font-weight:900;letter-spacing:.06em;color:#16a34a;font-family:'Inter',sans-serif;text-transform:uppercase;">Class today</span>`;
             } else if (index === 5) {
-                badge = `<span class="text-[10px] font-black tracking-widest" style="color: #ca8a04 !important;">Class tomorrow</span>`;
+                badge = `<span style="font-size:13px;font-weight:900;letter-spacing:.06em;color:#ca8a04;font-family:'Inter',sans-serif;text-transform:uppercase;">Class tomorrow</span>`;
             }
 
             const isAdvisory = subj.id === 'subj-effcomm' && sectionName === 'Grade 11 - ICT A';
-            const advisoryLabel = isAdvisory ? `<p class="text-[10px] font-black tracking-widest mb-0.5" style="color: #000000 !important;">Adviser</p>` : '';
+            const advisoryLabel = isAdvisory ? `<p style="font-size:13px;font-weight:900;letter-spacing:.06em;color:#000000;font-family:'Inter',sans-serif;margin-bottom:2px;">Adviser</p>` : '';
+            const iconClass = subj.icon || 'fa-solid fa-book';
+
+            // Assign a book image cycling book1–book8 by card index
+            const bookIdx = (index % 8) + 1;
+            const bookImg = `image/book${bookIdx}.jpg`;
+
+            const bannerContent = `<img src="${bookImg}" class="absolute inset-0 w-full h-full object-cover opacity-30">
+                   <i class="${iconClass} absolute -left-4 -top-4 text-white/20 text-7xl transform -rotate-12"></i>`;
 
             html += `
-                <div class="classroom-card bg-white border border-gray-100 rounded-[24px] overflow-hidden shadow-sm transition-all group flex flex-col h-full relative"
+                <div class="classroom-card bg-white border border-gray-100 rounded-[24px] overflow-hidden standard-panel-shadow transition-all group flex flex-col h-full relative"
                      data-id="${subj.id}|${sectionName}">
                     <!-- Header / Banner -->
-                    <div class="h-28 ${bgClass} w-full flex items-center justify-center px-6 rounded-t-[24px] classroom-card-banner">
-                         <h3 class="${textClass} font-black tracking-widest text-[14px] text-center leading-tight cursor-pointer hover:opacity-80 transition-opacity"
-                             style="color: #ffffff !important;"
+                    <div class="h-28 ${bgClass} w-full flex items-center justify-center px-6 rounded-t-[24px] classroom-card-banner relative overflow-hidden">
+                         ${bannerContent}
+                         <h3 class="${textClass} font-black tracking-widest text-center leading-tight cursor-pointer hover:underline transition-none relative z-10"
+                             style="color:#ffffff !important;font-size:16px;font-family:'Inter',sans-serif;text-shadow: 0 2px 4px rgba(0,0,0,0.3);"
                              onclick="window.showStudentList && window.showStudentList('${sectionName}', '${subj.name}')">${subj.name}</h3>
                     </div>
                     
                     <!-- Card Body -->
-                    <div class="p-6 flex flex-col flex-1 card-body-main">
+                    <div class="p-6 pt-10 flex flex-col flex-1 card-body-main" style="font-family:'Inter',sans-serif;">
                         <div class="flex items-start justify-between mb-4">
                             <div class="flex flex-col">
-                                <h4 class="text-[15px] font-black leading-tight" style="color: #000000 !important;">Elena Reyes</h4>
                                 ${advisoryLabel}
                             </div>
                             ${badge}
                         </div>
 
                         <div class="mt-auto flex flex-col gap-2.5 pt-4 border-t border-gray-50">
-                            <span class="text-[10px] font-black tracking-widest leading-none" style="color: #000000 !important;">${sectionName.split(' - ').pop()}</span>
-                            <span class="text-[10px] font-black tracking-widest leading-none mobile-hide-meta" style="color: #000000 !important;">${subj.grade}</span>
-                            <span class="text-[10px] font-black tracking-widest leading-none mobile-hide-meta" style="color: #000000 !important;">${subj.room}</span>
+                            <!-- Section code &mdash; green + icon -->
+                            <div class="flex items-center gap-1.5">
+                                <i class="fa-solid fa-users" style="font-size:13px;color:#15803d;width:16px;text-align:center;"></i>
+                                <span style="font-size:18px;font-weight:900;line-height:1;color:#15803d;font-family:'Inter',sans-serif;">${sectionName.split(' - ').pop().replace(/\s+/g, '-')}</span>
+                            </div>
+                            <!-- Grade -->
+                            <div class="flex items-center gap-1.5">
+                                <i class="fa-solid fa-graduation-cap" style="font-size:12px;color:#6b7280;width:16px;text-align:center;"></i>
+                                <span style="font-size:13px;font-weight:800;letter-spacing:.04em;line-height:1;color:#000000;font-family:'Inter',sans-serif;">${subj.grade}</span>
+                            </div>
+                            <!-- Room &mdash; icon -->
+                            <div class="flex items-center gap-1.5">
+                                <i class="fa-solid fa-door-open" style="font-size:12px;color:#6b7280;width:16px;text-align:center;"></i>
+                                <span style="font-size:13px;font-weight:800;letter-spacing:.04em;line-height:1;color:#000000;font-family:'Inter',sans-serif;">${subj.room}</span>
+                            </div>
+                            <!-- Schedule + School Year -->
                             <div class="flex items-center justify-between w-full">
-                                <span class="text-[10px] font-black tracking-widest leading-none mobile-hide-meta" style="color: #000000 !important;">08:00 AM - 09:30 AM</span>
-                                <span class="text-[10px] font-black tracking-widest leading-none mobile-hide-meta text-right" style="color: #000000 !important;">${subj.schoolYear || '2026-2027'}</span>
+                                <div class="flex items-center gap-1.5">
+                                    <i class="fa-regular fa-clock" style="font-size:12px;color:#6b7280;width:16px;text-align:center;"></i>
+                                    <span style="font-size:13px;font-weight:800;letter-spacing:.04em;line-height:1;color:#000000;font-family:'Inter',sans-serif;">${schedule.label}</span>
+                                </div>
+                                <span style="font-size:13px;font-weight:800;letter-spacing:.04em;line-height:1;color:#000000;font-family:'Inter',sans-serif;">${subj.schoolYear || '2026-2027'}</span>
                             </div>
                         </div>
                     </div>
@@ -1614,12 +2716,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const iconClass = subj.icon || 'fa-solid fa-book';
             const sectionsText = subj.sections ? subj.sections.join(', ') : 'No Sections';
+            const sIdx = allAssigned.indexOf(subj);
+            const sBookIdx = (sIdx % 8) + 1;
+            const sBookImg = `image/book${sBookIdx}.jpg`;
 
             return `
-                <div class="classroom-card bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col h-full">
+                <div class="classroom-card bg-white border border-gray-100 rounded-2xl overflow-hidden standard-panel-shadow hover:shadow-lg transition-all group flex flex-col h-full">
                     <div class="h-24 ${bgClass} w-full flex items-end justify-end px-8 pb-4 relative overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
                          onclick="window.openSubjectsProgramFocus && window.openSubjectsProgramFocus('${subj.programKey || 'core-subjects'}')">
-                        <i class="${iconClass} absolute -left-4 -top-4 text-white/10 text-7xl transform -rotate-12"></i>
+                        <img src="${sBookImg}" class="absolute inset-0 w-full h-full object-cover opacity-30">
+                        <i class="${iconClass} absolute -left-4 -top-4 text-white/20 text-7xl transform -rotate-12"></i>
                         <span class="relative z-10 text-white font-black tracking-widest text-[14px] drop-shadow-sm text-right leading-tight max-w-[80%]">${subj.name}</span>
                     </div>
                     <div class="p-6">
@@ -1650,15 +2756,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function buildGenericSubjectData(title, subjectId, clusterTitle) {
         const baseTopics = [
-            `Introduction to ${title}`,
-            `Core Concepts in ${title}`,
-            `Applied Practice in ${title}`,
-            `Assessment and Reflection for ${title}`
+            `Introduction`,
+            `Core Concepts`,
+            `Applied Practice`,
+            `Assessment and Reflection`
         ];
         return {
             id: subjectId,
             text: title,
-            subtitle: `${clusterTitle} • Grade 11`,
+            subtitle: `${clusterTitle} &bull; Grade 11`,
             instructor: 'Cluster Faculty',
             icon: 'fa-solid fa-book-open',
             bg: 'image/book1.jpg',
@@ -1903,7 +3009,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 title: item.title,
                 copy: item.overview,
                 media: item.image || '',
-                meta: `${item.track} • ${item.subjectCount} Subjects`
+                meta: `${item.track} &bull; ${item.subjectCount} Subjects`
             }));
         }
         if (program.stages) {
@@ -1972,6 +3078,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('sidebar-collapsed');
         sidebar?.classList.add('sidebar-collapsed');
 
+        navLinks.forEach(l => l.classList.remove('active'));
+        document.getElementById('nav-subjects')?.classList.add('active');
+
         const subSidebar = document.getElementById('sub-sidebar');
         if (subSidebar) {
             subSidebar.classList.add('hidden');
@@ -2011,7 +3120,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         title,
                         copy: subject.summary || `${title} is one of the elective subjects under ${k12Group.title}.`,
                         media: subject.bg || k12Group.image || 'image/book1.jpg',
-                        meta: `${k12Group.title} • ${k12Group.track}`,
+                        meta: `${k12Group.title} &bull; ${k12Group.track}`,
                         aiInsight: subject.summary || `${title} is part of ${k12Group.title} and supports the learning requirements of this elective path.`,
                         progress: 0
                     };
@@ -2029,7 +3138,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         title,
                         copy: subject.summary || `${title} is one of the elective subjects under ${cluster.title}.`,
                         media: subject.bg || cluster.image || 'image/book1.jpg',
-                        meta: `${cluster.title} • ${cluster.track}`,
+                        meta: `${cluster.title} &bull; ${cluster.track}`,
                         aiInsight: subject.summary || `${title} is part of ${cluster.title} and helps learners build the knowledge and outputs expected from this elective path.`,
                         progress: 0
                     };
@@ -2047,7 +3156,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 title,
                 copy: subject.summary || `${title} is part of the ${cluster.title} cluster and introduces the key lessons, activities, and outputs learners will complete in this track.`,
                 media: subject.bg || cluster.image || 'image/book1.jpg',
-                meta: `${cluster.track} • ${cluster.title}`,
+                meta: `${cluster.track} &bull; ${cluster.title}`,
                 aiInsight: subject.summary || `${title} is part of the ${cluster.title} cluster and helps students build knowledge, practice skills, and prepare for the requirements of this learning path.`,
                 progress: 0
             };
@@ -2381,14 +3490,33 @@ document.addEventListener('DOMContentLoaded', () => {
     window.openInlineProgramFocus = openInlineProgramFocus;
 
 
-    function switchToTopicPage(subjectId) {
+    function switchToTopicPage(subjectId, pushHistory = true, activeTopicIdx = null, initialTab = 'videos') {
         const data = getTopicData(subjectId);
         const subject = getTopicSubject(subjectId);
         if (!data || !subject) return;
+
+        const resolvedTopicIdx = Number.isInteger(activeTopicIdx)
+            ? activeTopicIdx
+            : (currentTopicState.subjectId === subjectId && Number.isInteger(currentTopicState.topicIdx) ? currentTopicState.topicIdx : 0);
+        const resolvedSection = currentTopicState.subjectId === subjectId ? (currentTopicState.selectedSection || '') : '';
+        const resolvedStudent = currentTopicState.subjectId === subjectId ? (currentTopicState.selectedStudent || '') : '';
+
+        if (pushHistory) {
+            history.pushState({ type: 'topic', subjectId, topicIdx: resolvedTopicIdx }, '', '#topic:' + subjectId);
+            localStorage.setItem('sigma-teacher-nav-state', JSON.stringify({ type: 'topic', subjectId, topicIdx: resolvedTopicIdx }));
+        }
+
         navLinks.forEach(link => link.classList.remove('active'));
         document.getElementById('nav-subjects')?.classList.add('active');
+
+        resetClassroomDetailLayout();
+
         const navContextText = document.getElementById('nav-context-text');
-        if (navContextText) navContextText.textContent = 'Subjects';
+        if (navContextText) navContextText.textContent = subject.name || 'Subjects';
+
+        if (window.setTeacherActiveSubject) window.setTeacherActiveSubject(subjectId);
+        currentTopicState = { subjectId, topicIdx: resolvedTopicIdx, activeTab: initialTab, videoIdx: 0, activeIdx: null, selectedSection: resolvedSection, selectedStudent: resolvedStudent, showGradebookPanel: false };
+
         _buildAndShowTopicPage(subjectId);
     }
     window.switchToTopicPage = switchToTopicPage;
@@ -2408,44 +3536,46 @@ document.addEventListener('DOMContentLoaded', () => {
         hideAllSections();
         showSection('section-topic-detail');
 
-        document.body.classList.add('sidebar-collapsed');
-        sidebar.classList.add('sidebar-collapsed');
-        const subSidebar = document.getElementById('sub-sidebar');
-        if (subSidebar) {
-            subSidebar.classList.add('hidden');
-            subSidebar.classList.remove('sub-sidebar-visible');
-        }
-        loadTopicSubSidebar(subject, data, statusIconClass);
+        // document.body.classList.add('sidebar-collapsed');
+        // sidebar.classList.add('sidebar-collapsed');
+        // Do not hide the sub-sidebar, let it persist so the user can continue navigating subjects
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function loadTopicSubSidebar(subject, data, statusIconClass) {
+    function loadTopicSubSidebar(subject, data, statusIconClass, activeIdx = null) {
         const content = document.getElementById('sub-sidebar-content');
         const title = document.getElementById('sub-sidebar-title');
         const header = document.getElementById('sub-sidebar-header');
         if (!content) return;
+        const subjectId = subject.id || subject.key;
+        const resolvedActiveIdx = activeIdx ?? (currentTopicState.subjectId === subjectId ? currentTopicState.topicIdx : null);
         if (header) header.classList.remove('hidden');
-        if (title) title.textContent = 'Topic Navigation';
+        if (title) title.textContent = data.text || subject.name || 'Topics';
 
-        content.innerHTML = data.q1Topics.map((t, i) => `
-            <button onclick="openTopicContent('${subject.id || subject.key}', ${i})" class="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-all flex items-start gap-3 group">
+        content.innerHTML = data.q1Topics.map((t, i) => {
+            const isActive = i === resolvedActiveIdx;
+            return `
+            <button onclick="openTopicContent('${subjectId}', ${i})" class="topic-nav-item w-full text-left p-3 rounded-xl transition-all flex items-start gap-3 group ${isActive ? 'active' : 'hover:bg-gray-50'}">
                 <i class="fa-solid ${statusIconClass[t.status] || 'fa-circle text-gray-200'} mt-1 flex-shrink-0"></i>
                 <div class="min-w-0">
-                    <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-0.5">Topic ${i + 1}</p>
-                    <p class="text-sm font-bold text-gray-700 leading-tight group-hover:text-icc transition-colors truncate">${t.title}</p>
+                    <p class="text-[10px] font-black text-black uppercase tracking-widest mb-0.5">Topic ${i + 1}</p>
+                    <p class="topic-nav-title text-[13px] font-bold leading-tight transition-colors truncate">${t.title}</p>
                 </div>
             </button>
-        `).join('');
+        `;
+        }).join('');
     }
 
     function buildTopicPage(subjectId, subject, data, statusIconClass) {
         const page = document.getElementById('section-topic-detail');
         if (!page) return;
-        const overallPct = Math.round(((data.q1Percent || 0) + (data.q2Percent || 0)) / 2);
-        const q1Done = (data.q1Topics || []).filter(topic => topic.status === 'completed').length;
-        const q1Total = (data.q1Topics || []).length || 1;
-        const quarter1Pct = data.q1Percent || Math.round((q1Done / q1Total) * 100);
-        const quarter2Pct = data.q2Percent || 0;
+        // Only show real progress when a section is selected
+        const sectionSelected = Boolean(currentTopicState.selectedSection);
+        const quarter1Pct = sectionSelected ? (data.q1Percent || 0) : 0;
+        const quarter2Pct = sectionSelected ? (data.q2Percent || 0) : 0;
+        const quarter3Pct = sectionSelected ? (data.q3Percent || 0) : 0;
+        const quarter4Pct = sectionSelected ? (data.q4Percent || 0) : 0;
+        const overallPct = sectionSelected ? Math.round((quarter1Pct + quarter2Pct + quarter3Pct + quarter4Pct) / 4) : 0;
         const topicImages = ['image/Topic.jpg', 'image/Topic2.jpg'];
         const topicOverview = {
             'Nature and Elements of Communication': 'Identify how messages are created, sent, received, and interpreted in real situations.',
@@ -2453,7 +3583,12 @@ document.addEventListener('DOMContentLoaded', () => {
             'Communication Models': 'Compare common models and how feedback moves across each communication process.',
             'Communication Breakdown': 'Recognize barriers that interrupt meaning and plan ways to avoid them.',
             'Speech Context, Style, and Act': 'Practice choosing language, tone, and delivery for specific audiences.',
-            'Principles of Speech Writing and Delivery': 'Prepare clear speeches with organized points and confident delivery.'
+            'Principles of Speech Writing and Delivery': 'Prepare clear speeches with organized points and confident delivery.',
+            'Origin and Structure of the Earth': 'Explore the history of the solar system and the geological layers that form our planet.',
+            'Earth Materials and Processes': 'Study the minerals, rocks, and tectonic movements that shape the Earth\'s surface.',
+            'Natural Hazards, Mitigation, and Adaptation': 'Understand environmental risks and develop strategies for community safety and resilience.',
+            'Matter, Light, and the Cosmos': 'Examine the fundamental properties of matter and the vast structures of the universe.',
+            'Perpetuation of Life and Reproduction': 'Learn about biological inheritance and the diverse mechanisms that sustain life across generations.'
         };
         const statusText = {
             completed: 'Done',
@@ -2462,68 +3597,40 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         const overallColor = overallPct >= 90 ? 'text-green-600' : overallPct >= 80 ? 'text-icc' : overallPct >= 75 ? 'text-yellow-600' : overallPct > 0 ? 'text-red-500' : 'text-gray-400';
         const renderTopicCard = (topic, index) => `
-            <button type="button" class="teacher-topic-card" onclick="openTopicContent('${subjectId}', ${index})">
-                <img src="${topicImages[index % topicImages.length]}" alt="" class="teacher-topic-card__image">
+            <div class="teacher-topic-card" onclick="openTopicContent('${subjectId}', ${index})">
+                <div class="teacher-topic-card__image-container">
+                    <img src="${topicImages[index % topicImages.length]}" alt="" class="teacher-topic-card__image">
+                </div>
                 <div class="teacher-topic-card__body">
                     <div class="teacher-topic-card__meta">
                         <span>Topic ${index + 1}</span>
-                        <i class="fa-solid ${statusIconClass[topic.status] || 'fa-circle text-gray-200'}"></i>
+                        <i class="fa-solid text-xl ${statusIconClass[topic.status] || 'fa-circle text-gray-200'}"></i>
                     </div>
                     <h3>${topic.title}</h3>
-                    <p>${topicOverview[topic.title] || `Review the key concepts, activities, and learning outputs for ${topic.title}.`}</p>
-                    <div class="teacher-topic-card__footer">
-                        <span class="teacher-topic-status">${statusText[topic.status] || 'Open'}</span>
-                        <span class="teacher-topic-open">Open <i class="fa-solid fa-arrow-right"></i></span>
+                    <p>${topicOverview[topic.title] || `Review the key concepts, activities, and learning outputs.`}</p>
+                    <div class="mt-auto pt-4 text-right">
+                        <button class="teacher-topic-open-btn inline-flex items-center gap-2 px-6 py-2.5 bg-icc text-white rounded-full font-bold text-sm shadow">
+                            Open Topic <i class="fa-solid fa-arrow-right"></i>
+                        </button>
                     </div>
                 </div>
-            </button>
+            </div>
         `;
 
         page.innerHTML = `
-            <div class="teacher-topic-page-shell">
-                <div class="teacher-topic-page-grid">
-                    <div class="teacher-topic-main-shell">
-                        <div class="teacher-topic-header">
-                            <h1>Topics</h1>
-                        </div>
-                        <div class="teacher-topic-list">
-                            ${data.q1Topics.map((topic, index) => renderTopicCard(topic, index)).join('')}
-                        </div>
-                    </div>
-
-                    <div class="teacher-topic-progress-rail">
-                        <div class="teacher-topic-progress-card">
-                            <p class="teacher-topic-progress-kicker">Progress</p>
-                            <div class="text-center py-1">
-                                <div class="teacher-topic-progress-percent text-gray-900">${overallPct}%</div>
-                                <p class="text-[10px] text-gray-400 mt-1">${q1Done} of ${q1Total} topics done</p>
+            <div class="w-full">
+                <div class="teacher-topic-page-shell min-h-screen">
+                    <div class="teacher-topic-page-grid">
+                        <div class="teacher-topic-main-shell">
+                            <div class="teacher-topic-header">
+                                <h1>${data.text || 'Topics'}</h1>
                             </div>
-                            <div>
-                                <div class="flex justify-between items-center mb-1.5">
-                                    <span class="teacher-topic-progress-label">1st Quarter</span>
-                                    <span class="text-[10px] font-black text-gray-900">${quarter1Pct}%</span>
-                                </div>
-                                <div class="teacher-topic-progress-bar bg-gray-100">
-                                    <div class="h-full bg-icc rounded-full transition-all" style="width:${quarter1Pct}%"></div>
-                                </div>
-                            </div>
-                            <div class="pt-3 border-t border-gray-100">
-                                <div class="flex justify-between items-center">
-                                    <span class="teacher-topic-progress-label">2nd Quarter</span>
-                                    <span class="text-[10px] font-black text-gray-900">${quarter2Pct}%</span>
-                                </div>
-                                <div class="teacher-topic-progress-bar bg-gray-100 mt-1.5">
-                                    <div class="h-full bg-icc rounded-full transition-all" style="width:${quarter2Pct}%"></div>
-                                </div>
+                            <div class="teacher-topic-list">
+                                ${data.q1Topics.map((topic, index) => renderTopicCard(topic, index)).join('')}
                             </div>
                         </div>
 
-                        <div class="teacher-topic-progress-card">
-                            <p class="teacher-topic-progress-kicker">Overall</p>
-                            <div class="text-center py-3">
-                                <div class="teacher-topic-overall-percent ${overallColor}">${overallPct}%</div>
-                            </div>
-                        </div>
+                        ${_buildProgressRail(data)}
                     </div>
                 </div>
             </div>
@@ -2531,10 +3638,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- TOPIC CONTENT SYSTEM (Standardized) ---
-    const TAB_LABELS = { videos: 'Videos', handouts: 'Handouts', assignments: 'Assignments', quiz: 'Quiz', activity: 'Activity', performance: 'Performance Task' };
+    const TAB_LABELS = { videos: 'Videos', handouts: 'Lessons', assignments: 'Assignments', quiz: 'Quizzes', activity: 'Activities', performance: 'Performance Tasks' };
     const TAB_ICONS = {
         videos: 'fa-solid fa-play',
-        handouts: 'fa-solid fa-file-pdf',
+        handouts: 'fa-solid fa-book-open',
         assignments: 'fa-solid fa-file-pen',
         quiz: 'fa-solid fa-square-poll-vertical',
         activity: 'fa-solid fa-flask',
@@ -2543,10 +3650,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const assessmentData = {
         default: {
-            startDate: 'March 20, 2026', startTime: '8:00 AM',
-            dueDate: 'March 27, 2026', dueTime: '5:00 PM',
-            maxScore: 100, maxAttempts: 3,
-            latePermission: true,
+            startDate: '&nbsp;', startTime: '&nbsp;',
+            dueDate: '&nbsp;', dueTime: '&nbsp;',
+            maxScore: 0, maxAttempts: 0,
+            latePermission: false,
             instructionType: 'text', // 'text' or 'pdf'
             instructionPdf: { title: 'Activity Instructions Sheet', pages: 4, size: '0.6 MB', uploader: 'Teacher' },
             submission: null // null = not yet submitted
@@ -2557,73 +3664,148 @@ document.addEventListener('DOMContentLoaded', () => {
         subjectId: null,
         topicIdx: null,
         activeTab: 'videos',
-        videoIdx: 0
+        videoIdx: 0,
+        selectedSection: '',
+        showGradebookPanel: false
     };
 
-    window.openTopicContent = function (subjectId, topicIdx, tab = 'videos', videoIdx = 0) {
+    window.openTopicContent = function (subjectId, topicIdx, tab = 'videos', subIdx = null, pushHistory = true, stateOverrides = {}) {
         const data = getTopicData(subjectId);
         const subject = getTopicSubject(subjectId);
         if (!data || !subject) return;
 
-        currentTopicState = { subjectId, topicIdx, activeTab: tab, videoIdx };
+        if (pushHistory) {
+            const hash = `#topic-content:${subjectId}:${topicIdx}:${tab}:${subIdx}`;
+            history.pushState({ type: 'topic-content', subjectId, topicIdx, tab, subIdx }, '', hash);
+            localStorage.setItem('sigma-teacher-nav-state', JSON.stringify({ type: 'topic-content', subjectId, topicIdx, tab, subIdx }));
+        }
 
-        buildTopicContentPage(subjectId, topicIdx);
+        // Preserve the selected section when navigating within the same subject
+        let preservedSection = currentTopicState.subjectId === subjectId ? (currentTopicState.selectedSection || '') : '';
+        let preservedStudent = currentTopicState.subjectId === subjectId ? (currentTopicState.selectedStudent || '') : '';
+        
+        // Apply overrides if provided (e.g. from Gradebook)
+        if (stateOverrides.selectedSection) preservedSection = stateOverrides.selectedSection;
+        if (stateOverrides.selectedStudent) preservedStudent = stateOverrides.selectedStudent;
+
+        currentTopicState = { 
+            subjectId, 
+            topicIdx, 
+            activeTab: tab, 
+            videoIdx: subIdx, 
+            activeIdx: subIdx, 
+            selectedSection: preservedSection, 
+            selectedStudent: preservedStudent, 
+            showGradebookPanel: false 
+        };
+        window._tcAssessmentDetailIdx = subIdx;
+        window._scAssessmentDetailIdx = subIdx; // Support both naming conventions for parity
+
+        // Manage sidebar active state manually to avoid switchTab fallback to Home
+        navLinks.forEach(l => l.classList.remove('active'));
+        const subjectsLink = document.getElementById('nav-subjects');
+        if (subjectsLink) subjectsLink.classList.add('active');
+        
+        // Clear any lingering sub-navigation highlights (e.g. from Gradebooks)
+        if (typeof window.clearSubNavigationHighlights === 'function') {
+            window.clearSubNavigationHighlights();
+        }
+        
+        // Ensure the correct sections are toggled
         hideAllSections();
         showSection('section-topic-content');
-        
+
+        const navContextText = document.getElementById('nav-context-text');
+        if (navContextText) navContextText.textContent = 'Subjects';
+
+        buildTopicContentPage(subjectId, topicIdx);
+
         // On desktop, swap sub-sidebar to topic contents
         if (window.innerWidth >= 1024) {
             renderTopicContentsSidebar(subjectId, topicIdx, tab);
         }
+
+        // Auto-scroll to player
+        setTimeout(() => {
+            const player = document.getElementById('topic-video-player-container');
+            if (player) {
+                const headerOffset = 100;
+                const elementPosition = player.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }, 100);
     };
 
-    window.switchTopicTab = function (tab) {
+    window.switchTopicTab = function (tab, assessmentIdx = null) {
+        scrollToTop();
+        if (!currentTopicState.subjectId) return;
+
+        // Stop all videos and iframes in the main container before switching
+        const container = document.getElementById('topic-content-main');
+        if (container) {
+            container.querySelectorAll('iframe, video').forEach(media => {
+                const src = media.src;
+                media.src = '';
+                if (media.pause) media.pause();
+            });
+        }
+
         currentTopicState.activeTab = tab;
-        currentTopicState.videoIdx = 0;
+        currentTopicState.videoIdx = null;
+        currentTopicState.showGradebookPanel = false;
+        window._tcAssessmentDetailIdx = assessmentIdx;
+
+        // Persist tab switch in hash and localStorage with PUSH state for back button
+        const { subjectId, topicIdx } = currentTopicState;
+        const hash = `#topic-content:${subjectId}:${topicIdx}:${tab}:${assessmentIdx}`;
+        history.pushState(currentTopicState, '', hash);
+        localStorage.setItem('sigma-teacher-nav-state', JSON.stringify({ type: 'topic-content', subjectId, topicIdx, activeTab: tab, videoIdx: null, assessmentIdx }));
+
         _renderTopicContentMain();
         renderTopicContentsSidebar(currentTopicState.subjectId, currentTopicState.topicIdx, tab);
+
+        // Auto Refresh Scroll Position
+        const mainScroll = document.querySelector('.teacher-topic-main-shell > .overflow-y-auto');
+        if (mainScroll) {
+            mainScroll.scrollTop = 0;
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     function getTopicTabs() {
-        const { subjectId, topicIdx } = currentTopicState;
-        const data = getTopicData(subjectId);
-        const topic = data.q1Topics[topicIdx];
-        const tabs = [];
-        if (topic.videos?.length || topicVideos[subjectId]) tabs.push('videos');
-        if (topic.handouts?.length || topicHandouts[subjectId]) tabs.push('handouts');
-        tabs.push('assignments', 'quiz', 'activity', 'performance');
-        return tabs;
+        return ['videos', 'handouts', 'assignments', 'quiz', 'activity', 'performance'];
     }
 
     function buildTopicContentPage(subjectId, topicIdx) {
         const page = document.getElementById('section-topic-content');
         if (!page) return;
-        
+
         page.innerHTML = `
-            <div class="mx-auto max-w-[1024px] w-full px-4 py-0 min-w-0">
-                <div class="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm min-h-screen overflow-hidden flex flex-col">
-                    <!-- Top Navigation Bar -->
-                    <div class="px-10 py-6 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-20">
-                        <div class="flex items-center gap-3">
-                            <button onclick="switchToTopicPage('${subjectId}')" class="text-gray-400 hover:text-icc transition-colors font-bold text-xs flex items-center gap-2 uppercase tracking-widest">
-                                <i class="fa-solid fa-arrow-left text-[10px]"></i> Back
-                            </button>
-                            <span class="text-gray-300">•</span>
-                            <span class="text-[11px] font-black text-gray-400 uppercase tracking-widest truncate max-w-[200px]">
-                                ${getTopicSubject(subjectId).text}
-                            </span>
+            <div class="teacher-topic-page-shell pt-0 px-0 pb-0 min-h-screen overflow-visible">
+                <div class="teacher-topic-page-grid">
+                    <!-- Main Content Panel (1024px) -->
+                    <div class="teacher-topic-main-shell standard-panel-shadow h-[calc(100vh-var(--shell-offset))] flex flex-col bg-white">
+                        <div id="topic-breadcrumb-container" class="px-10 py-0 flex-shrink-0">
+                            <!-- Breadcrumb injected here -->
                         </div>
-                        <div class="flex items-center gap-4">
-                            <div class="flex items-center gap-1.5 px-3 py-1.5 bg-icc-light rounded-full">
-                                <i class="fa-solid fa-bolt text-icc text-[10px]"></i>
-                                <span class="text-[10px] font-black text-icc uppercase tracking-widest">SIGMA Optimized</span>
-                            </div>
+                        <div id="topic-content-header" class="px-0 py-0 border-b border-gray-50 flex-shrink-0">
+                            <!-- tabNav injected here -->
+                        </div>
+                        <div id="topic-content-main" class="px-10 py-0 flex-1 overflow-y-auto">
+                            <!-- Content injected by _renderTopicContentMain() -->
                         </div>
                     </div>
 
-                    <!-- Main Content Area -->
-                    <div id="topic-content-main" class="flex-1 overflow-y-auto px-10 py-8 custom-scrollbar">
-                        <!-- Content injected by _renderTopicContentMain() -->
+                    <!-- Progress Rail -->
+                    <div id="topic-right-section" class="teacher-topic-progress-rail">
+                        <!-- Context/Details Injected here -->
                     </div>
                 </div>
             </div>
@@ -2632,31 +3814,489 @@ document.addEventListener('DOMContentLoaded', () => {
         _renderTopicContentMain();
     }
 
+    function normalizeTopicSubjectName(value) {
+        return String(value || '')
+            .toLowerCase()
+            .replace(/^computer\s+/i, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function getCurrentTopicSectionCards(data) {
+        const subject = getTopicSubject(currentTopicState.subjectId);
+        const candidates = [
+            subject?.name,
+            subject?.text,
+            subject?.title,
+            data?.text,
+            data?.name,
+            data?.title
+        ].map(normalizeTopicSubjectName).filter(Boolean);
+
+        return getTeacherSectionCards()
+            .filter(card => {
+                const cardName = normalizeTopicSubjectName(card.name);
+                const isCurrentSubject = candidates.includes(cardName) || candidates.some(name => cardName.includes(name) || name.includes(cardName));
+                const isAllowedGrade = /^Grade\s+(11|12)\b/i.test(card.sectionName || '');
+                return isCurrentSubject && isAllowedGrade;
+            })
+            .filter((card, index, cards) => cards.findIndex(item => item.sectionName === card.sectionName) === index);
+    }
+
+    function _buildTopicSectionSelectorCard(data) {
+        const selectedSection = currentTopicState.selectedSection || '';
+        const selectedStudent = currentTopicState.selectedStudent || '';
+        const sectionOptions = getCurrentTopicSectionCards(data)
+            .map(card => `<option value="${escapeHtml(card.sectionName)}" ${card.sectionName === selectedSection ? 'selected' : ''}>${escapeHtml(card.sectionName)}</option>`)
+            .join('');
+
+        const isAssessmentTab = ['assignments', 'quiz', 'activity', 'performance'].includes(currentTopicState.activeTab);
+        const isLocked = !selectedSection;
+
+        return `
+            <div class="teacher-topic-progress-card teacher-topic-nav-card sharp-shadow border border-gray-100">
+                <label for="topic-content-section-select" class="teacher-topic-progress-kicker">Sections</label>
+                <div class="teacher-topic-select-wrap">
+                    <select id="topic-content-section-select" class="teacher-topic-section-select" onchange="window.openTopicSectionFromRail?.(this.value)">
+                        <option value="" disabled ${selectedSection ? '' : 'selected'}>Select section</option>
+                        ${sectionOptions}
+                    </select>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <button
+                    type="button"
+                    id="topic-student-picker-btn"
+                    class="teacher-topic-student-btn ${isLocked ? 'teacher-topic-student-btn--locked' : ''}"
+                    onclick="${isLocked ? '' : 'window.openTopicStudentPicker?.()'}"
+                    ${isLocked ? 'disabled' : ''}
+                    title="${isLocked ? 'Select a section first' : 'Pick a student'}"
+                >
+                    <i class="fa-solid fa-user-graduate"></i>
+                    <span>${selectedStudent ? escapeHtml(selectedStudent) : 'Students'}</span>
+                </button>
+                ${(isAssessmentTab && window._tcAssessmentDetailIdx !== null) ? `
+                    <button type="button" class="teacher-topic-gradebook-link teacher-topic-gradebook-link--inside" onclick="window.openGradebookFromWorkstation?.()">
+                        <i class="fa-solid fa-book"></i>
+                        <span>Gradebooks</span>
+                    </button>
+                ` : ''}
+
+            </div>
+        `;
+    }
+
+    // â”€â”€ Student Picker Overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    window.openTopicStudentPicker = function () {
+        const section = currentTopicState.selectedSection || '';
+        if (!section) return;
+
+        const students = (typeof studentsBySection !== 'undefined' ? studentsBySection[section] : []) || [];
+        const selected = currentTopicState.selectedStudent || '';
+
+        const overlay = document.createElement('div');
+        overlay.id = 'topic-student-picker-overlay';
+        overlay.className = 'topic-student-picker-overlay';
+        overlay.innerHTML = `
+            <div class="topic-student-picker-panel">
+                <div class="topic-student-picker-header">
+                    <div>
+                        <p class="topic-student-picker-kicker">Students</p>
+                        <p class="topic-student-picker-section">${escapeHtml(section)}</p>
+                    </div>
+                    <button type="button" class="topic-student-picker-exit" onclick="window.closeTopicStudentPicker?.()">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="topic-student-picker-search-wrap">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input
+                        id="topic-student-search"
+                        type="text"
+                        class="topic-student-picker-search"
+                        placeholder="Search student..."
+                        oninput="window._filterTopicStudents?.(this.value)"
+                        autocomplete="off"
+                    />
+                </div>
+                <div class="topic-student-picker-list" id="topic-student-picker-list">
+                    ${students.map(s => `
+                        <button type="button"
+                            class="topic-student-item ${s.name === selected ? 'topic-student-item--active' : ''}"
+                            onclick="window.selectTopicStudent?.('${escapeHtml(s.name)}')"
+                            data-name="${escapeHtml(s.name)}"
+                        >
+                            <span class="topic-student-item-avatar">${escapeHtml(s.name.charAt(0))}</span>
+                            <span class="topic-student-item-name">${escapeHtml(s.name)}</span>
+                            ${s.name === selected ? '<i class="fa-solid fa-check topic-student-item-check"></i>' : ''}
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        requestAnimationFrame(() => overlay.classList.add('topic-student-picker-overlay--visible'));
+        document.getElementById('topic-student-search')?.focus();
+    };
+
+    window.closeTopicStudentPicker = function () {
+        const overlay = document.getElementById('topic-student-picker-overlay');
+        if (!overlay) return;
+        overlay.classList.remove('topic-student-picker-overlay--visible');
+        overlay.addEventListener('transitionend', () => overlay.remove(), { once: true });
+    };
+
+    window.selectTopicStudent = function (name) {
+        const isToggle = currentTopicState.selectedStudent === name;
+        
+        if (isToggle) {
+            currentTopicState.selectedStudent = '';
+            if (typeof window.clearGradebookHighlights === 'function') {
+                window.clearGradebookHighlights(false, true); // Clear inner
+                window.clearGradebookHighlights(true, true);  // Clear outer
+            }
+            const btn = document.getElementById('topic-student-picker-btn');
+            if (btn) {
+                const span = btn.querySelector('span');
+                if (span) span.textContent = 'Select Student';
+            }
+        } else {
+            currentTopicState.selectedStudent = name;
+            window.closeTopicStudentPicker();
+
+            // Directly update the button label in the DOM instantly
+            const btn = document.getElementById('topic-student-picker-btn');
+            if (btn) {
+                const span = btn.querySelector('span');
+                if (span) span.textContent = name;
+                btn.classList.remove('teacher-topic-student-btn--locked');
+                btn.disabled = false;
+            }
+
+            // Synchronize Gradebook highlight if visible
+            const gbPrefixes = ['gradebook-', 'gradebook-outer-'];
+            gbPrefixes.forEach(prefix => {
+                const table = document.getElementById(prefix + 'spreadsheet');
+                if (table) {
+                    const rows = table.querySelectorAll('tbody tr');
+                    rows.forEach(tr => {
+                        const nameCell = tr.querySelector('td:first-child p:first-child');
+                        if (nameCell && nameCell.textContent.trim() === name) {
+                            if (typeof window.highlightGradebookRow === 'function') {
+                                window.highlightGradebookRow(tr, prefix.includes('outer'));
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        // Refresh the progress panel after the overlay fade-out completes
+        setTimeout(() => {
+            const topicContentVisible = !document.getElementById('section-topic-content')?.classList.contains('hidden');
+            const topicPageVisible = !document.getElementById('section-topic-detail')?.classList.contains('hidden');
+            if (topicContentVisible) {
+                _renderTopicContentMain();   // re-renders progress rail inside topic content page
+            } else if (topicPageVisible) {
+                _refreshTopicPageRail();      // patches just the progress rail on topic overview page
+            }
+        }, 280); // matches overlay close transition duration
+    };
+
+    window._filterTopicStudents = function (query) {
+        const list = document.getElementById('topic-student-picker-list');
+        if (!list) return;
+        const q = query.toLowerCase().trim();
+        list.querySelectorAll('.topic-student-item').forEach(btn => {
+            const name = (btn.dataset.name || '').toLowerCase();
+            btn.style.display = name.includes(q) ? '' : 'none';
+        });
+    };
+
+
+
+    /**
+     * Deterministic per-student quarter progress calculator.
+     * Uses a hash of (studentName + topicIndex + assessmentType) to decide
+     * whether each assessment slot was "submitted" by this student.
+     * Respects topic status: completed &rarr; high chance, in-progress &rarr; partial, not-started &rarr; 0.
+     */
+    function _calcStudentQuarterProgress(studentName, topics, quarter) {
+        if (!topics || topics.length === 0) return null;
+        
+        const subjectId = currentTopicState.subjectId;
+        // Resolve student ID
+        const student = getGradebookStudents().find(s => s.name === studentName);
+        if (!student) return 0;
+        const studentId = student.id;
+
+        const assessmentTypes = ['assignment', 'quiz', 'activity', 'perf. task'];
+        let total = 0, done = 0;
+
+        topics.forEach((topic, ti) => {
+            assessmentTypes.forEach((type) => {
+                // There are 2 assessments per category per topic based on our generation logic
+                for (let i = 0; i < 2; i++) {
+                    total++;
+                    const idx = (ti * 2) + i;
+                    const score = gradebookScores[subjectId]?.[quarter]?.[studentId]?.[type]?.[idx];
+                    const status = gradebookStatuses[subjectId]?.[quarter]?.[studentId]?.[type]?.[idx];
+                    
+                    // Count as "done" if there's a score or a status (like Absent/Missing)
+                    if ((score !== undefined && score !== null && score !== '') || (status && status !== '')) {
+                        done++;
+                    }
+                }
+            });
+        });
+
+        return total > 0 ? Math.round((done / total) * 100) : 0;
+    }
+
+    function _buildProgressRail(data) {
+        // Progress requires both a section AND a student to be selected
+        const studentSelected = Boolean(currentTopicState.selectedStudent);
+        const sectionSelected = Boolean(currentTopicState.selectedSection);
+        const showProgress = sectionSelected && studentSelected;
+
+        const studentName = currentTopicState.selectedStudent || '';
+        const q1Topics = data.q1Topics || [];
+        const q2Topics = data.q2Topics || [];
+        const q3Topics = data.q3Topics || [];
+        const q4Topics = data.q4Topics || [];
+
+        // Calculate per-student quarter completion from this subject's topic data
+        const quarter1Pct = showProgress ? (_calcStudentQuarterProgress(studentName, q1Topics, 1) ?? 0) : 0;
+        const quarter2Pct = showProgress && q2Topics.length > 0 ? (_calcStudentQuarterProgress(studentName, q2Topics, 2) ?? 0) : (q2Topics.length > 0 ? 0 : null);
+        const quarter3Pct = showProgress && q3Topics.length > 0 ? (_calcStudentQuarterProgress(studentName, q3Topics, 3) ?? 0) : (q3Topics.length > 0 ? 0 : null);
+        const quarter4Pct = showProgress && q4Topics.length > 0 ? (_calcStudentQuarterProgress(studentName, q4Topics, 4) ?? 0) : (q4Topics.length > 0 ? 0 : null);
+
+        // Overall = (Q1 + Q2 + Q3 + Q4) / 4 &mdash; always divided by 4
+        const activeVals = [quarter1Pct, quarter2Pct, quarter3Pct, quarter4Pct].filter(v => v !== null);
+        const overallPct = showProgress && activeVals.length > 0
+            ? Math.round((quarter1Pct + (quarter2Pct ?? 0) + (quarter3Pct ?? 0) + (quarter4Pct ?? 0)) / 4)
+            : 0;
+
+        const renderBar = (label, pct) => {
+            if (pct === null) {
+                return `
+                    <div class="mt-3">
+                        <div class="flex justify-between items-center">
+                            <span class="teacher-topic-progress-label" style="color:#d1d5db">${label}</span>
+                            <span class="text-[10px] font-black" style="color:#d1d5db">&mdash;</span>
+                        </div>
+                        <div class="teacher-topic-progress-bar mt-1.5" style="background:#f3f4f6">
+                            <div class="h-full rounded-full" style="width:0%;background:#e5e7eb"></div>
+                        </div>
+                    </div>`;
+            }
+            return `
+                    <div class="mt-3">
+                        <div class="flex justify-between items-center">
+                            <span class="teacher-topic-progress-label">${label}</span>
+                            <span class="text-[10px] font-black text-black">${pct}%</span>
+                        </div>
+                        <div class="teacher-topic-progress-bar bg-gray-100 mt-1.5">
+                            <div class="h-full bg-icc rounded-full transition-all" style="width:${pct}%"></div>
+                        </div>
+                    </div>`;
+        };
+
+        return `
+            <div class="teacher-topic-progress-rail">
+                ${_buildTopicSectionSelectorCard(data)}
+                <div class="teacher-topic-progress-card sharp-shadow border border-gray-100">
+                    <p class="teacher-topic-progress-kicker">Progress</p>
+                    <div class="text-center py-1">
+                        <div class="teacher-topic-progress-percent text-black">${overallPct}%</div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="teacher-topic-progress-label">1st Quarter</span>
+                            <span class="text-[10px] font-black text-black">${quarter1Pct}%</span>
+                        </div>
+                        <div class="teacher-topic-progress-bar bg-gray-100">
+                            <div class="h-full bg-icc rounded-full transition-all" style="width:${quarter1Pct}%"></div>
+                        </div>
+                    </div>
+                    ${renderBar('2nd Quarter', quarter2Pct)}
+                    ${renderBar('3rd Quarter', quarter3Pct)}
+                    ${renderBar('4th Quarter', quarter4Pct)}
+                </div>
+            </div>
+        `;
+    }
+
+    /** Re-renders only the progress rail on the topic OVERVIEW page (section-topic-detail). */
+    function _refreshTopicPageRail() {
+        const subjectId = currentTopicState.subjectId;
+        const data = subjectId ? getTopicData(subjectId) : null;
+        if (!data) return;
+        const detail = document.getElementById('section-topic-detail');
+        if (!detail) return;
+        const oldRail = detail.querySelector('.teacher-topic-progress-rail');
+        if (!oldRail) return;
+        const temp = document.createElement('div');
+        temp.innerHTML = _buildProgressRail(data);
+        const newRail = temp.querySelector('.teacher-topic-progress-rail');
+        if (newRail) oldRail.replaceWith(newRail);
+    }
+
+
+
+    window.openTopicSectionFromRail = function (sectionName) {
+        // Clear selected student when section changes
+        if (currentTopicState.selectedSection !== (sectionName || '')) {
+            currentTopicState.selectedStudent = '';
+        }
+        currentTopicState.selectedSection = sectionName || '';
+        window._tcAssessmentDetailIdx = null;
+        const topicContentVisible = !document.getElementById('section-topic-content')?.classList.contains('hidden');
+        if (topicContentVisible) {
+            _renderTopicContentMain();
+            return;
+        }
+
+        if (currentTopicState.subjectId) {
+            const subject = getTopicSubject(currentTopicState.subjectId);
+            const data = getTopicData(currentTopicState.subjectId);
+            const statusIconClass = {
+                completed: 'fa-check-circle text-green-500',
+                'in-progress': 'fa-circle-half-stroke text-yellow-500',
+                'not-started': 'fa-circle text-gray-300'
+            };
+            if (subject && data) buildTopicPage(currentTopicState.subjectId, subject, data, statusIconClass);
+        }
+    };
+
+    window.openTopicGradebooks = function () {
+        if (typeof window.openGradebookOuterLayer === 'function') {
+            window.openGradebookOuterLayer();
+        }
+    };
+
+    window.openGradebookFromWorkstation = function() {
+        if (typeof window.openGradebookOuterLayer !== 'function') return;
+        
+        const categoryMap = {
+            'assignments': 'assignment',
+            'quiz': 'quiz',
+            'activity': 'activity',
+            'performance': 'perf. task'
+        };
+        
+        const category = categoryMap[currentTopicState.activeTab];
+        const globalIdx = (Number(currentTopicState.topicIdx) * 2) + Number(window._tcAssessmentDetailIdx);
+        
+        window.openGradebookOuterLayer(category, globalIdx);
+    };
+
+    function _buildTopicGradebookPanel(tab, subject, topic) {
+        const selectedSection = currentTopicState.selectedSection || '';
+        const tabLabel = TAB_LABELS[tab] || 'Assessment';
+        const subjectName = subject?.name || subject?.text || subject?.title || 'Subject';
+
+        if (!selectedSection) {
+            return `
+                <div class="space-y-4 mt-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div class="teacher-topic-empty-panel">
+                        <p>Select a section to view its gradebook file panel.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="space-y-4 mt-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <div class="teacher-topic-gradebook-file-panel handout-card group flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-[22px] sharp-shadow hover:border-black transition-all cursor-pointer" onclick="switchTab('nav-grades')">
+                    <div class="w-14 h-14 rounded-2xl bg-icc-light flex items-center justify-center text-icc flex-shrink-0">
+                        <i class="fa-solid fa-book text-xl"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-[10px] font-black uppercase tracking-widest text-[#15803d] mb-1">${escapeHtml(selectedSection)}</p>
+                        <h4 class="text-xl font-bold text-black leading-tight group-hover:text-yellow-500 transition-colors font-['Inter']">${escapeHtml(subjectName)} Gradebook</h4>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-black/40 group-hover:text-yellow-500 transition-colors"></i>
+                </div>
+            </div>
+        `;
+    }
+
     function _renderTopicContentMain() {
+        const breadcrumbContainer = document.getElementById('topic-breadcrumb-container');
+        const header = document.getElementById('topic-content-header');
         const container = document.getElementById('topic-content-main');
-        if (!container) return;
+        const rightSection = document.getElementById('topic-right-section');
+        if (!container || !header) return;
 
         const { subjectId, topicIdx, activeTab, videoIdx } = currentTopicState;
         const data = getTopicData(subjectId);
         const subject = getTopicSubject(subjectId);
-        const topic = data.q1Topics[topicIdx];
-
-        container.innerHTML = '';
         
+        if (!data || !data.q1Topics) {
+            console.error('Topic data missing for subject:', subjectId);
+            return;
+        }
+        
+        const topic = data.q1Topics[topicIdx] || { title: 'Unknown Topic' };
+
+        header.innerHTML = _tabNav(activeTab);
+
         let html = '';
-        if (activeTab === 'videos') {
-            html = _buildVideosTab(subject, topic, subjectId, topicIdx, videoIdx);
-        } else if (activeTab === 'handouts') {
-            html = _buildHandoutsTab(subject, topic, subjectId, topicIdx);
-        } else {
-            html = _buildAssessmentTab(activeTab, subject, topic, data);
+        let rightHtml = `
+            <div class="teacher-topic-progress-rail-direct font-['Inter']">
+                ${_buildProgressRail(data)}
+            </div>
+        `;
+
+        try {
+            if (activeTab === 'videos') {
+                html = _buildVideosTab(subject, topic, subjectId, topicIdx, videoIdx);
+            } else if (activeTab === 'handouts') {
+                html = _buildHandoutsTab(subject, topic, subjectId, topicIdx);
+            } else {
+                // Assessment tabs (Assignments, Quiz, etc)
+                const result = _buildAssessmentTab(activeTab, subject, topic, data, subjectId, topicIdx);
+                html = result.mainHtml;
+                if (result.rightHtml) {
+                    rightHtml = result.rightHtml;
+                }
+            }
+        } catch (err) {
+            console.error('Workstation rendering error:', err);
+            html = `
+                <div class="p-20 text-center font-['Inter']">
+                    <div class="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Something went wrong</h3>
+                    <p class="text-gray-500 max-w-xs mx-auto">There was an error rendering the ${activeTab} tab. Please try switching tabs or reloading.</p>
+                </div>
+            `;
+        }
+
+        if (breadcrumbContainer) {
+            breadcrumbContainer.innerHTML = '';
         }
 
         container.innerHTML = html;
 
+        // Inject the focused progress rail
+        if (rightSection) {
+            rightSection.innerHTML = rightHtml;
+            const isAssessmentDetail = ['assignments', 'quiz', 'activity', 'performance'].includes(activeTab)
+                && window._tcAssessmentDetailIdx !== null
+                && window._tcAssessmentDetailIdx !== undefined;
+            rightSection.classList.toggle('teacher-topic-right-section--fixed', isAssessmentDetail);
+        }
+
+        // Trigger Auto-Refresh Animation
+        container.classList.remove('animate-in', 'fade-in');
+        void container.offsetWidth;
+        container.classList.add('animate-in', 'fade-in');
+
         // Initialize any sliders if needed
         const handouts = topic.handouts || topicHandouts[subjectId] || [];
-        if (activeTab === 'handouts') {
+        if (activeTab === 'handouts' && handouts.length) {
             handouts.forEach((h, i) => {
                 if (h.type === 'ppt' && h.slides) {
                     new HandoutSlider(`handout-slider-${i}`, h.slides);
@@ -2665,82 +4305,314 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    window.openHandoutOuterLayer = function (url, title) {
+        if (!url || url === '#') return;
+
+        const isPdf = url.toLowerCase().endsWith('.pdf');
+        if (isPdf) {
+            window.open(url, '_blank');
+            return;
+        }
+
+        const isDocx = url.toLowerCase().endsWith('.docx');
+        const isPptx = url.toLowerCase().endsWith('.pptx') || url.toLowerCase().endsWith('.ppt');
+
+        // Construct absolute URL
+        let absoluteUrl = url;
+        if (!url.startsWith('http')) {
+            absoluteUrl = new URL(url, window.location.origin).href;
+        }
+
+        if (isDocx || isPptx) {
+            const newWindow = window.open('', '_blank');
+            if (newWindow) {
+                newWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Sigma Pro Viewer | ${title}</title>
+                        <script src="https://cdn.tailwindcss.com"></script>
+                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+                        <!-- DOCX Preview Libraries -->
+                        <script src="https://unpkg.com/jszip/dist/jszip.min.js"></script>
+                        <script src="https://unpkg.com/docx-preview/dist/docx-preview.js"></script>
+                        <style>
+                            body { font-family: 'Inter', sans-serif; background-color: #525659; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+                            .bg-icc { background-color: #008148; }
+                            .bg-icc-dark { background-color: #006b3c; }
+                            .custom-scrollbar::-webkit-scrollbar { width: 12px; height: 12px; }
+                            .custom-scrollbar::-webkit-scrollbar-track { background: #323639; }
+                            .custom-scrollbar::-webkit-scrollbar-thumb { background: #525659; border: 3px solid #323639; border-radius: 6px; }
+                            #preview-container { background: white; min-height: 100%; width: 100%; box-shadow: 0 0 50px rgba(0,0,0,0.3); }
+                            /* Overwrite docx-preview styles to match our clean aesthetic */
+                            .docx-wrapper { background-color: transparent !important; padding: 0 !important; }
+                            .docx { box-shadow: none !important; margin-bottom: 0 !important; }
+                        </style>
+                    </head>
+                    <body>
+                        <!-- Sigma Pro Toolbar -->
+                        <div class="h-12 bg-[#323639] border-b border-white/5 flex items-center justify-between px-4 text-white shadow-lg shrink-0">
+                            <div class="flex items-center gap-1">
+                                <button onclick="window.close()" class="w-8 h-8 rounded hover:bg-white/10 transition-all flex items-center justify-center text-white/80 hover:text-white" title="Close">
+                                    <i class="fa-solid fa-xmark text-sm"></i>
+                                </button>
+                                <div class="w-px h-6 bg-white/10 mx-1"></div>
+                                <button class="w-8 h-8 rounded hover:bg-white/10 transition-all flex items-center justify-center text-white/80 hover:text-white" onclick="window.print()" title="Print">
+                                    <i class="fa-solid fa-print text-sm"></i>
+                                </button>
+                                <button class="w-8 h-8 rounded hover:bg-white/10 transition-all flex items-center justify-center text-white/80 hover:text-white" title="Thumbnails">
+                                    <i class="fa-solid fa-table-cells-large text-sm"></i>
+                                </button>
+                            </div>
+
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-3 bg-black/20 px-3 py-1 rounded-md border border-white/5">
+                                    <button class="text-white/60 hover:text-white"><i class="fa-solid fa-minus text-xs"></i></button>
+                                    <div class="w-24 h-1 bg-white/10 rounded-full overflow-hidden relative">
+                                        <div class="absolute inset-0 bg-icc w-3/4"></div>
+                                    </div>
+                                    <button class="text-white/60 hover:text-white"><i class="fa-solid fa-plus text-xs"></i></button>
+                                    <span class="text-[10px] font-bold min-w-[30px] text-center">80%</span>
+                                </div>
+                                <div class="w-px h-6 bg-white/10"></div>
+                                <div class="flex items-center gap-2">
+                                    <button class="w-6 h-6 rounded hover:bg-white/10 flex items-center justify-center text-white/40"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+                                    <input type="text" value="1" class="w-8 h-6 bg-black/40 border border-white/10 rounded text-[10px] text-center font-bold focus:outline-none focus:border-icc">
+                                    <span class="text-[10px] text-white/40">/ 1</span>
+                                    <button class="w-6 h-6 rounded hover:bg-white/10 flex items-center justify-center text-white/40"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3">
+                                <div class="relative">
+                                    <input type="text" placeholder="Search..." class="w-48 h-8 bg-black/40 border border-white/10 rounded-full px-4 py-1 text-[10px] text-white focus:outline-none focus:border-icc transition-all placeholder:text-white/20">
+                                    <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-white/20 text-[10px]"></i>
+                                </div>
+                                <a href="${absoluteUrl}" download class="h-8 px-4 rounded bg-icc hover:bg-icc-dark text-white text-[10px] font-bold uppercase tracking-widest no-underline flex items-center gap-2 transition-all shadow-lg">
+                                    <i class="fa-solid fa-download text-xs"></i> Save
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Main Viewing Area -->
+                        <div class="flex-1 overflow-auto p-4 md:p-8 flex justify-center custom-scrollbar" id="viewport">
+                            <div class="w-full max-w-5xl h-fit min-h-full flex flex-col items-center justify-center text-center bg-white" id="preview-container">
+                                <div id="loader" class="flex flex-col items-center gap-4">
+                                    <div class="w-12 h-12 border-4 border-icc border-t-transparent rounded-full animate-spin"></div>
+                                    <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">Preparing Document...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <script>
+                            async function loadPreview() {
+                                const container = document.getElementById('preview-container');
+                                const loader = document.getElementById('loader');
+                                const fileUrl = '${absoluteUrl}';
+                                const isDocx = fileUrl.toLowerCase().endsWith('.docx');
+                                const isPptx = fileUrl.toLowerCase().endsWith('.pptx') || fileUrl.toLowerCase().endsWith('.ppt');
+
+                                try {
+                                    if (isDocx) {
+                                        const response = await fetch(fileUrl);
+                                        if (!response.ok) throw new Error('Failed to fetch file');
+                                        const arrayBuffer = await response.arrayBuffer();
+                                        
+                                        loader.remove();
+                                        container.classList.remove('justify-center');
+                                        
+                                        await docx.renderAsync(arrayBuffer, container);
+                                    } else if (isPptx) {
+                                        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                                        if (isLocal) {
+                                            loader.innerHTML = \`
+                                                <div class="w-24 h-24 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-gray-100">
+                                                    <i class="fa-solid fa-file-powerpoint text-orange-500 text-5xl"></i>
+                                                </div>
+                                                <h3 class="text-2xl font-bold text-gray-900 mb-4">Development Preview</h3>
+                                                <p class="text-gray-500 text-sm leading-relaxed mb-10 max-w-sm mx-auto">
+                                                    PowerPoint previews require a live internet connection to render. Once your site is hosted, this will preview perfectly.
+                                                </p>
+                                                <a href="\${fileUrl}" download class="inline-flex items-center justify-center gap-3 px-10 py-5 bg-black text-white rounded-2xl font-bold hover:bg-gray-800 transition-all shadow-xl">
+                                                    <i class="fa-solid fa-download"></i> Download File
+                                                </a>
+                                            \`;
+                                        } else {
+                                            const mViewer = \`https://view.officeapps.live.com/op/embed.aspx?src=\${encodeURIComponent(fileUrl)}\`;
+                                            container.innerHTML = \`<iframe src="\${mViewer}" class="w-full h-full border-none flex-1 min-h-[800px]" allow="fullscreen"></iframe>\`;
+                                        }
+                                    }
+                                } catch (err) {
+                                    console.error(err);
+                                    loader.innerHTML = \`
+                                        <i class="fa-solid fa-circle-exclamation text-red-500 text-4xl mb-4"></i>
+                                        <h3 class="text-xl font-bold text-gray-900 mb-2">Oops! Preview failed</h3>
+                                        <p class="text-gray-500 text-sm mb-6">We couldn't load the document directly.</p>
+                                        <a href="\${fileUrl}" download class="inline-flex items-center justify-center gap-3 px-8 py-3 bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-all">
+                                            <i class="fa-solid fa-download"></i> Download File
+                                        </a>
+                                    \`;
+                                }
+                            }
+                            loadPreview();
+                        </script>
+                    </body>
+                    </html>
+                `);
+                newWindow.document.close();
+            }
+            return;
+        }
+
+        window.open(url, '_blank');
+    };
+
     function _tabNav(currentTab) {
         const tabs = getTopicTabs();
         const idx = tabs.indexOf(currentTab);
         const prev = idx > 0 ? tabs[idx - 1] : null;
         const next = idx < tabs.length - 1 ? tabs[idx + 1] : null;
 
-        return `
-            <div class="flex items-center justify-between w-full py-5">
-                ${prev ? `
-                <button onclick="switchTopicTab('${prev}')"
-                    title="${TAB_LABELS[prev]}"
-                    class="h-10 min-w-[56px] px-4 rounded-xl bg-icc hover:bg-icc-dark text-white text-xs font-bold transition-all flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
-                    <i class="${TAB_ICONS[prev]} text-[14px]"></i>
-                </button>` : '<div class="w-10 h-10"></div>'}
+        const { subjectId, topicIdx } = currentTopicState;
+        const data = getTopicData(currentTopicState.subjectId);
+        const topic = data.q1Topics[topicIdx];
+        const tabLabel = TAB_LABELS[currentTab] || currentTab;
 
-                <div class="flex items-center gap-2">
-                    ${tabs.map(t => `
-                        <button onclick="switchTopicTab('${t}')"
-                            class="w-10 h-10 rounded-xl flex items-center justify-center transition-all ${t === currentTab ? 'bg-icc text-white shadow-lg shadow-icc/20' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}">
-                            <i class="${TAB_ICONS[t]} text-[14px]"></i>
-                        </button>
-                    `).join('')}
+        return `
+            <div class="flex flex-col w-full py-0 border-b border-gray-100 bg-white shadow-sm relative z-10">
+                <!-- Header Row (Breadcrumbs) -->
+                <div class="px-10 pt-6 pb-0">
+                    <div class="flex items-center gap-2 text-black flex-wrap">
+                        <span class="text-sm md:text-xl font-bold text-gray-900 tracking-tight leading-tight">${topic.title}</span>
+                        <i class="fa-solid fa-chevron-right text-[10px] md:text-xs text-black/20 mx-1 flex-shrink-0"></i>
+                        <span class="text-sm md:text-xl font-bold text-gray-900 tracking-tight whitespace-nowrap">${tabLabel}</span>
+                    </div>
                 </div>
 
-                ${next ? `
-                <button onclick="switchTopicTab('${next}')"
-                    title="${TAB_LABELS[next]}"
-                    class="h-10 min-w-[56px] px-4 rounded-xl bg-icc hover:bg-icc-dark text-white text-xs font-bold transition-all flex items-center justify-center gap-2">
-                    <i class="${TAB_ICONS[next]} text-[14px]"></i>
-                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                </button>` : '<div class="w-10 h-10"></div>'}
+                <!-- Action Row (Buttons) -->
+                <div class="flex items-center justify-between w-full px-10 pt-4 pb-4">
+                    ${prev ? `
+                    <button onclick="switchTopicTab('${prev}')"
+                        class="h-8 w-20 md:h-10 md:w-28 rounded-xl bg-icc hover:bg-icc-dark text-white text-[10px] md:text-xs font-bold transition-all flex items-center justify-center flex-shrink-0">
+                        Previous
+                    </button>` : '<div class="w-20 md:w-28"></div>'}
+
+                    ${next ? `
+                    <button onclick="switchTopicTab('${next}')"
+                        class="h-8 w-20 md:h-10 md:w-28 rounded-xl bg-icc hover:bg-icc-dark text-white text-[10px] md:text-xs font-bold transition-all flex items-center justify-center flex-shrink-0">
+                        Next
+                    </button>` : '<div class="w-20 md:w-28"></div>'}
+                </div>
+
+                <!-- Tab Row -->
+                <div class="flex items-center justify-between border-t border-gray-50 px-10 py-2 w-full">
+                    <div class="flex items-center gap-2 md:gap-8 flex-wrap flex-1 mr-2">
+                        ${tabs.map(tab => `
+                            <button onclick="switchTopicTab('${tab}')"
+                                class="relative h-10 md:h-12 px-2 text-[10px] md:text-xs font-bold transition-all whitespace-nowrap flex-shrink-0 ${currentTab === tab ? 'text-yellow-500' : 'text-gray-900 hover:text-gray-600'}">
+                                ${TAB_LABELS[tab]}
+                                ${currentTab === tab ? '<div class="absolute bottom-0 left-0 w-full h-1 bg-icc"></div>' : ''}
+                            </button>
+                        `).join('')}
+                    </div>
+                    
+                    <!-- Desktop Action Buttons - Forced Visible -->
+                    <div class="flex items-center gap-1 ml-4 flex-shrink-0">
+                        <button onclick="switchToTopicPage('${subjectId}', true, ${topicIdx})" class="w-9 h-9 rounded-full flex items-center justify-center text-black hover:bg-slate-100 transition-colors" title="Back to Topics">
+                            <i class="fa-solid fa-book text-lg"></i>
+                        </button>
+                        <button onclick="window.returnToRoomFromTopic?.('${subjectId}')" class="w-9 h-9 rounded-full flex items-center justify-center text-black hover:bg-slate-100 transition-colors" title="Back to Sections">
+                            <i class="fa-solid fa-door-open text-lg"></i>
+                        </button>
+
+                    </div>
+                </div>
             </div>
         `;
     }
 
     function _buildVideosTab(subject, topic, subjectId, topicIdx, activeIdx) {
-        const videos = topic.videos || (topicVideos[subjectId] ? [{ id: 1, title: topic.title, duration: '12:45', url: topicVideos[subjectId] }] : []);
-        const activeVideo = videos[activeIdx] || videos[0];
-        const otherVideos = videos.filter((_, i) => i !== activeIdx);
+        const videos = topic.videos || (topicVideos[subjectId] && typeof topicVideos[subjectId] === 'string' ? [{ id: 1, title: topic.title, duration: '12:45', url: topicVideos[subjectId] }] : (topicVideos[subjectId] || topicVideos.default || []));
 
-        if (!activeVideo) {
+        if (!videos.length) {
             return `
-                ${_tabNav('videos')}
-                <div class="bg-white border border-dashed border-gray-200 rounded-2xl p-8 text-center">
-                    <i class="fa-solid fa-video text-4xl text-gray-300 mb-4"></i>
-                    <p class="text-xl font-black text-gray-800">No videos yet</p>
-                    <p class="text-sm text-gray-500 mt-2">This topic lesson does not have any videos yet.</p>
+                <div class="p-20 text-center font-['Inter']">
+                    <div class="w-24 h-24 rounded-[32px] bg-slate-50 flex items-center justify-center mx-auto mb-8 text-slate-200">
+                        <i class="fa-solid fa-play-circle text-5xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-900 mb-3">No videos</h3>
                 </div>
             `;
         }
 
-        return `
-            ${_tabNav('videos')}
-            <div class="aspect-video bg-black rounded-3xl overflow-hidden mb-8 shadow-2xl relative group">
-                <iframe src="${activeVideo.url}" class="w-full h-full border-none" allowfullscreen></iframe>
-            </div>
-            <div class="mb-10">
-                <h3 class="text-2xl font-black text-gray-900">${activeVideo.title}</h3>
-                <p class="text-gray-500 mt-2 leading-relaxed">Lesson module video covering the core concepts of ${topic.title}. Watch thoroughly to prepare for the upcoming assessments.</p>
-            </div>
-            ${otherVideos.length ? `
-            <div class="space-y-4">
-                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">More in this topic</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    ${otherVideos.map((v, i) => `
-                        <button onclick="openTopicContent('${subjectId}', ${topicIdx}, 'videos', ${videos.indexOf(v)})" class="bg-white border border-gray-100 p-4 rounded-2xl flex items-center gap-4 hover:shadow-md transition-all text-left">
-                            <div class="w-20 aspect-video bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <i class="fa-solid fa-play text-gray-300"></i>
+        if (activeIdx === null || activeIdx === undefined) {
+            return `
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-10 mt-10 px-6 md:px-10">
+                    ${videos.map((video, i) => `
+                        <button type="button" class="video-selection-card group bg-white border border-gray-100 p-4 text-left sharp-shadow hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:border-black transition-all duration-300" onclick="openTopicContent('${subjectId}', ${topicIdx}, 'videos', ${i})">
+                            <div class="bg-gray-900 overflow-hidden mb-4 flex items-center justify-center" style="aspect-ratio:16/9;">
+                                <div class="text-center text-white/40">
+                                    <i class="fa-solid fa-play-circle text-4xl mb-2 block"></i>
+                                </div>
                             </div>
-                            <div class="min-w-0">
-                                <p class="text-sm font-bold text-gray-800 truncate">${v.title}</p>
-                                <p class="text-[10px] text-gray-400 font-bold uppercase mt-1">${v.duration}</p>
+                            <p class="text-base font-bold text-gray-800 leading-tight group-hover:text-yellow-500 transition-colors font-['Inter']">${video.title}</p>
+                            <p class="text-sm text-black mt-2 leading-relaxed font-['Inter']">${getTopicOverview(video.title)}</p>
+                            <div class="mt-3 flex items-center justify-between">
                             </div>
                         </button>
                     `).join('')}
+                </div>
+            `;
+        }
+
+        const activeVideo = videos[activeIdx] || videos[0];
+        const otherVideos = videos.filter((_, idx) => idx !== activeIdx);
+
+        return `
+            <div id="topic-video-player-container" class="max-w-[960px] mb-4 lg:mx-auto mt-10">
+                <div class="bg-gray-900 rounded-none md:rounded-2xl overflow-hidden flex items-center justify-center w-full" style="aspect-ratio:16/9;">
+                    ${activeVideo.url ? `
+                        <iframe src="${activeVideo.url}" class="w-full h-full border-none" allowfullscreen></iframe>
+                    ` : `
+                        <div class="text-center text-white/40 px-6">
+                            <i class="fa-solid fa-play-circle text-4xl md:text-6xl mb-3 block"></i>
+                            <p class="text-[10px] md:text-sm font-bold">${activeVideo.title}</p>
+                            <p class="text-[8px] md:text-[10px] mt-4 text-white/20">Video player &bull; connect to backend to stream</p>
+                        </div>
+                    `}
+                </div>
+            </div>
+
+            <div class="mb-10 px-6 md:px-10 font-['Inter']">
+                <p class="text-base md:text-xl font-bold text-black mt-1 font-['Inter']">${activeVideo.title}</p>
+                <p class="text-xs md:text-sm text-black mt-2 leading-relaxed font-['Inter']">${getTopicOverview(activeVideo.title)}</p>
+            </div>
+
+            ${otherVideos.length ? `
+            <div class="space-y-4 pb-10 px-6 md:px-10 font-['Inter']">
+                <div class="flex items-center justify-between">
+                    <p class="text-xs font-black text-black uppercase tracking-widest">More Videos</p>
+                    <span class="text-[10px] text-black/40 font-bold">${otherVideos.length} videos</span>
+                </div>
+                <div class="space-y-4">
+                    ${otherVideos.map((video) => {
+            const originalIdx = videos.indexOf(video);
+            return `
+                            <button type="button" class="w-full bg-white border border-gray-100 rounded-2xl overflow-hidden flex text-left standard-panel-shadow hover:shadow-md hover:border-black transition-all duration-300 group" onclick="openTopicContent('${subjectId}', ${topicIdx}, 'videos', ${originalIdx})">
+                                <div class="w-44 flex-shrink-0 bg-gray-900 flex items-center justify-center" style="aspect-ratio:16/9;">
+                                    <i class="fa-solid fa-play text-white/60 text-xl"></i>
+                                </div>
+                                <div class="flex-1 p-5 min-w-0 font-['Inter']">
+                                    <p class="text-base font-black text-black leading-tight group-hover:text-yellow-500 transition-colors">${video.title}</p>
+                                    <p class="text-sm text-black/60 mt-2 line-clamp-2">${getTopicOverview(video.title)}</p>
+                                    <div class="mt-4 flex items-center justify-between">
+                                    </div>
+                                </div>
+                            </button>
+                        `;
+        }).join('')}
                 </div>
             </div>` : ''}
         `;
@@ -2748,128 +4620,336 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function _buildHandoutsTab(subject, topic, subjectId, topicIdx) {
         const handouts = topic.handouts || topicHandouts[subjectId] || [];
-        
+
         if (!handouts.length) {
             return `
-                ${_tabNav('handouts')}
-                <div class="bg-white border border-dashed border-gray-200 rounded-2xl p-8 text-center">
-                    <i class="fa-solid fa-file-pdf text-4xl text-gray-300 mb-4"></i>
-                    <p class="text-xl font-black text-gray-800">No handouts yet</p>
-                    <p class="text-sm text-gray-500 mt-2">This topic lesson does not have any handouts yet.</p>
+                <div class="p-20 text-center font-['Inter']">
+                    <div class="w-24 h-24 rounded-[32px] bg-slate-50 flex items-center justify-center mx-auto mb-8 text-slate-200">
+                        <i class="fa-solid fa-file-pdf text-5xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-900 mb-3">No lessons</h3>
                 </div>
             `;
         }
 
         return `
-            ${_tabNav('handouts')}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-4 mt-10 px-6 md:px-10">
                 ${handouts.map((h, i) => {
-                    const isPpt = h.type === 'ppt';
-                    const icon = isPpt ? 'fa-file-powerpoint text-orange-500' : (h.type === 'DOC' || h.type === 'DOCX' ? 'fa-file-word text-blue-500' : 'fa-file-pdf text-red-500');
-                    const bg = isPpt ? 'bg-orange-50' : (h.type === 'DOC' || h.type === 'DOCX' ? 'bg-blue-50' : 'bg-red-50');
+            const isPpt = h.type.toLowerCase() === 'ppt' || h.type.toLowerCase() === 'pptx';
+            const icon = isPpt ? 'fa-file-powerpoint text-orange-500' : (h.type === 'DOC' || h.type === 'DOCX' ? 'fa-file-word text-blue-500' : 'fa-file-pdf text-red-500');
+            const bg = isPpt ? 'bg-orange-50' : (h.type === 'DOC' || h.type === 'DOCX' ? 'bg-blue-50' : 'bg-red-50');
 
-                    if (isPpt && h.slides) {
-                        return `
-                            <div class="ppt-handout-container bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-4 md:col-span-2">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <h3 class="text-lg font-black text-gray-800">${h.title}</h3>
-                                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Presentation • ${h.slides.length} Slides</p>
-                                    </div>
-                                    <div class="w-10 h-10 rounded-xl ${bg} flex items-center justify-center">
-                                        <i class="fa-solid ${icon} text-lg"></i>
-                                    </div>
-                                </div>
-                                <div id="handout-slider-${i}" class="min-h-[240px]"></div>
-                            </div>
-                        `;
-                    }
 
-                    return `
-                        <div class="bg-white border border-gray-100 p-5 rounded-2xl flex items-center gap-4 hover:shadow-md transition-all cursor-pointer">
-                            <div class="w-14 h-14 rounded-xl ${bg} flex items-center justify-center flex-shrink-0">
+            return `
+                        <div onclick="openHandoutOuterLayer('${h.url || h.file || '#'}', '${h.title || h.name}')" class="group flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-none md:rounded-[20px] sharp-shadow hover:border-black transition-all cursor-pointer">
+                            <div class="w-16 h-16 ${bg} rounded-none md:rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
                                 <i class="fa-solid ${icon} text-2xl"></i>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-black text-gray-800 leading-tight truncate">${h.title || h.name}</p>
-                                <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">${h.type} • ${h.size || 'N/A'}</p>
+                                <h4 class="text-[16px] font-bold text-black leading-tight mb-1 group-hover:text-yellow-500 transition-colors font-['Inter']">${(h.title || h.name || '').replace(/\.(pdf|docx|pptx|ppt)$/i, '')}</h4>
                             </div>
-                            <button class="w-10 h-10 rounded-full bg-gray-50 text-gray-400 hover:bg-icc hover:text-white transition-all flex items-center justify-center">
-                                <i class="fa-solid fa-download text-xs"></i>
-                            </button>
                         </div>
                     `;
-                }).join('')}
+        }).join('')}
             </div>
         `;
     }
 
-    function _buildAssessmentTab(tab, subject, topic, data) {
-        const labels = { assignments: 'Assignment', quiz: 'Quiz', activity: 'Activity', performance: 'Performance Task' };
-        const label = labels[tab];
-        const amd = assessmentData.default;
+    function getAssessmentReleaseType(tab) {
+        return {
+            assignments: 'Assignment',
+            quiz: 'Quiz',
+            activity: 'Activity',
+            performance: 'Performance Task'
+        }[tab] || '';
+    }
 
-        return `
-            ${_tabNav(tab)}
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 space-y-6">
-                    <div class="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm">
-                        <h3 class="text-xl font-black text-gray-900 mb-4">${label} Instructions</h3>
-                        <p class="text-gray-600 leading-relaxed">Complete the required output for ${topic.title}. Ensure all criteria in the rubric are met before submission. For technical questions, contact your instructor via the classroom portal.</p>
-                        
-                        <div class="mt-8 bg-gray-50 rounded-2xl p-6 border border-dashed border-gray-200">
-                            <div class="flex items-center gap-4 text-gray-400">
-                                <i class="fa-solid fa-cloud-arrow-up text-3xl"></i>
-                                <div>
-                                    <p class="text-sm font-bold text-gray-500">Submission restricted</p>
-                                    <p class="text-xs">Teacher portal: Viewing submission template mode.</p>
+    function isAssessmentReleasedForSelectedSection(tab, topic) {
+        const section = currentTopicState.selectedSection || '';
+        const releaseType = getAssessmentReleaseType(tab);
+        if (!section || !releaseType) return false;
+        return releasedTopics.some(item =>
+            item.section === section &&
+            item.quarter === currentReleaseQuarter &&
+            (item.topicId === topic.id || item.topicTitle === topic.title) &&
+            item.type === releaseType
+        );
+    }
+
+    function _buildAssessmentTab(tab, subject, topic, data, subjectId, topicIdx) {
+        const labels = { assignments: 'Assignment', quiz: 'Quiz', activity: 'Activity', performance: 'Performance Task' };
+        const label = labels[tab] || 'Assessment';
+        const icons = { assignments: 'fa-file-pen', quiz: 'fa-square-poll-vertical', activity: 'fa-flask', performance: 'fa-star' };
+        const colors = { assignments: 'bg-blue-50 text-blue-500', quiz: 'bg-purple-50 text-purple-500', activity: 'bg-amber-50 text-amber-500', performance: 'bg-icc-light text-icc' };
+
+        // Wireframe Mock Data
+        const descriptions = {
+            assignments: 'Complete the provided exercises based on the latest lecture. Submit your work in PDF format.',
+            quiz: 'Assessment quiz covering the core concepts of this module. Please ensure you have a stable internet connection.',
+            activity: 'Hands-on activity to apply what you\'ve learned. Follow the step-by-step instructions in the attached guide.',
+            performance: 'Final performance task for this module. Refer to the rubric for grading details.'
+        };
+
+        const category = tab === 'performance' ? 'perf. task' : tab === 'assignments' ? 'assignment' : tab;
+        const details = getCategoryDetails(category);
+
+        // Map topicIdx to gradebook indices (assume 2 assessments per topic)
+        const assessments = [];
+        const startIdx = topicIdx * 2;
+        if (details[startIdx]) assessments.push({ ...details[startIdx], id: 1 });
+        if (details[startIdx + 1]) assessments.push({ ...details[startIdx + 1], id: 2 });
+
+        // Fallback if no specific assessments found for this topic range
+        if (assessments.length === 0) {
+            const topicTitle = topic?.title || 'Topic';
+            assessments.push({ id: 1, title: `${label} #1: Introduction to ${topicTitle}`, description: descriptions[tab] || 'Assessment instructions and materials.', type: 'PDF', size: '1.2 MB', max: 100, date: 'Mar 10, 2026' });
+            assessments.push({ id: 2, title: `${label} #2: Advanced concepts in ${topicTitle}`, description: 'Continuing our exploration with practical exercises and case studies.', type: 'DOCX', size: '850 KB', max: 100, date: 'Mar 17, 2026' });
+        } else {
+            // Add metadata for rendering
+            assessments[0].description = descriptions[tab] || 'Assessment instructions and materials.';
+            assessments[0].type = 'PDF';
+            assessments[0].size = '1.2 MB';
+            if (assessments[1]) {
+                assessments[1].description = 'Continuing our exploration with practical exercises and case studies.';
+                assessments[1].type = 'DOCX';
+                assessments[1].size = '850 KB';
+            }
+        }
+
+        // Force selection logic: ensure we always have a section and a student context
+        let selectedSection = currentTopicState.selectedSection || '';
+        const sections = getCurrentTopicSectionCards(data);
+        if (!selectedSection && sections.length > 0) {
+            selectedSection = sections[0].sectionName;
+            currentTopicState.selectedSection = selectedSection;
+        }
+
+        let selectedStudent = currentTopicState.selectedStudent || '';
+        if (selectedSection && !selectedStudent) {
+            const students = (typeof studentsBySection !== 'undefined' ? studentsBySection[selectedSection] : []) || [];
+            if (students.length > 0) {
+                selectedStudent = students[0].name;
+                currentTopicState.selectedStudent = selectedStudent;
+            }
+        }
+
+        const sectionSelected = Boolean(selectedSection);
+        const studentSelected = Boolean(selectedStudent);
+
+        const shouldShowAssessmentFiles = sectionSelected;
+        const emptyLabels = {
+            assignments: 'No assignments',
+            quiz: 'No quiz',
+            activity: 'No activities',
+            performance: 'No Performance Tasks'
+        };
+
+        let mainHtml = '';
+        let rightHtml = null;
+
+        const buildAssessmentRightRail = (content = '') => `
+            <div class="space-y-6 font-['Inter']">
+                ${_buildTopicSectionSelectorCard(data)}
+                ${content}
+            </div>
+        `;
+
+        const buildAssessmentOverviewRail = () => `
+            <div class="teacher-topic-progress-rail-direct font-['Inter']">
+                ${_buildProgressRail(data)}
+            </div>
+        `;
+
+
+
+        // Show detail view if we have a specific assessment index (from Gradebook navigation or task click)
+        if (window._tcAssessmentDetailIdx !== null && window._tcAssessmentDetailIdx !== undefined) {
+            const activeIdx = window._tcAssessmentDetailIdx;
+            const ass = assessments[activeIdx];
+            const assData = assessmentData.default;
+
+            const isPpt = ass.type?.toLowerCase() === 'ppt' || ass.type?.toLowerCase() === 'pptx';
+            const isDoc = ass.type?.toLowerCase() === 'doc' || ass.type?.toLowerCase() === 'docx';
+            const icon = isPpt ? 'fa-file-powerpoint text-orange-500' : (isDoc ? 'fa-file-word text-blue-500' : 'fa-file-pdf text-red-500');
+            const bg = isPpt ? 'bg-orange-50' : (isDoc ? 'bg-blue-50' : 'bg-red-50');
+
+            mainHtml = `
+                <div class="animate-in fade-in slide-in-from-bottom-4 duration-700 mt-10 space-y-12 pb-20">
+                    <div class="px-0 md:px-10">
+                        <h2 class="text-3xl font-bold text-black mb-4 leading-tight font-['Inter']">${ass.title}</h2>
+                    </div>
+
+                    <div class="space-y-6 px-6 md:px-10">
+                        <h3 class="text-xl font-bold text-black font-['Inter']">Instructions</h3>
+                        <p class="text-black leading-relaxed font-medium font-['Inter']">
+                            ${ass.description} This is a wireframe detail view. It provides the structured layout for future content integration.
+                        </p>
+                    </div>
+
+                    <div class="pt-8 border-t border-gray-100 px-0 md:px-10">
+                        <div onclick="openHandoutOuterLayer('#', '${ass.title}')" class="group flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-none md:rounded-[20px] sharp-shadow hover:border-black transition-all cursor-pointer">
+                            <div class="w-16 h-16 ${bg} rounded-none md:rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+                                <i class="fa-solid ${icon} text-2xl"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-[16px] font-bold text-black leading-tight mb-1 group-hover:text-yellow-500 transition-colors font-['Inter']">${ass.title}</h4>
+                                <p class="text-[11px] font-bold text-black uppercase tracking-widest font-['Inter']">${ass.type} &bull; ${ass.size}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            let assMaxScore = sectionSelected ? ass.max : 100;
+            let assStartDate = sectionSelected ? ass.date : '-';
+            let assDueDate = sectionSelected ? ass.date : '-';
+
+            let scoreValue = '0';
+            let isGraded = false;
+
+            if (studentSelected && sectionSelected) {
+                const students = studentsBySection[currentTopicState.selectedSection] || [];
+                const student = students.find(s => s.name === currentTopicState.selectedStudent);
+                if (student) {
+                    const gradebookIdx = startIdx + activeIdx;
+                    const subjectId = currentTopicState.subjectId;
+                    const quarter = gradebookState.currentQuarter;
+                    const studentId = student.id;
+
+                    // Pull persistent data
+                    const savedScore = gradebookScores[subjectId]?.[quarter]?.[studentId]?.[category]?.[gradebookIdx];
+                    const savedStatus = gradebookStatuses[subjectId]?.[quarter]?.[studentId]?.[category]?.[gradebookIdx];
+
+                    if (savedScore !== undefined && savedScore !== null && savedScore !== '') {
+                        scoreValue = savedScore;
+                        isGraded = true;
+                    }
+
+                    if (savedStatus && savedStatus !== '') {
+                        const statusLabel = savedStatus.charAt(0).toUpperCase() + savedStatus.slice(1);
+                        isGraded = true;
+                        window._tempStatusLabel = statusLabel; 
+                    } else {
+                        window._tempStatusLabel = isGraded ? 'Graded' : 'Not Graded';
+                    }
+                }
+            }
+
+            let assMaxAttempts = sectionSelected ? assData.maxAttempts : 0;
+            let assLatePermission = sectionSelected ? assData.latePermission : false;
+            let lateLabel = sectionSelected ? (assLatePermission ? 'Permitted' : 'Not Permitted') : 'Not Permitted';
+            let lateColor = sectionSelected ? (assLatePermission ? 'text-icc' : 'text-red-500') : 'text-red-500';
+
+
+            rightHtml = buildAssessmentRightRail(`
+                    <!-- Tasks Panel (formerly Progress) -->
+                    <div class="bg-white border border-gray-100 rounded-[16px] sharp-shadow flex flex-col overflow-hidden relative select-none">
+                        <div class="px-4 py-2 flex items-center border-b border-gray-50 bg-white">
+                            <h4 class="text-[10px] font-bold text-[#15803d] tracking-widest uppercase">Tasks</h4>
+                        </div>
+                        <div class="p-3">
+                            <div class="space-y-1.5">
+                                ${assessments.map((a, i) => `
+                                    <div onclick="window.switchTopicTab('${tab}', ${i})" class="flex items-start gap-2 cursor-pointer group">
+                                        <div class="w-1 h-1 rounded-full bg-black mt-2 flex-shrink-0"></div>
+                                        <span class="min-w-0 text-[13px] font-bold leading-snug break-words ${i === activeIdx ? 'text-yellow-500' : 'text-black group-hover:text-yellow-500'} transition-colors">${a.title}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Score Panel -->
+                    <div class="bg-white border border-gray-100 rounded-[16px] sharp-shadow p-3 flex flex-col text-center">
+                        <p class="text-[10px] font-bold text-[#15803d] uppercase tracking-widest text-left mb-2">Score</p>
+                        <div id="workstation-score-value" class="text-[36px] font-black text-icc leading-none mb-0">${scoreValue}</div>
+                        <p class="text-[8px] font-bold text-black uppercase tracking-widest mb-3">Out of ${assMaxScore}</p>
+
+                        <div class="pt-2 border-t border-gray-50 text-right">
+                            <span id="workstation-graded-status" class="text-[8px] font-bold text-black uppercase tracking-widest">${window._tempStatusLabel || (isGraded ? 'Graded' : 'Not Graded')}</span>
+                        </div>
+                    </div>
+
+                    <!-- Assessment Panel -->
+                    <div class="bg-white border border-gray-100 rounded-[16px] sharp-shadow p-3 flex flex-col space-y-2">
+                        <p class="text-[10px] font-bold text-[#15803d] uppercase tracking-widest mb-1">Assessment</p>
+                            
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-lg bg-icc-light flex items-center justify-center text-icc">
+                                    <i class="fa-solid fa-star text-[10px]"></i>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-[8px] font-bold text-black uppercase tracking-widest leading-none">Max Score</p>
+                                    <p class="text-[12px] font-bold text-black">${assMaxScore} Points</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-lg bg-icc-light flex items-center justify-center text-icc">
+                                    <i class="fa-solid fa-calendar text-[10px]"></i>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-[8px] font-bold text-black uppercase tracking-widest leading-none">Start</p>
+                                    <p class="text-[12px] font-bold text-black">${assStartDate}</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-lg bg-icc-light flex items-center justify-center text-icc">
+                                    <i class="fa-solid fa-calendar-check text-[10px]"></i>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-[8px] font-bold text-black uppercase tracking-widest leading-none">Due</p>
+                                    <p class="text-[12px] font-bold text-black">${assDueDate}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-white border border-gray-100 rounded-3xl overflow-hidden">
-                        <div class="px-8 py-5 border-b border-gray-100">
-                            <p class="text-sm font-black text-gray-900 uppercase tracking-widest">Assessment Schedule</p>
-                        </div>
-                        <div class="p-8 grid grid-cols-2 gap-6">
-                            <div class="bg-gray-50 rounded-2xl p-5">
-                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Start Date</p>
-                                <p class="text-base font-black text-gray-800">${amd.startDate}</p>
-                                <p class="text-xs text-gray-500 mt-0.5">${amd.startTime}</p>
-                            </div>
-                            <div class="bg-red-50 rounded-2xl p-5">
-                                <p class="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Due Date</p>
-                                <p class="text-base font-black text-red-600">${amd.dueDate}</p>
-                                <p class="text-xs text-red-400 mt-0.5">${amd.dueTime}</p>
-                            </div>
+                    <!-- Submission Panel -->
+                    <div class="bg-white border border-gray-100 rounded-[16px] sharp-shadow p-3 flex flex-col">
+                        <p class="text-[10px] font-bold text-[#15803d] uppercase tracking-widest mb-2">Submission</p>
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[12px] font-bold text-black">Max Attempts</span>
+                                    <span class="text-[12px] font-bold text-black">${assMaxAttempts}</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[12px] font-bold text-black">Attempts Used</span>
+                                    <span class="text-[12px] font-bold text-black">0</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[12px] font-bold text-black">Late Permission</span>
+                                    <span class="text-[12px] font-bold ${lateColor}">${lateLabel}</span>
+                                </div>
                         </div>
                     </div>
+            `);
+        } else {
+            mainHtml = `
+                <div class="space-y-4 mt-10 animate-in fade-in slide-in-from-bottom-4 duration-700 px-6 md:px-10">
+                    ${shouldShowAssessmentFiles ? assessments.map((ass, i) => {
+                return `
+                        <div onclick="window.switchTopicTab('${tab}', ${i})" class="handout-card group flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-none md:rounded-[22px] sharp-shadow hover:border-black transition-all cursor-pointer">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-xl font-bold text-black leading-tight group-hover:text-yellow-500 transition-colors font-['Inter']">${ass.title}</h4>
+                            </div>
+                        </div>
+                    `;
+            }).join('') : `
+                        <div class="teacher-topic-empty-panel">
+                            <p>${selectedSection ? `No released ${label.toLowerCase()} file title panels for ${escapeHtml(selectedSection)}.` : emptyLabels[tab]}</p>
+                        </div>
+                    `}
                 </div>
+            `;
+        }
 
-                <div class="space-y-6">
-                    <div class="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm text-center">
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Max Score</p>
-                        <div class="text-6xl font-black text-icc mb-2">${amd.maxScore}</div>
-                        <p class="text-xs text-gray-400 font-bold">Total Points Possible</p>
-                    </div>
+        if (!rightHtml) {
+            rightHtml = buildAssessmentOverviewRail();
+        }
 
-                    <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Settings</p>
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs font-bold text-gray-500">Max Attempts</span>
-                                <span class="text-xs font-black text-gray-900">${amd.maxAttempts}</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs font-bold text-gray-500">Late Permitted</span>
-                                <span class="text-xs font-black ${amd.latePermission ? 'text-icc' : 'text-red-500'}">${amd.latePermission ? 'Yes' : 'No'}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        return { mainHtml, rightHtml };
     }
 
     function renderTopicContentsSidebar(subjectId, topicIdx, activeTab) {
@@ -2879,9 +4959,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!content) return;
 
         if (header) header.classList.remove('hidden');
-        if (title) title.textContent = 'Topic Navigator';
+        document.getElementById('sub-sidebar')?.classList.add('sub-sidebar-visible');
 
         const data = getTopicData(subjectId);
+        const subject = getTopicSubject(subjectId);
+        if (title) title.textContent = subject?.name || 'Topics';
         const topic = data.q1Topics[topicIdx];
         const tabs = getTopicTabs();
 
@@ -2890,19 +4972,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${tabs.map(t => `
                     <button onclick="switchTopicTab('${t}')" class="w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 group ${t === activeTab ? 'bg-icc-light text-icc' : 'hover:bg-gray-50 text-gray-500'}">
                         <i class="${TAB_ICONS[t]} text-sm ${t === activeTab ? 'text-icc' : 'text-gray-300 group-hover:text-icc'}"></i>
-                        <span class="text-[11px] font-black uppercase tracking-widest ${t === activeTab ? 'text-icc' : 'text-gray-500'}">${TAB_LABELS[t]}</span>
+                        <span class="text-[11px] font-bold uppercase tracking-widest ${t === activeTab ? 'text-icc' : 'text-gray-500'}">${TAB_LABELS[t]}</span>
                     </button>
                 `).join('')}
             </div>
-            <div class="mt-4 pt-4 border-t border-gray-50 px-4">
-                <p class="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] mb-4">Other Topics</p>
+            <div class="mt-4 pt-4 border-t border-gray-50 px-2 pb-8">
+                <p class="text-[10px] font-black text-black uppercase tracking-widest mb-4 px-2">Course Topics</p>
                 <div class="space-y-1">
-                    ${data.q1Topics.map((t, i) => `
-                        <button onclick="openTopicContent('${subjectId}', ${i})" class="w-full text-left p-2 rounded-lg transition-all flex items-start gap-2 group ${i === topicIdx ? 'opacity-40 cursor-default' : 'hover:bg-gray-50'}">
-                            <div class="w-1 h-1 rounded-full bg-gray-200 mt-1.5 flex-shrink-0 ${i === topicIdx ? 'bg-icc' : ''}"></div>
-                            <span class="text-[11px] font-bold text-gray-500 leading-tight truncate ${i === topicIdx ? 'text-icc' : ''}">${t.title}</span>
-                        </button>
-                    `).join('')}
+                    ${data.q1Topics.map((t, i) => {
+            let iconHtml = '<div class="w-4 h-4 rounded-full border border-gray-200"></div>';
+            if (t.status === 'completed') {
+                iconHtml = '<i class="fa-solid fa-circle-check text-green-500 text-sm"></i>';
+            } else if (t.status === 'in-progress') {
+                iconHtml = '<i class="fa-solid fa-circle-half-stroke text-yellow-500 text-sm"></i>';
+            }
+
+            const isActive = i === topicIdx;
+
+            return `
+                            <button onclick="openTopicContent('${subjectId}', ${i})" class="topic-nav-item w-full text-left p-3 rounded-xl transition-all flex items-start gap-3 group ${isActive ? 'active' : 'hover:bg-gray-50'}">
+                                <div class="mt-1 flex-shrink-0">${iconHtml}</div>
+                                <div class="min-w-0">
+                                    <p class="text-[10px] font-black text-black uppercase tracking-widest mb-0.5">Topic ${i + 1}</p>
+                                    <p class="topic-nav-title text-[13px] font-bold leading-tight">${t.title}</p>
+                                </div>
+                            </button>
+                        `;
+        }).join('')}
                 </div>
             </div>
         `;
@@ -2952,7 +5048,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    window.handleHandoutSlider = function(id, delta) {
+    window.handleHandoutSlider = function (id, delta) {
         if (window.handoutSliders && window.handoutSliders[id]) {
             window.handoutSliders[id].move(delta);
         }
@@ -2960,28 +5056,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    // --- Layout Utility ---
-    function updateLayout() {
-        if (!layoutWrapper) return;
 
-        if (window.innerWidth < 1024) {
-            layoutWrapper.style.marginLeft = '0';
-            return;
-        }
-
-        const subSidebar = document.getElementById('sub-sidebar');
-        const isSubVisible = subSidebar && !subSidebar.classList.contains('hidden') && !subSidebar.classList.contains('subjects-hover-subsidebar');
-        const isCollapsed = document.body.classList.contains('sidebar-collapsed');
-
-        const mainWidth = isCollapsed ? 82 : 280;
-        const subWidth = isSubVisible ? 240 : 0;
-
-        layoutWrapper.style.marginLeft = (mainWidth + subWidth) + 'px';
-
-        if (subSidebar) {
-            subSidebar.style.left = mainWidth + 'px';
-        }
-    }
 
     const sectionFeatureInit = {
         dashboard: false,
@@ -3031,6 +5106,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!sectionFeatureInit.gradebook) {
                 sectionFeatureInit.gradebook = true;
                 setTimeout(() => initGradebook(), 100);
+            } else {
+                // Reset the Gradebook page to its initial state on every return visit
+                resetGradebookPage();
             }
             return;
         }
@@ -3048,6 +5126,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function showSection(id) {
         const sec = document.getElementById(id);
         if (sec) sec.classList.remove('hidden');
+
+        // AUTO-HIDE Gradebook Panel if we leave the workstation
+        if (id !== 'section-topic-content' && typeof window.closeGradebookOuterLayer === 'function') {
+            window.closeGradebookOuterLayer();
+        }
+
+        if (id === 'section-topic-detail') {
+            document.body.classList.add('curriculum-mode');
+        } else if (id !== 'section-topic-content') {
+            document.body.classList.remove('curriculum-mode');
+        }
     }
 
     function setSubjectsPanelsMode(enabled) {
@@ -3061,76 +5150,156 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Navigation Logic ---
-    window.switchTab = function (navId, pushHistory = true) {
-        // Auto-close mobile sidebar
+    function scrollToTop() {
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+        const mainContent = document.getElementById('main-content');
+        if (mainContent) mainContent.scrollTop = 0;
+        const layoutWrapper = document.getElementById('layout-wrapper');
+        if (layoutWrapper) layoutWrapper.scrollTop = 0;
+    }
+
+    // Helper to clear all sub-navigation highlights across sidebar and sub-sidebar
+    window.clearSubNavigationHighlights = function() {
+        document.querySelectorAll('#sub-sidebar .active, #sub-sidebar .bg-icc-light, #sub-sidebar .text-icc, .sidebar-submenu .active, .section-nav-child.active, .sub-sidebar-link.active').forEach(el => {
+            el.classList.remove('active', 'bg-icc-light', 'text-icc');
+        });
+        // Specifically clear Grades submenu links
+        document.querySelectorAll('#grades-submenu .nav-sublink').forEach(link => {
+            link.classList.remove('active');
+        });
+    };
+
+    function switchTab(navId, pushHistory = true) {
+        scrollToTop();
+        const requestedNavId = navId;
+        if (!sectionMap[navId] || !document.getElementById(sectionMap[navId])) {
+            navId = navId && navId.startsWith('nav-subjects-') ? 'nav-subjects' : 'nav-dashboard';
+            if (!sectionMap[navId] || !document.getElementById(sectionMap[navId])) navId = 'nav-dashboard';
+            console.warn(`Unknown teacher tab "${requestedNavId}". Falling back to "${navId}".`);
+        }
+        window.scrollTo(0, 0);
+
+        // Stop all videos and iframes globally when switching main tabs
+        document.querySelectorAll('iframe, video').forEach(media => {
+            try {
+                if (media.tagName.toLowerCase() === 'iframe') {
+                    const src = media.src;
+                    media.src = '';
+                    media.src = src;
+                } else if (media.pause) {
+                    media.pause();
+                    media.currentTime = 0;
+                }
+            } catch (e) { }
+        });
+        // Auto-close mobile sidebar - DISABLED per user request
+        /*
         if (window.innerWidth < 1024) {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             if (sidebar) sidebar.classList.remove('sidebar-visible');
             if (overlay) overlay.classList.add('hidden');
         }
+        */
 
         const targetSectionId = sectionMap[navId];
-        if (!targetSectionId) return;
+        // Continue even if no direct section exists (allows highlighting parent tabs without landing pages)
 
         if (pushHistory) {
-            history.pushState({ type: 'tab', navId }, '', '');
+            const pageKey = Object.entries(navIdByPage).find(([k, v]) => v === navId)?.[0] || 'dashboard';
+            history.pushState({ type: 'tab', navId }, '', '#' + pageKey);
+            localStorage.setItem('sigma-teacher-nav-state', JSON.stringify({ type: 'tab', navId, pageKey }));
         }
 
+        // Reset classroom detail view when switching main tabs
         resetClassroomDetailLayout();
 
-        // Close side panels when switching main sections
-        closeAiPanel();
-        document.querySelectorAll('[id$="Menu"], [id$="Panel"], [id$="dropdown"]').forEach(m => {
-            if (m.id !== 'user-profile-tab-panel' && m.id !== 'layout-wrapper') m.classList.add('hidden');
-        });
-        document.querySelectorAll('.relative button').forEach(b => b.classList.remove('active'));
+        // Close side panels when switching main sections (skip if we have an active classroom and are staying on nav-classes)
+        if (!(currentClassroomKey && navId === 'nav-classes')) {
+            closeAiPanel();
+            document.querySelectorAll('[id$="Menu"], [id$="Panel"], [id$="dropdown"]').forEach(m => {
+                if (m.id !== 'user-profile-tab-panel' && m.id !== 'layout-wrapper') m.classList.add('hidden');
+            });
+            document.querySelectorAll('.relative button').forEach(b => b.classList.remove('active'));
+
+            // Clear sub-sidebar highlights and submenu states
+            window.clearSubNavigationHighlights();
+
+            if (typeof window.resetTeacherGradesSidebarState === 'function') {
+                    window.resetTeacherGradesSidebarState();
+                }
+            }
+
+            if (typeof window.resetTeacherSubjectSidebarState === 'function') {
+                window.resetTeacherSubjectSidebarState();
+            }
+
+        // Reset Gradebook highlights when switching tabs
+        if (typeof window.clearGradebookHighlights === 'function') {
+            window.clearGradebookHighlights(false, true); // inner
+            window.clearGradebookHighlights(true, true);  // outer
+        }
+
 
         // Update active nav link
         navLinks.forEach(l => l.classList.remove('active'));
+
         const activeLink = document.getElementById(navId);
         if (activeLink) activeLink.classList.add('active');
 
         // Handle Sections
-        document.querySelectorAll('.dynamic-section').forEach(s => s.classList.add('hidden'));
-        const targetSection = document.getElementById(targetSectionId);
-        if (targetSection) targetSection.classList.remove('hidden');
+        hideAllSections();
+        if (targetSectionId) showSection(targetSectionId);
+
+        // Auto-refresh sections on switch
+        if (navId === 'nav-dashboard') {
+            if (typeof renderTeacherAnnouncements === 'function') renderTeacherAnnouncements();
+            if (typeof renderTeacherHomeDashboardPanels === 'function') renderTeacherHomeDashboardPanels();
+        }
+
+        if (navId === 'nav-classes') {
+            if (typeof renderClassroomsGrid === 'function') renderClassroomsGrid();
+        }
 
         // Hard-link assessments tab to its renderer immediately so it never opens blank.
         if (navId === 'nav-assessments') {
             sectionFeatureInit.assessments = true;
-            renderAssessmentsPage();
+            if (typeof renderAssessmentsPage === 'function') renderAssessmentsPage();
         }
 
-        // Hard-link grades tab to gradebook view so it never opens blank.
+        // Hard-link grades tab so it never opens blank.
         if (navId === 'nav-grades') {
             if (!sectionFeatureInit.gradebook) {
                 sectionFeatureInit.gradebook = true;
-                initGradebook();
+                if (typeof initGradebook === 'function') initGradebook();
             }
-            switchGradesSubTab('gradebook');
+            if (typeof window.resetGradebookState === 'function') {
+                window.resetGradebookState();
+            }
+            if (typeof switchGradesSubTab === 'function') switchGradesSubTab('analytics');
         }
 
-        // Special layout modes
-        if (navId === 'nav-subjects') {
-            resetSubjectsInlineExplorer(true);
-            currentInlineProgram = null;
-            currentCurriculumProgram = null;
-        }
-        setSubjectsPanelsMode(navId === 'nav-subjects');
+        // --- Navigation context ---
 
         // Update Nav Context Title
         const navContextText = document.getElementById('nav-context-text');
         if (navContextText) {
-            if (navId === 'nav-classes') {
-                navContextText.textContent = 'Sections';
-            } else {
-                navContextText.textContent = 'Interface Computer College';
-            }
+            const navContextMap = {
+                'nav-dashboard': 'Interface Computer College',
+                'nav-classes': 'Sections',
+                'nav-subjects': 'Subjects',
+                'nav-assessments': 'Assessments',
+                'nav-grades': 'Grades'
+            };
+            navContextText.textContent = navContextMap[navId] || 'Interface Computer College';
         }
 
         // Update Sub-Sidebar
-        updateSubSidebar(navId);
+        if (!(currentClassroomKey && navId === 'nav-classes')) {
+            updateSubSidebar(navId);
+        }
 
         // --- Subjects scroll behavior ---
         if (navId === 'nav-subjects') {
@@ -3166,12 +5335,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (navId === 'nav-dashboard') {
-            if (typeof window.renderHomeSubjectRail === 'function') {
-                window.renderHomeSubjectRail();
+            if (typeof renderTeacherHomeDashboardPanels === 'function') {
+                renderTeacherHomeDashboardPanels();
             }
         }
 
         updateLayout();
+
+        // Sync Sections chevron visibility
+        if (typeof syncSectionsNavState === 'function') {
+            syncSectionsNavState();
+        }
     }
 
     // Expose switchTab globally for inline event handlers (logo button etc.)
@@ -3191,66 +5365,174 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const setupNavigationHistory = () => {
-        const loginPage = 'index.html';
+        const hash = window.location.hash || '';
 
-        // Initialize root state to prevent back to login
-        if (!history.state) {
-            history.replaceState({ type: 'root' }, '', '');
-            history.pushState({ type: 'tab', navId: 'nav-dashboard' }, '', '');
-        }
-
-        window.addEventListener('popstate', (event) => {
-            // If they hit back beyond the entry dashboard (type root or null)
-            if (!event.state || event.state.type === 'root') {
-                // Bounce them back into the teacher portal dashboard
-                history.pushState({ type: 'tab', navId: 'nav-dashboard' }, '', '');
-                switchTab('nav-dashboard', false);
+        // 1. High-Priority Hash Check (Deep Links)
+        // If we have a hash that looks like a deep link, use it immediately regardless of state
+        if (hash.startsWith('#classroom:')) {
+            const parts = hash.split(':');
+            if (parts.length >= 4) {
+                const className = decodeURIComponent(parts[1]);
+                const subject = decodeURIComponent(parts[2]);
+                const initialTab = parts[3] || 'room';
+                if (!history.state || history.state.type !== 'classroom') {
+                    history.replaceState({ type: 'classroom', className, subject, initialTab }, '', hash);
+                }
+                showStudentList(className, subject, initialTab, false);
                 return;
             }
+        } else if (hash.startsWith('#topic:')) {
+            const subjectId = hash.replace('#topic:', '');
+            if (!history.state || history.state.type !== 'topic') {
+                history.replaceState({ type: 'topic', subjectId }, '', hash);
+            }
+            switchToTopicPage(subjectId, false, history.state?.topicIdx);
+            return;
+        } else if (hash.startsWith('#topic-content:')) {
+            const parts = hash.split(':');
+            if (parts.length >= 5) {
+                const subjectId = parts[1];
+                const topicIdx = parseInt(parts[2]);
+                const tab = parts[3];
+                const vIdxStr = parts[4];
+                const videoIdx = (vIdxStr === 'null' || vIdxStr === 'undefined' || !vIdxStr) ? null : parseInt(vIdxStr);
 
-            const { type, navId, className, subject, initialTab } = event.state;
-
-            if (type === 'tab') {
-                // Determine if we should close the classroom view
-                const grid = document.getElementById('classrooms-grid');
-                const detailView = document.getElementById('classroom-detail-view');
-                if (detailView && !detailView.classList.contains('hidden')) {
-                    grid.classList.remove('hidden');
-                    grid.style.setProperty('display', 'grid', 'important');
-                    detailView.classList.add('hidden');
-                    detailView.style.setProperty('display', 'none', 'important');
-                    setClassroomDetailHeader({ showDetail: false });
-                    hideClassroomSectionsSidebar();
-
-                    const rightPanel = document.getElementById('classes-right-panel');
-                    const mainCol = document.getElementById('classes-main-col');
-                    const mainContent = document.getElementById('main-content');
-
-                    if (rightPanel) {
-                        rightPanel.classList.remove('hidden');
-                        rightPanel.style.setProperty('display', 'block', 'important');
-                    }
-                    if (mainCol) {
-                        mainCol.classList.add('lg:col-span-2');
-                        mainCol.classList.remove('lg:col-span-3');
-                    }
-                    if (mainContent) {
-                        mainContent.style.removeProperty('padding-top');
-                        mainContent.style.removeProperty('padding-bottom');
-                        mainContent.classList.add('pt-3');
-                        mainContent.classList.remove('pt-0');
-                        mainContent.classList.add('pb-4');
-                        mainContent.classList.remove('pb-0');
-                    }
+                if (!history.state || history.state.type !== 'topic-content') {
+                    history.replaceState({ type: 'topic-content', subjectId, topicIdx, tab, videoIdx }, '', hash);
                 }
+                window.openTopicContent(subjectId, topicIdx, tab, videoIdx, false);
+                return;
+            }
+        }
+
+        // Standard tab hashes should beat stale history.state/localStorage.
+        // Browser refresh and DevTools can preserve an old state object while
+        // the visible URL is already pointing at another tab.
+        if (!hash) {
+            history.replaceState({ type: 'tab', navId: 'nav-dashboard' }, '', `${window.location.pathname}${window.location.search}`);
+            localStorage.setItem('sigma-teacher-nav-state', JSON.stringify({
+                type: 'tab',
+                navId: 'nav-dashboard',
+                pageKey: 'dashboard'
+            }));
+            switchTab('nav-dashboard', false);
+            return;
+        }
+
+        const hashPageKey = hash.replace('#', '');
+        if (hashPageKey && navIdByPage[hashPageKey]) {
+            switchTab(navIdByPage[hashPageKey], false);
+            return;
+        }
+
+        // 2. State-Based Restoration (Standard Tabs)
+        let state = history.state;
+        const savedState = JSON.parse(localStorage.getItem('sigma-teacher-nav-state') || 'null');
+
+        // Initialize root if absolutely empty
+        if (!state) {
+            history.replaceState({ type: 'root' }, '', '');
+            state = { type: 'root' };
+        }
+
+        // Fallback to persistent storage if state is generic
+        if (state.type === 'root' || !state.type) {
+            state = savedState || state;
+        }
+
+        if (state && state.type && state.type !== 'root') {
+            const { type, navId, className, subject, initialTab, subjectId, topicIdx, tab, videoIdx } = state;
+            if (type === 'tab' && navId) {
                 switchTab(navId, false);
             } else if (type === 'classroom') {
                 showStudentList(className, subject, initialTab, false);
+            } else if (type === 'topic') {
+                switchToTopicPage(subjectId, false, topicIdx);
+            } else if (type === 'topic-content') {
+                window.openTopicContent(subjectId, topicIdx, tab, videoIdx, false);
+            } else {
+                switchTab('nav-dashboard', false);
             }
-        });
+        } else {
+            // 3. Final Fallback (Hash-to-Tab or Dashboard)
+            const pageKey = hash.replace('#', '') || 'dashboard';
+            const navId = navIdByPage[pageKey] || 'nav-dashboard';
+            switchTab(navId, false);
+        }
     };
 
-    setupNavigationHistory();
+    window.addEventListener('popstate', (event) => {
+        if (!event.state || event.state.type === 'root') {
+            const hash = window.location.hash || '';
+            if (hash.startsWith('#classroom:')) {
+                const parts = hash.split(':');
+                if (parts.length >= 4) {
+                    const className = decodeURIComponent(parts[1]);
+                    const subject = decodeURIComponent(parts[2]);
+                    const initialTab = parts[3] || 'room';
+                    showStudentList(className, subject, initialTab, false);
+                    return;
+                }
+            } else if (hash.startsWith('#topic:')) {
+                const subjectId = hash.replace('#topic:', '');
+                switchToTopicPage(subjectId, false, history.state?.topicIdx);
+                return;
+            } else if (hash.startsWith('#topic-content:')) {
+                const parts = hash.split(':');
+                if (parts.length >= 5) {
+                    window.openTopicContent(parts[1], parseInt(parts[2]), parts[3], parseInt(parts[4]), false);
+                    return;
+                }
+            }
+            const pageKey = hash.replace('#', '') || 'dashboard';
+            const navId = navIdByPage[pageKey] || 'nav-dashboard';
+            switchTab(navId, false);
+            return;
+        }
+
+        const state = event.state;
+        if (state.type === 'tab') {
+            // Determine if we should close the classroom view
+            const grid = document.getElementById('classrooms-grid');
+            const detailView = document.getElementById('classroom-detail-view');
+            if (detailView && !detailView.classList.contains('hidden')) {
+                grid.classList.remove('hidden');
+                grid.style.setProperty('display', 'grid', 'important');
+                detailView.classList.add('hidden');
+                detailView.style.setProperty('display', 'none', 'important');
+                setClassroomDetailHeader({ showDetail: false });
+                hideClassroomSectionsSidebar();
+
+                const rightPanel = document.getElementById('classes-right-panel');
+                const mainCol = document.getElementById('classes-main-col');
+                const mainContent = document.getElementById('main-content');
+
+                if (rightPanel) {
+                    rightPanel.classList.remove('hidden');
+                    rightPanel.style.setProperty('display', 'block', 'important');
+                }
+                if (mainCol) {
+                    mainCol.classList.add('lg:col-span-2');
+                    mainCol.classList.remove('lg:col-span-3');
+                }
+                if (mainContent) {
+                    mainContent.style.removeProperty('padding-top');
+                    mainContent.style.removeProperty('padding-bottom');
+                    mainContent.classList.add('pt-3');
+                    mainContent.classList.remove('pt-0');
+                    mainContent.classList.add('pb-4');
+                    mainContent.classList.remove('pb-0');
+                }
+            }
+            switchTab(state.navId, false);
+        } else if (state.type === 'classroom') {
+            showStudentList(state.className, state.subject, state.initialTab, false);
+        } else if (state.type === 'topic') {
+            switchToTopicPage(state.subjectId, false, state.topicIdx);
+        } else if (state.type === 'topic-content') {
+            window.openTopicContent(state.subjectId, state.topicIdx, state.tab, state.videoIdx, false);
+        }
+    });
 
     function setClassroomDetailHeader({ title = 'Sections', subject = '', showDetail = false, className = '', room = '' }) {
         const navContextText = document.getElementById('nav-context-text');
@@ -3353,9 +5635,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (studentList) {
-            studentList.innerHTML = students
-                .slice(0, 10)
-                .map(student => `<button type="button" class="classroom-room-person">${student.name}</button>`)
+            studentList.innerHTML = [...students]
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map(student => {
+                    const parts = student.name.split(', ');
+                    const displayName = parts[0] + (parts[1] ? ', ' + parts[1].split(' ')[0] : '');
+                    return `<button type="button" class="classroom-room-person">${displayName}</button>`;
+                })
                 .join('');
         }
     }
@@ -3381,8 +5667,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const dateLabel = post.timestamp || '';
 
             return `
-            <article id="room-post-${post.id}" class="bg-white border border-slate-200 rounded-[22px] relative w-full overflow-hidden transition-all duration-500 group mb-4">
-                <div class="p-6 flex flex-col min-w-0">
+            <article id="room-post-${post.id}" class="bg-white border border-slate-200 rounded-[22px] relative w-full overflow-hidden transition-all duration-500 group mb-4 standard-panel-shadow">
+                <div class="p-8 flex flex-col min-w-0">
                     <!-- Header: avatar + name + date -->
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex items-center gap-3">
@@ -3394,7 +5680,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <span class="text-[10px] font-bold text-slate-400">Teacher</span>
                             </div>
                         </div>
-                        <span class="text-[10px] font-medium text-slate-400 tracking-tight mt-0.5">${dateLabel}</span>
+                        <span class="text-[10px] font-medium text-slate-400 tracking-tight mt-0.5">${formatAnnouncementDate(post.timestamp)}</span>
                     </div>
 
                     <!-- Subject title + grade/section -->
@@ -3405,7 +5691,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     <!-- Post body -->
                     <div class="pl-[3.25rem] text-[15px] text-slate-700 leading-relaxed classroom-announcement-content">
-                        ${post.html}
+                        ${post.html || ''}
                     </div>
 
                     ${commentsEnabled && comments.length ? `
@@ -3477,35 +5763,31 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderAttendanceRecordingRows() {
         updateAttendanceHeaderDate();
         const recordingBody = document.getElementById('attendance-recording-body');
-        const note = document.getElementById('attendance-mode-note');
+
         const students = studentsBySection[currentClassroomSectionName] || [];
-        const mode = getCurrentAttendanceMode();
+
         const savedStatuses = getCurrentAttendanceStatuses();
         const savedExcuses = getCurrentAttendanceExcuses();
 
         if (!recordingBody) return;
 
         if (note) {
-            if (mode === 'trust') {
-                note.textContent = 'Students Press Present is on. This list updates as students check themselves in from their attendance tab.';
-                note.classList.remove('hidden');
-            } else {
-                note.classList.add('hidden');
-                note.textContent = '';
-            }
+            note.classList.add('hidden');
+            note.textContent = '';
         }
 
         recordingBody.innerHTML = students.map(student => {
             const currentStatus = savedStatuses[student.name] || '';
             const excuse = savedExcuses[student.name];
+            const nameParts = student.name.split(', ');
+            const lastName = nameParts[0];
+            const firstNameFirstPart = nameParts[1] ? nameParts[1].split(' ')[0] : '';
+            const displayName = `${lastName}, ${firstNameFirstPart}`;
             return `
                 <tr class="hover:bg-gray-50/50 transition-colors group" data-student-name="${student.name}" data-status="${currentStatus}">
                     <td class="px-2 md:px-3 py-3 md:py-4 sticky left-0 z-10 bg-white border-r border-gray-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] group-hover:bg-gray-50/50 transition-colors">
-                        <div class="flex items-center gap-2 md:gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-icc-light flex items-center justify-center text-icc font-bold text-xs uppercase flex-shrink-0">
-                                ${student.name.split(', ')[1][0]}${student.name[0]}
-                            </div>
-                            <span class="text-xs md:text-sm font-bold text-gray-800 line-clamp-2 md:line-clamp-1 leading-tight">${student.name}</span>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs md:text-sm font-bold text-gray-800 line-clamp-2 md:line-clamp-1 leading-tight">${displayName}</span>
                         </div>
                     </td>
                     <td class="px-3 md:px-6 py-3 md:py-4">
@@ -3523,7 +5805,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="px-3 md:px-6 py-3 md:py-4">
                         ${excuse
                     ? `<button type="button" onclick="viewAttendanceExcuse('${student.name.replace(/'/g, "\\'")}')" class="px-4 py-2 rounded-xl bg-white border border-gray-100 text-[10px] font-black uppercase tracking-widest text-icc hover:bg-icc-light transition-all whitespace-nowrap">View Excuse</button>`
-                    : `<span class="text-[10px] md:text-xs font-bold text-gray-300 whitespace-nowrap">${mode === 'trust' ? 'No submission' : 'No excuse'}</span>`}
+                    : `<span class="text-[10px] md:text-xs font-bold text-gray-300 whitespace-nowrap">No excuse</span>`}
                     </td>
                 </tr>
             `;
@@ -3547,15 +5829,11 @@ document.addEventListener('DOMContentLoaded', () => {
             hour: 'numeric',
             minute: '2-digit'
         }).toUpperCase();
-        dateEl.textContent = `${dateText} • ${timeText}`;
+        dateEl.textContent = `${dateText} &bull; ${timeText}`;
     }
 
     function applyClassroomSettingsUI() {
-        const mode = getCurrentAttendanceMode();
         const commentMode = getCurrentCommentMode();
-        classroomSettingsMenu?.querySelectorAll('[data-attendance-mode]').forEach(button => {
-            button.classList.toggle('is-active', button.dataset.attendanceMode === mode);
-        });
         classroomSettingsMenu?.querySelectorAll('[data-comment-mode]').forEach(button => {
             button.classList.toggle('is-active', button.dataset.commentMode === commentMode);
         });
@@ -3611,14 +5889,25 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- Classroom Navigation ---
-    window.showStudentList = function (className, subject, initialTab = 'room', pushHistory = true) {
+    function showStudentList(className, subject, initialTab = 'room', pushHistory = true) {
+        scrollToTop();
         if (pushHistory) {
-            history.pushState({ type: 'classroom', className, subject, initialTab }, '', '');
+            const hash = `#classroom:${encodeURIComponent(className)}:${encodeURIComponent(subject)}:${initialTab}`;
+            history.pushState({ type: 'classroom', className, subject, initialTab }, '', hash);
+            localStorage.setItem('sigma-teacher-nav-state', JSON.stringify({ type: 'classroom', className, subject, initialTab }));
         }
 
         currentClassroomKey = `${className}::${subject}`;
         currentClassroomSectionName = className;
         currentClassroomMeta = classroomMetaBySubject[`${className}::${subject}`] || null;
+
+        // Ensure the sidebar reflects the correct tab (Sections)
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(l => l.classList.remove('active'));
+        const classesLink = document.getElementById('nav-classes');
+        if (classesLink) classesLink.classList.add('active');
+        const navContextText = document.getElementById('nav-context-text');
+        if (navContextText) navContextText.textContent = 'Sections';
 
         // 1. IMPACTFUL UI TRANSITION (Hide room-adjacent panels only)
 
@@ -3650,7 +5939,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const sectionClasses = document.getElementById('section-classes');
         const sectionDetail = document.getElementById('section-classroom-detail');
 
-        if (sectionClasses) sectionClasses.classList.add('hidden');
+        hideAllSections();
         if (sectionDetail) sectionDetail.classList.remove('hidden');
 
         if (mainContent) {
@@ -3673,7 +5962,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         applyClassroomBannerCover(subject);
-        renderClassroomSectionsSidebar(className, subject);
+        const subSidebar = document.getElementById('sub-sidebar');
+        const isSubSidebarVisible = subSidebar && subSidebar.classList.contains('sub-sidebar-visible');
+        renderClassroomSectionsSidebar(className, subject, isSubSidebarVisible);
 
         renderRoomPeoplePanel(className, subject);
         renderRoomAnnouncementsFeed();
@@ -3686,19 +5977,71 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof switchClassDetailTab === 'function') {
             switchClassDetailTab(initialTab || 'room');
         }
+
+        // Reset Gradebook highlights when switching sections
+        if (typeof window.clearGradebookHighlights === 'function') {
+            window.clearGradebookHighlights(false, true); // inner
+            window.clearGradebookHighlights(true, true);  // outer
+        }
     };
 
     window.openCurrentClassroomTopics = function () {
         const subjectName = (currentClassroomKey || '').split('::')[1] || '';
         if (!subjectName) return;
-        const allSubjects = Object.values(window.subjectsData || {}).flat();
-        const matched = allSubjects.find(subject => subject.name === subjectName);
-        const programKey = matched?.programKey || 'core-subjects';
-        const program = curriculumPrograms[programKey];
-        const direct = (program?.subjects || []).find(subject => subject.title === subjectName || subject.text === subjectName);
-        const targetId = direct?.id || (matched?.id && getTopicData(matched.id) ? matched.id : ensureSubjectDataForTitle(subjectName, program?.title || 'Subjects').id);
-        switchToTopicPage(targetId);
+
+        // 1. Find the subject across all programs, clusters, and stages
+        let targetId = null;
+        for (const progKey in curriculumPrograms) {
+            const prog = curriculumPrograms[progKey];
+
+            // Check direct subjects
+            const foundDirect = (prog.subjects || []).find(s => s.title === subjectName || s.text === subjectName || s.name === subjectName);
+            if (foundDirect) {
+                targetId = foundDirect.id;
+                break;
+            }
+
+            // Check clusters
+            if (prog.clusters) {
+                for (const cluster of prog.clusters) {
+                    const foundInCluster = (cluster.subjects || []).find(s => (typeof s === 'string' ? s === subjectName : (s.title === subjectName || s.text === subjectName)));
+                    if (foundInCluster) {
+                        targetId = typeof foundInCluster === 'string' ? `gen-${slugify(foundInCluster)}` : foundInCluster.id;
+                        if (typeof foundInCluster === 'string' && typeof ensureSubjectDataForTitle === 'function') {
+                            ensureSubjectDataForTitle(foundInCluster, cluster.title);
+                        }
+                        break;
+                    }
+                }
+            }
+            if (targetId) break;
+
+            // Check stages
+            const foundStage = (prog.stages || []).find(s => s.title === subjectName || s.text === subjectName || s.name === subjectName);
+            if (foundStage) {
+                targetId = foundStage.key || foundStage.id;
+                break;
+            }
+        }
+
+        if (targetId) {
+            switchToTopicPage(targetId);
+        } else {
+            // 2. Fallback: try matching by name in window.subjectsData
+            const allSubjects = Object.values(window.subjectsData || {}).flat();
+            const matched = allSubjects.find(s => s.name === subjectName || s.title === subjectName);
+            if (matched && matched.id) {
+                switchToTopicPage(matched.id);
+            }
+        }
     };
+
+    function slugify(text) {
+        return (text || '').toString().toLowerCase().trim()
+            .replace(/\s+/g, '-')
+            .replace(/[^\w\-]+/g, '')
+            .replace(/\-\-+/g, '-');
+    }
 
     window.leaveRoom = function () {
         const modal = document.getElementById('leaveRoomModal');
@@ -3772,7 +6115,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    window.closeAnnouncementPad = function () {
+    // --- Classroom Announcement Pad ---
+    function closeAnnouncementPad() {
         if (!announcementPadLayer) return;
         announcementPadLayer.classList.add('hidden');
         document.body.classList.remove('announcement-overlay-open');
@@ -4055,14 +6399,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!btn) return;
 
         const rows = document.querySelectorAll('#attendance-recording-body tr');
-        const mode = getCurrentAttendanceMode();
+
         const savedStatuses = getCurrentAttendanceStatuses();
         const savedExcuses = getCurrentAttendanceExcuses();
         const statuses = {};
         rows.forEach(row => {
             const name = row.dataset.studentName;
             if (!name) return;
-            statuses[name] = mode === 'trust' ? (savedStatuses[name] || '') : (row.dataset.status || '');
+            statuses[name] = row.dataset.status || '';
         });
         saveCurrentAttendanceStatuses(statuses, savedExcuses);
 
@@ -4075,6 +6419,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.switchClassDetailTab = function (tabId) {
+        scrollToTop();
         const sections = ['room', 'attendance', 'materials'];
         sections.forEach(id => {
             const section = document.getElementById(`detail-section-${id}`);
@@ -4094,7 +6439,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const analyticsSection = document.getElementById('detail-section-analytics');
         if (analyticsSection) analyticsSection.classList.add('hidden');
-        if (tabId === 'attendance') renderAttendanceRecordingRows();
+        if (tabId === 'attendance') {
+            // Reset scroll so the table always snaps to today's column on mobile
+            attendanceLastScrollLeft = -1;
+            renderClassroomAttendanceTab(true);
+        }
 
     };
 
@@ -4116,17 +6465,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             document.body.appendChild(panel);
 
-            // Position panel to start below the nav bar
-            const header = document.getElementById('teacher-header');
-            const navBottom = header ? header.getBoundingClientRect().bottom : 0;
-            panel.style.top = navBottom + 'px';
-            panel.style.bottom = '0';
-            panel.style.borderRadius = '1.5rem 1.5rem 0 0';
+            // Show until the top of the screen
+            panel.style.top = '0';
+            // Rest exactly on top of the bottom app bar (68px height)
+            panel.style.bottom = '68px';
+            panel.style.borderRadius = '0';
 
             // Double rAF: first frame paints panel in off-screen start position,
             // second frame triggers the CSS transition so it slides up cleanly
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
+                    // Auto-reset scroll position
+                    panel.scrollTop = 0;
+                    panel.querySelectorAll('.classroom-room-people__list').forEach(list => list.scrollTop = 0);
+
                     panel.classList.add('active');
                 });
             });
@@ -4161,7 +6513,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const deltaY = currentY - startY;
                     panel.style.transition = '';
                     if (deltaY > 80) {
-                        // Enough drag — close
+                        // Enough drag &mdash; close
                         window.toggleMobilePeoplePanel();
                     } else {
                         // Snap back to open position
@@ -4659,22 +7011,12 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleClassroomSettingsMenu();
     });
 
-    classroomSettingsMenu?.querySelectorAll('[data-attendance-mode]').forEach(button => {
-        button.addEventListener('click', () => {
-            const mode = button.dataset.attendanceMode;
-            if (!mode) return;
-            saveCurrentAttendanceMode(mode);
-            applyClassroomSettingsUI();
-            renderAttendanceRecordingRows();
-        });
-    });
-
     classroomSettingsMenu?.querySelectorAll('[data-comment-mode]').forEach(button => {
         button.addEventListener('click', () => {
             const mode = button.dataset.commentMode;
-            if (!mode) return;
-            saveCurrentCommentMode(mode);
+            localStorage.setItem(`classroom-comment-mode-${currentClassroomKey}`, mode);
             applyClassroomSettingsUI();
+            closeClassroomSettingsMenu();
             renderRoomAnnouncementsFeed();
         });
     });
@@ -4717,17 +7059,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="bg-white/50 p-3 rounded-lg">
                         <div class="font-semibold text-red-700 mb-1">At-Risk Students (5 total)</div>
                         <div class="text-xs space-y-1">
-                            <div>• Maria Santos: Gen Math (72%)</div>
-                            <div>• Juan Dela Cruz: Programming (68%)</div>
-                            <div>• Ana Reyes: Empowerment Tech (71%)</div>
+                            <div>&bull; Maria Santos: Gen Math (72%)</div>
+                            <div>&bull; Juan Dela Cruz: Programming (68%)</div>
+                            <div>&bull; Ana Reyes: Empowerment Tech (71%)</div>
                         </div>
                     </div>
                     <div class="bg-white/30 p-3 rounded-lg">
                         <div class="font-semibold text-red-600 mb-1">Immediate Actions Required</div>
                         <div class="text-xs space-y-1">
-                            <div>• Schedule parent-teacher conferences</div>
-                            <div>• Arrange tutoring for Programming</div>
-                            <div>• Monitor progress weekly</div>
+                            <div>&bull; Schedule parent-teacher conferences</div>
+                            <div>&bull; Arrange tutoring for Programming</div>
+                            <div>&bull; Monitor progress weekly</div>
                         </div>
                     </div>
                 </div>`
@@ -4742,9 +7084,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="bg-white/50 p-3 rounded-lg">
                         <div class="font-semibold text-amber-700 mb-2">Engagement Drop: -15%</div>
                         <div class="text-xs space-y-1">
-                            <div>• 4 students consistently silent in class</div>
-                            <div>• Reduced participation in forum discussions</div>
-                            <div>• Late logins to LMS recorded for 6 students</div>
+                            <div>&bull; 4 students consistently silent in class</div>
+                            <div>&bull; Reduced participation in forum discussions</div>
+                            <div>&bull; Late logins to LMS recorded for 6 students</div>
                         </div>
                     </div>
                     <div class="bg-white/30 p-3 rounded-lg">
@@ -4763,8 +7105,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="bg-white/50 p-3 rounded-lg">
                         <div class="font-semibold text-orange-700 mb-2">Missing Lab Exercises</div>
                         <div class="text-xs space-y-1">
-                            <div>• Lab #4: 8 students have not submitted</div>
-                            <div>• Quiz #2: 3 students missed deadline</div>
+                            <div>&bull; Lab #4: 8 students have not submitted</div>
+                            <div>&bull; Quiz #2: 3 students missed deadline</div>
                         </div>
                     </div>
                     <div class="bg-white/30 p-3 rounded-lg">
@@ -4783,16 +7125,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="bg-white/50 p-3 rounded-lg">
                         <div class="font-semibold text-green-700 mb-2">Performance Drop: -8% GPA</div>
                         <div class="grid grid-cols-2 gap-2 text-xs">
-                            <div>• Database normalization: 45% errors</div>
-                            <div>• CSS Grid layouts: 38% incomplete</div>
+                            <div>&bull; Database normalization: 45% errors</div>
+                            <div>&bull; CSS Grid layouts: 38% incomplete</div>
                         </div>
                     </div>
                     <div class="bg-white/30 p-3 rounded-lg">
                         <div class="font-semibold text-green-600 mb-2">Recommended Interventions</div>
                         <div class="text-xs space-y-1">
-                            <div>• Schedule review sessions</div>
-                            <div>• Provide practice materials</div>
-                            <div>• One-on-one consultations</div>
+                            <div>&bull; Schedule review sessions</div>
+                            <div>&bull; Provide practice materials</div>
+                            <div>&bull; One-on-one consultations</div>
                         </div>
                     </div>
                 </div>`
@@ -4807,17 +7149,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="bg-white/50 p-3 rounded-lg">
                         <div class="font-semibold text-blue-700 mb-2">Learning Gap: OOP Concepts</div>
                         <div class="text-xs space-y-1">
-                            <div>• 12 students affected</div>
-                            <div>• Inheritance: 65% struggling</div>
-                            <div>• Polymorphism: 58% incomplete</div>
+                            <div>&bull; 12 students affected</div>
+                            <div>&bull; Inheritance: 65% struggling</div>
+                            <div>&bull; Polymorphism: 58% incomplete</div>
                         </div>
                     </div>
                     <div class="bg-white/30 p-3 rounded-lg">
                         <div class="font-semibold text-blue-600 mb-2">Implementation Plan</div>
                         <div class="text-xs space-y-1">
-                            <div>• Peer tutoring program</div>
-                            <div>• Interactive coding exercises</div>
-                            <div>• Visual learning aids</div>
+                            <div>&bull; Peer tutoring program</div>
+                            <div>&bull; Interactive coding exercises</div>
+                            <div>&bull; Visual learning aids</div>
                         </div>
                     </div>
                 </div>`
@@ -4832,17 +7174,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="bg-white/50 p-3 rounded-lg">
                         <div class="font-semibold text-orange-700 mb-2">Attendance Issues</div>
                         <div class="text-xs space-y-1">
-                            <div>• Carlo Mendoza: 3 consecutive days</div>
-                            <div>• Sofia Garcia: 2 consecutive days</div>
-                            <div>• Assignment submissions: -15%</div>
+                            <div>&bull; Carlo Mendoza: 3 consecutive days</div>
+                            <div>&bull; Sofia Garcia: 2 consecutive days</div>
+                            <div>&bull; Assignment submissions: -15%</div>
                         </div>
                     </div>
                     <div class="bg-white/30 p-3 rounded-lg">
                         <div class="font-semibold text-orange-600 mb-2">Follow-up Actions</div>
                         <div class="text-xs space-y-1">
-                            <div>• Contact parents immediately</div>
-                            <div>• Provide catch-up materials</div>
-                            <div>• Monitor engagement patterns</div>
+                            <div>&bull; Contact parents immediately</div>
+                            <div>&bull; Provide catch-up materials</div>
+                            <div>&bull; Monitor engagement patterns</div>
                         </div>
                     </div>
                 </div>`
@@ -4857,17 +7199,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="bg-white/50 p-3 rounded-lg">
                         <div class="font-semibold text-purple-700 mb-2">Performance Trends</div>
                         <div class="text-xs space-y-1">
-                            <div class="text-green-600">✓ 8 students improved in Web Dev (+12% avg)</div>
-                            <div class="text-red-600">⚠ 6 students showing burnout signs</div>
-                            <div>• Declining quiz scores despite attendance</div>
+                            <div class="text-green-600">&check; 8 students improved in Web Dev (+12% avg)</div>
+                            <div class="text-red-600">&#9888; 6 students showing burnout signs</div>
+                            <div>&bull; Declining quiz scores despite attendance</div>
                         </div>
                     </div>
                     <div class="bg-white/30 p-3 rounded-lg">
                         <div class="font-semibold text-purple-600 mb-2">Support Recommendations</div>
                         <div class="text-xs space-y-1">
-                            <div>• Adjust workload distribution</div>
-                            <div>• Provide mental health resources</div>
-                            <div>• Implement progress check-ins</div>
+                            <div>&bull; Adjust workload distribution</div>
+                            <div>&bull; Provide mental health resources</div>
+                            <div>&bull; Implement progress check-ins</div>
                         </div>
                     </div>
                 </div>`
@@ -5214,9 +7556,9 @@ document.addEventListener('DOMContentLoaded', () => {
         { time: '13:30', endTime: '15:00', subject: 'Programming 1', section: 'Grade 11 - ICT B', room: 'Lab 2' }
     ];
     const upcomingAssessmentItems = [
-        { title: 'Quiz 4 • Programming 1', when: 'Due Today • 11:59 PM', status: 'Due' },
-        { title: 'Lab Activity 3 • Empowerment Tech', when: 'Apr 11 • 10:00 AM', status: 'Upcoming' },
-        { title: 'Performance Task • Database Management', when: 'Apr 12 • 3:00 PM', status: 'Upcoming' }
+        { title: 'Quiz 4 &bull; Programming 1', when: 'Due Today &bull; 11:59 PM', status: 'Due' },
+        { title: 'Lab Activity 3 &bull; Empowerment Tech', when: 'Apr 11 &bull; 10:00 AM', status: 'Upcoming' },
+        { title: 'Performance Task &bull; Database Management', when: 'Apr 12 &bull; 3:00 PM', status: 'Upcoming' }
     ];
 
     function timeToMinutes(value) {
@@ -5226,6 +7568,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getUpcomingClasses(limit = 2) {
+        if (typeof getTeacherUpcomingSectionClasses === 'function') {
+            const sectionClasses = getTeacherUpcomingSectionClasses(limit);
+            if (sectionClasses.length) return sectionClasses;
+        }
         if (!dailySchedule.length) return [];
         const now = new Date();
         const nowMinutes = (now.getHours() * 60) + now.getMinutes();
@@ -5244,31 +7590,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const assessmentsWrap = document.getElementById('calendarDropdownAssessmentList');
         if (!classesWrap || !assessmentsWrap) return;
 
-        const upcomingClasses = getUpcomingClasses(2);
-        classesWrap.innerHTML = upcomingClasses.length
-            ? upcomingClasses.map((item, index) => `
-                <div class="rounded-xl border border-gray-100 bg-gray-50/40 p-3">
-                    <p class="text-[9px] font-black uppercase tracking-widest ${index === 0 ? 'text-icc' : 'text-gray-400'}">${index === 0 ? 'Next Class' : 'Upcoming Class'}</p>
-                    <p class="text-sm font-bold text-gray-800 mt-1">${item.subject}</p>
-                    <p class="text-[11px] text-gray-500 mt-0.5">${item.room}${item.section ? ` - ${item.section}` : ''}</p>
-                    <p class="text-[11px] font-bold text-gray-600 mt-1">${item.time} - ${item.endTime}</p>
-                </div>
-            `).join('')
-            : `
-                <div class="py-5 text-center border border-dashed border-gray-100 rounded-xl">
-                    <p class="text-[10px] font-black text-gray-300 uppercase tracking-widest">No classes scheduled</p>
-                </div>
-            `;
-
-        assessmentsWrap.innerHTML = upcomingAssessmentItems.map(item => `
-            <div class="rounded-xl border border-gray-100 bg-white p-3">
-                <div class="flex items-center justify-between gap-2">
-                    <p class="text-sm font-bold text-gray-800 leading-tight">${item.title}</p>
-                    <span class="px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${item.status === 'Due' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}">${item.status}</span>
-                </div>
-                <p class="text-[11px] text-gray-500 mt-1">${item.when}</p>
-            </div>
-        `).join('');
+        // Removed as per request to hide Next Class, Upcoming Class, and Submissions in dropdown
+        classesWrap.innerHTML = '';
+        assessmentsWrap.innerHTML = '';
     }
 
     renderCalendarDropdownSummary();
@@ -5737,11 +8061,116 @@ document.addEventListener('DOMContentLoaded', () => {
         currentMode: 'quarters', // Default to quarters
         selectedSection: '',
         selectedSubject: '',
-        weights: loadGradebookWeights()
+        weights: loadGradebookWeights(),
+        isOuter: false
     };
 
-    // Data storage for scores
-    let gradebookScores = {}; // { studentId: { category: { itemId: score } } }
+    // Data storage for scores and statuses with persistence (Scoped by Subject)
+    const SCORES_STORAGE_KEY = 'sigma-teacher-gradebook-scores-v2';
+    const STATUSES_STORAGE_KEY = 'sigma-teacher-gradebook-statuses-v2';
+
+    let gradebookScores = {}; // { subjectId: { quarter: { studentId: { category: { itemId: score } } } } }
+    let gradebookStatuses = {}; // { subjectId: { quarter: { studentId: { category: { itemId: status } } } } }
+
+    function loadGradebookData() {
+        try {
+            const s = localStorage.getItem(SCORES_STORAGE_KEY);
+            const st = localStorage.getItem(STATUSES_STORAGE_KEY);
+            if (s) gradebookScores = JSON.parse(s);
+            if (st) gradebookStatuses = JSON.parse(st);
+        } catch (e) {
+            console.error('Failed to load gradebook data:', e);
+        }
+    }
+
+    function saveGradebookData() {
+        try {
+            localStorage.setItem(SCORES_STORAGE_KEY, JSON.stringify(gradebookScores));
+            localStorage.setItem(STATUSES_STORAGE_KEY, JSON.stringify(gradebookStatuses));
+        } catch (e) {
+            console.error('Failed to save gradebook data:', e);
+        }
+    }
+    loadGradebookData();
+
+    window.resetGradebookState = () => {
+        gradebookState.selectedSection = '';
+        gradebookState.selectedSubject = '';
+        gradebookState.currentQuarter = 1;
+        gradebookState.currentView = 'overview';
+        const pickerSubjectLabel = document.getElementById('gradebook-picker-subject-label');
+        const pickerSectionLabel = document.getElementById('gradebook-picker-section-label');
+        if (pickerSubjectLabel) pickerSubjectLabel.textContent = 'Select Subject';
+        if (pickerSectionLabel) pickerSectionLabel.textContent = 'Grade · Section';
+
+        if (typeof renderGradebookSpreadsheet === 'function') {
+            renderGradebookSpreadsheet();
+        }
+    };
+
+    window.openGradebookWeightPicker = (anchorEl) => {
+        let panel = document.getElementById('gradebook-weight-picker-panel');
+        if (!panel) {
+            panel = document.createElement('div');
+            panel.id = 'gradebook-weight-picker-panel';
+            panel.className = 'fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center p-4 transition-opacity duration-200';
+            document.body.appendChild(panel);
+
+            const gradingSystems = [
+                { label: 'Core subjects', ww: 25, pt: 50, qa: 25 },
+                { label: 'Academic track — all other subjects', ww: 25, pt: 45, qa: 30 },
+                { label: 'Academic track — work immersion / research / business enterprise simulation / exhibit / performance', ww: 0, pt: 100, qa: 0 },
+                { label: 'TVL / Sports / Arts & Design — all other subjects', ww: 35, pt: 40, qa: 25 },
+                { label: 'TVL / Sports / Arts & Design — work immersion / research / exhibit / performance', ww: 20, pt: 60, qa: 20 }
+            ];
+
+            window.selectGradebookWeights = (ww, pt, qa) => {
+                const weights = { ww, pt, qa };
+                gradebookState.weights = weights;
+                if (typeof saveGradebookWeights === 'function') saveGradebookWeights(weights);
+                document.getElementById('gradebook-weight-picker-panel').classList.add('hidden');
+                if (typeof renderGradebookSpreadsheet === 'function') {
+                    renderGradebookSpreadsheet();
+                }
+            };
+
+            const modalContent = `
+                <div class="bg-white border border-slate-200 rounded-xl shadow-2xl overflow-hidden w-full max-w-[500px] flex flex-col" onclick="event.stopPropagation()">
+                    <div class="px-5 pt-4 pb-3 border-b border-slate-100 flex justify-between items-center bg-gray-50">
+                        <p class="text-[11px] font-black text-black uppercase tracking-widest">Select Component Weights</p>
+                        <button class="text-gray-400 hover:text-red-500 transition-colors p-1" onclick="document.getElementById('gradebook-weight-picker-panel').classList.add('hidden')">
+                            <i class="fa-solid fa-xmark text-[16px]"></i>
+                        </button>
+                    </div>
+                    <div class="max-h-[60vh] overflow-y-auto divide-y divide-slate-50">
+                        ${gradingSystems.map((sys) => `
+                            <button type="button" 
+                                    class="w-full px-5 py-4 flex flex-col items-start text-left hover:bg-slate-50 transition-colors group"
+                                    onclick="window.selectGradebookWeights(${sys.ww}, ${sys.pt}, ${sys.qa})">
+                                <span class="text-[13px] font-bold text-black leading-tight mb-2 group-hover:text-black">${sys.label}</span>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-[10px] font-black text-black uppercase tracking-widest bg-gray-100 px-2 py-1 rounded">WW: ${sys.ww}%</span>
+                                    <span class="text-[10px] font-black text-black uppercase tracking-widest bg-gray-100 px-2 py-1 rounded">PT: ${sys.pt}%</span>
+                                    <span class="text-[10px] font-black text-black uppercase tracking-widest bg-gray-100 px-2 py-1 rounded">QA: ${sys.qa}%</span>
+                                </div>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            panel.innerHTML = modalContent;
+
+            // Close on background overlay click
+            panel.addEventListener('mousedown', (e) => {
+                if (e.target === panel) {
+                    panel.classList.add('hidden');
+                }
+            });
+        }
+
+        panel.classList.remove('hidden');
+    };
 
     function setupAnalyticsTab() {
         // Analytics Elements
@@ -5807,85 +8236,190 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
+    function getAllSubjectsRaw() {
+        const data = window.subjectsData || {};
+        return [
+            ...(Array.isArray(data.core) ? data.core : []),
+            ...(Array.isArray(data.academic) ? data.academic : []),
+            ...(Array.isArray(data.techpro) ? data.techpro : [])
+        ].filter(s => s && s.name);
+    }
+
+    function resetGradebookPage() {
+        // Hide the quarter tabs (they show once a subject is selected)
+        const tabs = document.getElementById('gradebook-quarter-tabs');
+        if (tabs) tabs.classList.add('hidden');
+
+        // Reset subject picker label back to "Select a Subject"
+        const pickerSubjectLabel = document.getElementById('gradebook-picker-subject-label');
+        const pickerSectionLabel = document.getElementById('gradebook-picker-section-label');
+        if (pickerSubjectLabel) pickerSubjectLabel.textContent = 'Select a Subject';
+        if (pickerSectionLabel) pickerSectionLabel.textContent = 'No section selected';
+
+        // Clear the spreadsheet body and header
+        const head = document.querySelector('#gradebook-spreadsheet thead');
+        const body = document.getElementById('gradebook-body');
+        if (head) head.innerHTML = '';
+        if (body) body.innerHTML = `
+            <tr>
+                <td colspan="10" class="py-20 text-center">
+                    <p class="text-[11px] font-black text-[#15803d] uppercase tracking-[0.25em]">Please select section and subject</p>
+                </td>
+            </tr>`;
+
+        // Reset gradebook state
+        gradebookState.selectedSubject = null;
+        gradebookState.selectedSection = null;
+        gradebookState.currentView = 'overview';
+    }
+
     function initGradebook() {
+
+        // Keep hidden selectors for any downstream code that reads them
         const sectionSelector = document.getElementById('gradebook-section-selector');
         const subjectSelector = document.getElementById('gradebook-subject-selector');
         const tabs = document.getElementById('gradebook-quarter-tabs');
+        const pickerBtn = document.getElementById('gradebook-subject-picker-btn');
+        const pickerSubjectLabel = document.getElementById('gradebook-picker-subject-label');
+        const pickerSectionLabel = document.getElementById('gradebook-picker-section-label');
+        const pickerChevron = document.getElementById('gradebook-picker-chevron');
         setupGradebookDragScroll();
+        // setupGradebookSelection(); // Disabled legacy selection logic to prevent conflicts with targeted highlighting
 
-        if (!sectionSelector || !subjectSelector) return;
+        if (!pickerBtn) return;
 
-        const buildAllSubjects = () => {
-            const data = window.subjectsData || {};
-            const all = [
-                ...(Array.isArray(data.core) ? data.core : []),
-                ...(Array.isArray(data.academic) ? data.academic : []),
-                ...(Array.isArray(data.techpro) ? data.techpro : [])
-            ];
-
-            const filtered = all.filter(s => s && s.name);
-
-            // Unique by name (case-insensitive)
-            const seen = new Set();
-            return filtered
-                .filter(s => {
-                    const key = String(s.name).trim().toLowerCase();
-                    if (!key || seen.has(key)) return false;
-                    seen.add(key);
-                    return true;
-                })
-                .sort((a, b) => String(a.name).localeCompare(String(b.name)));
-        };
-
-        const populateSubjectSelector = () => {
-            const subjects = buildAllSubjects();
-            subjectSelector.innerHTML = `
-                <option value="" disabled selected>Select Subject</option>
-                ${subjects.map(s => `<option value="${String(s.name).replace(/"/g, '&quot;')}">${s.name}</option>`).join('')}
+        // ── Create the dropdown panel as a BODY-LEVEL portal ──────────────
+        // This prevents it from being clipped by any overflow:auto ancestor.
+        let panel = document.getElementById('gradebook-subject-picker-panel');
+        if (!panel) {
+            panel = document.createElement('div');
+            panel.id = 'gradebook-subject-picker-panel';
+            panel.className = 'hidden fixed w-[360px] bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden';
+            panel.style.cssText = 'z-index: 9999;';
+            panel.innerHTML = `
+                <div class="px-4 pt-3 pb-2 border-b border-slate-100">
+                    <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Select Subject</p>
+                </div>
+                <div id="gradebook-subject-picker-list" class="max-h-[320px] overflow-y-auto divide-y divide-slate-50"></div>
             `;
+            document.body.appendChild(panel);
+        }
+        const pickerList = panel.querySelector('#gradebook-subject-picker-list');
+
+        // ── Populate list ──────────────────────────────────────────────────
+        const populatePicker = () => {
+            const all = getAllSubjectsRaw();
+            const entries = [];
+            all.forEach(sub => {
+                const secs = Array.isArray(sub.sections) && sub.sections.length ? sub.sections : ['—'];
+                secs.forEach(sec => {
+                    entries.push({ id: sub.id, name: sub.name, grade: sub.grade || '', section: sec });
+                });
+            });
+            entries.sort((a, b) => a.name.localeCompare(b.name));
+
+            pickerList.innerHTML = entries.map(e => `
+                <button
+                    type="button"
+                    class="gradebook-picker-item w-full px-4 py-3 flex flex-col items-start text-left hover:bg-slate-50 transition-colors"
+                    onclick="window.selectGradebookSubject('${e.name.replace(/'/g, "\\'")}', '${e.section.replace(/'/g, "\\'")}', '${(e.grade || '').replace(/'/g, "\\'")}')"
+                >
+                    <span class="text-[13px] font-bold text-gray-800 leading-tight">${e.name}</span>
+                    <span class="text-[10px] font-medium text-gray-400 mt-0.5">${e.grade ? e.grade + ' · ' : ''}${e.section}</span>
+                </button>
+            `).join('');
+        };
+        populatePicker();
+
+        // ── Toggle: open anchored below the button ─────────────────────────
+        const closePanel = () => {
+            panel.classList.add('hidden');
+            pickerChevron?.classList.remove('rotate-180');
         };
 
-        // Always preload the full subject list (even while disabled).
-        populateSubjectSelector();
-
-        sectionSelector.onchange = () => {
-            gradebookState.selectedSection = sectionSelector.value;
-            if (sectionSelector.value) {
-                subjectSelector.disabled = false;
-                subjectSelector.classList.remove('cursor-not-allowed', 'opacity-50');
-                subjectSelector.classList.add('cursor-pointer', 'hover:bg-white');
-                const firstOption = subjectSelector.querySelector('option[disabled]');
-                if (firstOption) firstOption.textContent = 'Select Subject';
-                populateSubjectSelector();
-            } else {
-                subjectSelector.disabled = true;
-                subjectSelector.value = "";
-                subjectSelector.classList.add('cursor-not-allowed', 'opacity-50');
-                subjectSelector.classList.remove('cursor-pointer', 'hover:bg-white');
-                tabs?.classList.add('hidden');
-                populateSubjectSelector();
+        window.toggleGradebookSubjectPicker = () => {
+            if (!panel.classList.contains('hidden')) {
+                closePanel();
+                return;
             }
-            gradebookState.currentView = 'overview';
-            gradebookState.selectedSubject = '';
-            subjectSelector.value = "";
-            renderGradebookSpreadsheet();
+            // Position the panel fixed, below the button
+            const rect = pickerBtn.getBoundingClientRect();
+            panel.style.top = (rect.bottom + 6) + 'px';
+            panel.style.right = (window.innerWidth - rect.right) + 'px';
+            panel.style.left = 'auto';
+            panel.classList.remove('hidden');
+            pickerChevron?.classList.add('rotate-180');
         };
 
-        subjectSelector.onchange = () => {
-            gradebookState.selectedSubject = subjectSelector.value;
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+            if (!panel.contains(e.target) && e.target !== pickerBtn && !pickerBtn.contains(e.target)) {
+                closePanel();
+            }
+        });
+
+        // Reposition on scroll / resize so panel stays aligned
+        window.addEventListener('scroll', (e) => {
+            if (panel.contains(e.target)) return;
+            if (!panel.classList.contains('hidden')) closePanel();
+        }, true);
+        window.addEventListener('resize', () => { if (!panel.classList.contains('hidden')) closePanel(); });
+
+        // ── Selection handler ──────────────────────────────────────────────
+        window.selectGradebookSubject = (subjectName, section, grade) => {
+            if (pickerSubjectLabel) pickerSubjectLabel.textContent = subjectName;
+            if (pickerSectionLabel) pickerSectionLabel.textContent = (grade ? grade + ' · ' : '') + section;
+            closePanel();
+
+            // Sync hidden selectors
+            if (sectionSelector) {
+                if (!sectionSelector.querySelector(`option[value="${section}"]`)) {
+                    const opt = document.createElement('option');
+                    opt.value = section; opt.textContent = section;
+                    sectionSelector.appendChild(opt);
+                }
+                sectionSelector.value = section;
+            }
+            if (subjectSelector) {
+                if (!subjectSelector.querySelector(`option[value="${subjectName}"]`)) {
+                    const opt = document.createElement('option');
+                    opt.value = subjectName; opt.textContent = subjectName;
+                    subjectSelector.appendChild(opt);
+                }
+                subjectSelector.value = subjectName;
+            }
+
+            gradebookState.selectedSection = section;
+            gradebookState.selectedSubject = subjectName;
             gradebookState.currentView = 'overview';
             gradebookState.currentQuarter = 1;
-            if (subjectSelector.value) {
-                tabs?.classList.remove('hidden');
-            } else {
-                tabs?.classList.add('hidden');
+            
+            // Auto-refresh the background Topic Content workstation if it's currently visible
+            const topicContent = document.getElementById('section-topic-content');
+            if (topicContent && !topicContent.classList.contains('hidden')) {
+                let actualId = subjectName;
+                const all = typeof getAllSubjectsRaw === 'function' ? getAllSubjectsRaw() : [];
+                const found = all.find(s => s.name === subjectName || s.id === subjectName);
+                if (found) actualId = found.id;
+                
+                if (typeof window.openTopicContent === 'function') {
+                    // Switch to the new subject/section in the background workstation
+                    // We set pushHistory to false to avoid cluttering the history stack
+                    window.openTopicContent(actualId, 0, 'overview', 0, false);
+                }
             }
 
+            tabs?.classList.remove('hidden');
             updateGradebookTabLabels();
             setGradebookQuarter(1);
             resetGradebookScrollPosition();
+
+
         };
     }
+
+
+
 
     function setupGradebookDragScroll() {
         const scrollArea = document.getElementById('gradebook-scroll-area');
@@ -5905,6 +8439,11 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollArea.addEventListener('mousedown', (event) => {
             if (event.button !== 0) return;
             if (event.target.closest('input, button, select, textarea, a, [draggable="true"]')) return;
+
+            // Blur any active input to exit editing mode when clicking empty space
+            if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+                document.activeElement.blur();
+            }
 
             isDragging = true;
             startX = event.clientX;
@@ -5933,10 +8472,125 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function resetGradebookScrollPosition() {
+        // Global page reset to top (Simulate refresh button)
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+
+        const scrollArea = document.getElementById('gradebook-scroll-area');
+        if (scrollArea) {
+            scrollArea.scrollTop = 0;
+            scrollArea.scrollLeft = 0;
+        }
+        clearGradebookSelection();
+
+        // Brief flash to simulate refresh button feel
+        const main = document.getElementById('main-content');
+        if (main) {
+            main.style.opacity = '0';
+            requestAnimationFrame(() => {
+                main.style.transition = 'opacity 0.1s ease-out';
+                main.style.opacity = '1';
+            });
+        }
+    }
+
+    function clearGradebookSelection() {
+        const body = document.getElementById('gradebook-body');
+        const spreadsheet = document.getElementById('gradebook-spreadsheet');
+        if (body) body.querySelectorAll('tr.gb-row-selected').forEach(row => row.classList.remove('gb-row-selected'));
+        if (spreadsheet) spreadsheet.querySelectorAll('.gb-col-selected').forEach(c => c.classList.remove('gb-col-selected'));
+    }
+
+    function scrollToGradebookColumn(element) {
         const scrollArea = document.getElementById('gradebook-scroll-area');
         if (!scrollArea) return;
-        scrollArea.scrollTop = 0;
-        scrollArea.scrollLeft = 0;
+        const cell = element.closest('td, th');
+        if (!cell || cell.classList.contains('sticky')) return;
+
+        // The sticky student column is roughly 200px.
+        const stickyWidth = 200;
+        const cellLeft = cell.offsetLeft;
+
+        scrollArea.scrollTo({
+            left: cellLeft - stickyWidth,
+            behavior: 'smooth'
+        });
+    }
+
+    function setupGradebookSelection() {
+        const spreadsheet = document.getElementById('gradebook-spreadsheet');
+        if (!spreadsheet || spreadsheet.dataset.selectionBound === 'true') return;
+
+        const body = document.getElementById('gradebook-body');
+        if (!body) return;
+
+        const clearSelection = () => {
+            clearGradebookSelection();
+        };
+
+        const selectCell = (cell) => {
+            if (!cell) return;
+            const tr = cell.closest('tr');
+            if (!tr || tr.classList.contains('placeholder-row')) return;
+
+            const index = cell.cellIndex;
+
+            clearSelection();
+
+            // Select Row (only if it's a data row in the body)
+            if (body.contains(tr)) {
+                tr.classList.add('gb-row-selected');
+            }
+
+            // Select Column (include th in header and td in body, ignore index 0/Students)
+            if (index > 0) {
+                spreadsheet.querySelectorAll(`tr td:nth-child(${index + 1}), tr th:nth-child(${index + 1})`).forEach(c => {
+                    c.classList.add('gb-col-selected');
+                });
+            }
+        };
+
+        // Handle focus (for inputs)
+        spreadsheet.addEventListener('focusin', (e) => {
+            const cell = e.target.closest('td, th');
+            if (cell && body.contains(cell)) {
+                selectCell(cell);
+
+                // Auto-scroll when input is focused
+                if (!cell.classList.contains('sticky')) {
+                    scrollToGradebookColumn(e.target);
+                }
+            }
+        });
+
+        spreadsheet.addEventListener('mousedown', (e) => {
+            const cell = e.target.closest('td, th');
+            if (!cell) {
+                clearSelection();
+                return;
+            }
+
+            // Trigger selection logic
+            selectCell(cell);
+
+            // Auto-scroll to clicked column
+            if (!cell.classList.contains('sticky')) {
+                scrollToGradebookColumn(cell);
+            }
+        });
+
+        // Global click-away to clear selection
+        const handleOutsideClick = (e) => {
+            // If click is outside the spreadsheet, clear highlights
+            if (!spreadsheet.contains(e.target)) {
+                clearSelection();
+            }
+        };
+
+        document.addEventListener('mousedown', handleOutsideClick);
+
+        spreadsheet.dataset.selectionBound = 'true';
     }
 
     function getGradebookPeriodLabel() {
@@ -5959,21 +8613,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.setGradebookQuarter = (quarter) => {
         gradebookState.currentQuarter = quarter;
+        // Auto-reset view to overview when switching quarters for a "fresh" screen
+        gradebookState.currentView = 'overview';
+
         // Update tab buttons
         for (let i = 1; i <= 4; i++) {
             const btn = document.getElementById(`quarter-btn-${i}`);
             if (btn) {
                 if (i === quarter) {
-                    btn.classList.add('bg-white', 'text-icc', 'shadow-sm');
-                    btn.classList.remove('text-gray-400');
+                    btn.classList.add('bg-white', 'text-[#FFD000]', 'shadow-sm');
+                    btn.classList.remove('text-black');
                 } else {
-                    btn.classList.remove('bg-white', 'text-icc', 'shadow-sm');
-                    btn.classList.add('text-gray-400');
+                    btn.classList.remove('bg-white', 'text-[#FFD000]', 'shadow-sm');
+                    btn.classList.add('text-black');
                 }
             }
         }
         renderGradebookSpreadsheet();
-        resetGradebookScrollPosition();
+        resetGradebookScrollPosition(); // This also clears selections
     };
 
     window.setGradebookView = (view) => {
@@ -5982,96 +8639,395 @@ document.addEventListener('DOMContentLoaded', () => {
         resetGradebookScrollPosition();
     };
 
-    window.handleGradebookDragStart = (e, status) => {
-        e.dataTransfer.setData('text/plain', status);
-    };
 
-    window.handleGradebookDragOver = (e) => {
-        e.preventDefault();
-        const td = e.target.closest('td');
-        if (td) td.classList.add('bg-gray-100', 'ring-2', 'ring-icc/20', 'ring-inset');
-    };
-
-    window.handleGradebookDragLeave = (e) => {
-        const td = e.target.closest('td');
-        if (td) td.classList.remove('bg-gray-100', 'ring-2', 'ring-icc/20', 'ring-inset');
-    };
-
-    window.handleGradebookDrop = (e) => {
-        e.preventDefault();
-        const td = e.target.closest('td');
-        if (!td) return;
-
-        td.classList.remove('bg-gray-100', 'ring-2', 'ring-icc/20', 'ring-inset');
-
-        const status = e.dataTransfer.getData('text/plain');
-        const colors = {
-            'missing': 'bg-red-50',
-            'incomplete': 'bg-amber-50',
-            'absent': 'bg-gray-100',
-            'excuse': 'bg-blue-50'
-        };
-
-        // Clear existing status bg colors
-        Object.values(colors).forEach(c => td.classList.remove(c));
-
-        const input = td.querySelector('input');
-        if (colors[status]) {
-            td.classList.add(colors[status]);
-            if (input) {
-                input.value = ''; // Clear score if status is dropped
-                input.placeholder = status.charAt(0).toUpperCase() + status.slice(1, 3);
-            }
-
-            // Sync with status button if present
-            const btn = td.querySelector(`.status-btn[title="${status.charAt(0).toUpperCase() + status.slice(1)}"]`);
-            if (btn) toggleStudentStatus(btn, status);
-        }
-    };
 
     function renderGradebookSpreadsheet() {
+        const isOuter = gradebookState.isOuter;
+        const prefix = isOuter ? 'gradebook-outer-' : 'gradebook-';
+
         const section = gradebookState.selectedSection;
         const subject = gradebookState.selectedSubject;
-        const body = document.getElementById('gradebook-body');
-        const spreadsheet = document.getElementById('gradebook-spreadsheet');
+        const body = document.getElementById(`${prefix}body`);
+        const spreadsheet = document.getElementById(`${prefix}spreadsheet`);
         const tableHead = spreadsheet?.querySelector('thead');
 
         if (!section || !subject) {
-            if (body) body.innerHTML = `<tr><td colspan="10" class="py-20 text-center text-gray-400 text-xs font-medium uppercase tracking-widest">Please select section and subject</td></tr>`;
+            if (body) body.innerHTML = `<tr class="placeholder-row"><td colspan="10" class="py-20 text-center text-gray-400 text-xs font-medium uppercase tracking-widest">Please select section and subject</td></tr>`;
             if (tableHead) tableHead.innerHTML = '';
             return;
         }
 
         if (gradebookState.currentView === 'overview') {
-            renderQuarterlyOverview();
+            renderQuarterlyOverview(isOuter);
         } else if (gradebookState.currentView === 'ww-sub') {
-            renderWWSubCategories();
+            renderWWSubCategories(isOuter);
         } else {
-            renderGradebookDetailView(gradebookState.currentView);
+            renderGradebookDetailView(gradebookState.currentView, isOuter);
+        }
+
+        // Apply refresh animation
+        if (spreadsheet) {
+            spreadsheet.classList.remove('gradebook-refresh-anim');
+            void spreadsheet.offsetWidth; // Force reflow
+            spreadsheet.classList.add('gradebook-refresh-anim');
         }
     }
 
+    // --- Gradebook Highlighting & Navigation ---
+    window.highlightGradebookColumn = function (index, isOuter = false) {
+        const prefix = isOuter ? 'gradebook-outer-' : 'gradebook-';
+        const table = document.getElementById(`${prefix}spreadsheet`);
+        if (!table) return;
+
+        // Clear previous
+        table.querySelectorAll('.gb-col-selected').forEach(el => el.classList.remove('gb-col-selected'));
+
+        if (index === -1) return;
+
+        // Highlight cells in this column (excluding student column index 0)
+        if (index === 0) return;
+
+        table.querySelectorAll('tr').forEach(row => {
+            const cell = row.cells[index];
+            if (cell) cell.classList.add('gb-col-selected');
+        });
+    };
+
+    window.highlightGradebookRow = function (row, isOuter = false) {
+        const prefix = isOuter ? 'gradebook-outer-' : 'gradebook-';
+        const table = document.getElementById(`${prefix}spreadsheet`);
+        if (!table) return;
+
+        // Clear previous
+        table.querySelectorAll('.gb-row-selected').forEach(el => el.classList.remove('gb-row-selected'));
+
+        if (row) {
+            row.classList.add('gb-row-selected');
+        }
+    };
+
+    window.clearGradebookHighlights = function (isOuter = false, forceClearRows = false) {
+        const prefix = isOuter ? 'gradebook-outer-' : 'gradebook-';
+        const table = document.getElementById(`${prefix}spreadsheet`);
+        if (!table) return;
+        table.querySelectorAll('.gb-col-selected').forEach(el => el.classList.remove('gb-col-selected'));
+        if (forceClearRows) {
+            table.querySelectorAll('.gb-row-selected').forEach(el => el.classList.remove('gb-row-selected'));
+        }
+    };
+
+    window.initGradebookInteractions = function (isOuter = false) {
+        const prefix = isOuter ? 'gradebook-outer-' : 'gradebook-';
+        const container = document.getElementById(`${prefix}spreadsheet-container`);
+        if (!container) return;
+        
+        // Prevent multiple initializations
+        if (container._gbInteractionsInited) return;
+        container._gbInteractionsInited = true;
+
+        // Drag to Scroll — distinguish drag vs click by movement distance
+        let isDown = false;
+        let startX, startY;
+        let scrollLeft, scrollTop;
+        let hasDragged = false;
+        const DRAG_THRESHOLD = 5; // px — below this = click, above = drag
+
+        container.addEventListener('mousedown', (e) => {
+            // Only allow left click
+            if (e.button !== 0) return;
+            if (e.target.tagName === 'INPUT' || e.target.closest('button') || e.target.closest('span[onclick]')) return;
+            
+            isDown = true;
+            hasDragged = false;
+            const rect = container.getBoundingClientRect();
+            startX = e.pageX - rect.left;
+            startY = e.pageY - rect.top;
+            scrollLeft = container.scrollLeft;
+            scrollTop = container.scrollTop;
+            
+            container.style.cursor = 'grabbing';
+            document.body.style.cursor = 'grabbing';
+            document.body.style.userSelect = 'none';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            
+            const rect = container.getBoundingClientRect();
+            const x = e.pageX - rect.left;
+            const y = e.pageY - rect.top;
+            const dx = Math.abs(x - startX);
+            const dy = Math.abs(y - startY);
+
+            if (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD) {
+                hasDragged = true;
+                e.preventDefault();
+                container.scrollLeft = scrollLeft - (x - startX) * 2;
+                container.scrollTop = scrollTop - (y - startY) * 2;
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (!isDown) return;
+            isDown = false;
+            container.style.cursor = 'grab';
+            document.body.style.cursor = 'default';
+            document.body.style.userSelect = 'auto';
+        });
+
+        // Only clear highlights on a real click (not end-of-drag)
+        container.addEventListener('click', (e) => {
+            if (hasDragged) {
+                e.stopPropagation();
+                hasDragged = false;
+                return;
+            }
+            if (e.target.tagName !== 'INPUT') {
+                clearGradebookHighlights(isOuter);
+            }
+        });
+
+        container.style.cursor = 'grab';
+    };
+
+    window.anchorGradebookColumn = function (input) {
+        const td = input.closest('td');
+        const tr = input.closest('tr');
+        const table = td.closest('table');
+        const container = td.closest('div'); // The overflow container
+        if (!td || !container || !table) return;
+
+        const isOuter = table.id.includes('outer');
+
+        // Selection Highlights
+        highlightGradebookColumn(td.cellIndex, isOuter);
+        highlightGradebookRow(tr, isOuter);
+
+
+        // Snap to Student Column: selected cell should be immediately to the right of the sticky column
+        const studentWidth = 200; // Width of the sticky student name column
+        const targetScroll = td.offsetLeft - studentWidth;
+
+        // Only scroll if we are not already in a good position or if it's a new selection
+        container.scrollTo({ left: targetScroll, behavior: 'smooth' });
+    };
+    let isDraggingGradebook = false;
+    let startY = 0;
+    let startHeight = 0;
+
+    function initGradebookDrag() {
+        const handle = document.getElementById('gradebook-outer-drag-handle');
+        const panel = document.getElementById('gradebook-outer-panel');
+        if (!handle || !panel) return;
+
+        handle.addEventListener('mousedown', (e) => {
+            isDraggingGradebook = true;
+            startY = e.clientY;
+            startHeight = panel.offsetHeight;
+            document.body.style.cursor = 'ns-resize';
+            document.body.style.userSelect = 'none';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDraggingGradebook) return;
+            const deltaY = startY - e.clientY;
+            const newHeight = startHeight + deltaY;
+            
+            // Limit to at least 1/8 (12.5%) and at most 98%
+            const minH = window.innerHeight * 0.125;
+            const maxH = window.innerHeight * 0.98;
+            
+            const clampedHeight = Math.min(maxH, Math.max(minH, newHeight));
+            panel.style.height = `${clampedHeight}px`;
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isDraggingGradebook) {
+                isDraggingGradebook = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
+    }
+
+    window.openGradebookOuterLayer = function (targetCategory = null, targetIndex = null, force = false) {
+        // RESTRICTION: Only open the pull-up panel if we are in the Topic Content (Workstation) view
+        // Skip this check when force=true (e.g. navigating here FROM the Gradebook)
+        if (!force) {
+            const topicSection = document.getElementById('section-topic-content');
+            if (!topicSection || topicSection.classList.contains('hidden')) return;
+        }
+
+        const layer = document.getElementById('gradebook-outer-layer');
+        if (!layer) return;
+
+        const { subjectId, selectedSection } = currentTopicState;
+        const subject = getTopicSubject(subjectId);
+        
+        // Sync Gradebook state
+        gradebookState.selectedSubject = subjectId;
+        gradebookState.selectedSection = selectedSection;
+        
+        if (targetCategory) {
+            gradebookState.currentView = targetCategory;
+        } else {
+            gradebookState.currentView = 'overview'; 
+        }
+        
+        gradebookState.isOuter = true; // Set outer mode
+
+        // Update UI Labels
+        const titleEl = document.getElementById('gradebook-outer-title');
+        if (titleEl) titleEl.textContent = subject ? (subject.text || subject.name) : 'Gradebooks';
+
+        layer.classList.remove('hidden');
+        renderGradebookSpreadsheet();
+
+        // Target Scrolling Logic
+        if (targetIndex !== null && targetIndex !== undefined) {
+            setTimeout(() => {
+                const spreadsheet = document.getElementById('gradebook-outer-spreadsheet');
+                const container = document.getElementById('gradebook-outer-spreadsheet-container');
+                if (spreadsheet && container) {
+                    // +2 because 1st column is students and nth-child is 1-based
+                    const headerCell = spreadsheet.querySelector(`thead th:nth-child(${targetIndex + 2})`);
+                    if (headerCell) {
+                        const studentWidth = 200;
+                        container.scrollTo({ left: headerCell.offsetLeft - studentWidth, behavior: 'smooth' });
+                        highlightGradebookColumn(targetIndex + 1, true); // +1 because cellIndex 0 is students
+                    }
+                }
+            }, 600);
+        }
+
+        // Initialize drag if not already done
+        if (!window._gbDragInitialized) {
+            initGradebookDrag();
+            window._gbDragInitialized = true;
+        }
+    };
+
+    window.closeGradebookOuterLayer = function () {
+        const layer = document.getElementById('gradebook-outer-layer');
+        if (layer) layer.classList.add('hidden');
+        gradebookState.isOuter = false; // Reset outer mode
+    };
+
+    window.navigateToAssessmentFromGradebook = function (category, index) {
+        const subjectId = gradebookState.selectedSubject;
+        const section = gradebookState.selectedSection;
+        
+        if (!subjectId) {
+            console.error('No subject selected in Gradebook');
+            return;
+        }
+
+        // Get the items to find the specific topic and assessment index
+        const items = getCategoryDetails(category);
+        const item = items[index];
+        if (!item) return;
+
+        const topicIdx = item.topicIdx !== undefined ? item.topicIdx : 0;
+        const itemIdx = item.itemIdx !== undefined ? item.itemIdx : 0;
+        let tab = category;
+        if (category === 'assignment') tab = 'assignments';
+        if (category === 'perf. task') tab = 'performance';
+        
+        let actualSubjectId = item.subjectId || subjectId;
+        
+        // Ensure we always use the system ID ('core-1') rather than the name ('General Mathematics')
+        if (typeof getAllSubjectsRaw === 'function') {
+            const allSubjects = getAllSubjectsRaw();
+            const foundSub = allSubjects.find(s => s.name === actualSubjectId || s.id === actualSubjectId);
+            if (foundSub) {
+                actualSubjectId = foundSub.id;
+            }
+        }
+        // 1. Sync section state BEFORE jumping to ensure workstation loads correctly
+        currentTopicState.selectedSection = section;
+        currentTopicState.subjectId = actualSubjectId;
+        
+        if (typeof gradebookStudents !== 'undefined' && gradebookStudents.length > 0) {
+            currentTopicState.selectedStudent = gradebookStudents[0].name;
+        }
+        
+        // 2. Jump directly to the specific Topic and Assessment in the Workstation
+        if (typeof window.openTopicContent === 'function') {
+            const stateOverrides = {
+                selectedSection: section,
+                selectedStudent: '' // Let the workstation pick the first student automatically for consistency
+            };
+            if (typeof gradebookStudents !== 'undefined' && gradebookStudents.length > 0) {
+                stateOverrides.selectedStudent = gradebookStudents[0].name;
+            }
+            window.openTopicContent(actualSubjectId, topicIdx, tab, itemIdx, true, stateOverrides);
+        }
+
+        // 3. Automatically open the outer layer panel and scroll to the relevant column
+        if (typeof window.openGradebookOuterLayer === 'function') {
+            window.openGradebookOuterLayer(category, index, true);
+        }
+    };
+
+    window.setGradebookOuterQuarter = function (q) {
+        gradebookState.currentQuarter = q;
+        
+        // Update UI tabs
+        document.querySelectorAll('.gradebook-outer-q-btn').forEach(btn => {
+            const btnQ = parseInt(btn.getAttribute('data-q'));
+            if (btnQ === q) {
+                btn.classList.add('bg-white', 'text-[#FFD000]', 'shadow-sm');
+                btn.classList.remove('text-black');
+            } else {
+                btn.classList.remove('bg-white', 'text-[#FFD000]', 'shadow-sm');
+                btn.classList.add('text-black');
+            }
+        });
+
+        const subtitleEl = document.getElementById('gradebook-outer-subtitle');
+        if (subtitleEl) {
+            const parts = subtitleEl.textContent.split(' • ');
+            subtitleEl.textContent = `${parts[0]} • Quarter ${q}`;
+        }
+
+        renderGradebookSpreadsheet();
+    };
+
     // Extended Student List
-    const gradebookStudents = [
-        { id: '2024-001', name: 'Dela Cruz, Juan' },
-        { id: '2024-002', name: 'Santos, Maria' },
-        { id: '2024-003', name: 'Garcia, Anna' },
-        { id: '2024-004', name: 'Mendoza, Carlo' },
-        { id: '2024-005', name: 'Reyes, Sofia' },
-        { id: '2024-006', name: 'Aquino, Paolo' },
-        { id: '2024-007', name: 'Bautista, Elena' },
-        { id: '2024-008', name: 'Castro, Miguel' },
-        { id: '2024-009', name: 'Domingo, Clara' },
-        { id: '2024-010', name: 'Estrada, Luis' },
-        { id: '2024-011', name: 'Fernando, Gina' },
-        { id: '2024-012', name: 'Guevarra, Rico' },
-        { id: '2024-013', name: 'Hernandez, Rosa' },
-        { id: '2024-014', name: 'Ibarra, Simon' },
-        { id: '2024-015', name: 'Javier, Teresa' }
-    ].sort((a, b) => a.name.localeCompare(b.name));
+    function getGradebookStudents() {
+        const section = gradebookState.selectedSection;
+        if (typeof studentsBySection !== 'undefined' && studentsBySection[section]) {
+            return studentsBySection[section];
+        }
+        // Fallback to legacy demo data if section not found
+        return [
+            { id: '2601031', name: 'Aquino, Paolo' },
+            { id: '2601032', name: 'Bautista, Elena' },
+            { id: '2601033', name: 'Castro, Miguel' },
+            { id: '2601034', name: 'Dela Cruz, Juan' },
+            { id: '2601035', name: 'Domingo, Clara' },
+            { id: '2601036', name: 'Estrada, Luis' },
+            { id: '2601037', name: 'Fernando, Gina' },
+            { id: '2601038', name: 'Garcia, Anna' },
+            { id: '2601039', name: 'Guevarra, Rico' },
+            { id: '2601040', name: 'Hernandez, Rosa' },
+            { id: '2601041', name: 'Ibarra, Simon' },
+            { id: '2601042', name: 'Javier, Teresa' },
+            { id: '2601043', name: 'Mendoza, Carlo' },
+            { id: '2601044', name: 'Reyes, Sofia' },
+            { id: '2601045', name: 'Santos, Maria' }
+        ].sort((a, b) => a.name.localeCompare(b.name));
+    }
 
     function calculateCategoryPercentage(studentId, category) {
-        const studentScores = gradebookScores[studentId]?.[category];
+        let subjectId = gradebookState.selectedSubject;
+        if (typeof getAllSubjectsRaw === 'function') {
+            const found = getAllSubjectsRaw().find(s => s.name === subjectId || s.id === subjectId);
+            if (found) subjectId = found.id;
+        }
+
+        const currentQ = gradebookState.currentQuarter;
+        const studentScores = gradebookScores[subjectId]?.[currentQ]?.[studentId]?.[category];
         if (!studentScores) return null;
 
         const details = getCategoryDetails(category);
@@ -6093,7 +9049,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function calculateCategoryTotalScore(studentId, category) {
-        const studentScores = gradebookScores[studentId]?.[category];
+        const studentScores = gradebookScores[gradebookState.currentQuarter]?.[studentId]?.[category];
         if (!studentScores) return null;
 
         const details = getCategoryDetails(category);
@@ -6111,59 +9067,146 @@ document.addEventListener('DOMContentLoaded', () => {
         return hasAny ? Number(totalScore.toFixed(1)) : null;
     }
 
+    function getAssessmentsForSubject(subjectId, category) {
+        const data = getTopicData(subjectId);
+        const quarterKey = `q${gradebookState.currentQuarter}Topics`;
+        const topics = data ? data[quarterKey] : null;
+        if (!topics) return [];
+
+        const generated = [];
+        const labels = {
+            'assignment': 'Assignment',
+            'quiz': 'Quiz',
+            'activity': 'Activity',
+            'perf. task': 'PT'
+        };
+        const label = labels[category] || category;
+
+        topics.forEach((topic, tIdx) => {
+            generated.push({
+                title: `${label} #1: Introduction to ${topic.title}`,
+                date: 'Mar 10, 2026',
+                max: 100,
+                subjectId: subjectId,
+                topicIdx: tIdx,
+                itemIdx: 0
+            });
+            generated.push({
+                title: `${label} #2: Advanced concepts in ${topic.title}`,
+                date: 'Mar 17, 2026',
+                max: 100,
+                subjectId: subjectId,
+                topicIdx: tIdx,
+                itemIdx: 1
+            });
+        });
+        return generated;
+    }
+
     const gradebookCategoryDetails = {
-        'assignment': [
-            { title: 'ASG #1', date: 'Mar 10, 2026', max: 20 },
-            { title: 'ASG #2', date: 'Mar 15, 2026', max: 20 },
-            { title: 'ASG #3', date: 'Mar 22, 2026', max: 20 },
-            { title: 'ASG #4', date: 'Apr 02, 2026', max: 20 },
-            { title: 'ASG #5', date: 'Apr 09, 2026', max: 20 },
-            { title: 'ASG #6', date: 'Apr 16, 2026', max: 20 },
-            { title: 'ASG #7', date: 'Apr 23, 2026', max: 20 },
-            { title: 'ASG #8', date: 'Apr 30, 2026', max: 20 },
-            { title: 'ASG #9', date: 'May 07, 2026', max: 20 },
-            { title: 'ASG #10', date: 'May 14, 2026', max: 20 },
-            { title: 'ASG #11', date: 'May 21, 2026', max: 20 },
-            { title: 'ASG #12', date: 'May 28, 2026', max: 20 }
-        ],
-        'quiz': [
-            { title: 'Quiz 1', date: 'Mar 12, 2026', max: 30 },
-            { title: 'Quiz 2', date: 'Mar 26, 2026', max: 30 },
-            { title: 'Quiz 3', date: 'Apr 08, 2026', max: 30 },
-            { title: 'Quiz 4', date: 'Apr 22, 2026', max: 30 },
-            { title: 'Quiz 5', date: 'May 06, 2026', max: 30 },
-            { title: 'Quiz 6', date: 'May 20, 2026', max: 30 },
-            { title: 'Quiz 7', date: 'Jun 03, 2026', max: 30 },
-            { title: 'Quiz 8', date: 'Jun 17, 2026', max: 30 }
-        ],
-        'activity': [
-            { title: 'ACT #1', date: 'Mar 08, 2026', max: 50 },
-            { title: 'ACT #2', date: 'Mar 18, 2026', max: 50 },
-            { title: 'ACT #3', date: 'Apr 01, 2026', max: 50 },
-            { title: 'ACT #4', date: 'Apr 15, 2026', max: 50 },
-            { title: 'ACT #5', date: 'Apr 29, 2026', max: 50 },
-            { title: 'ACT #6', date: 'May 13, 2026', max: 50 },
-            { title: 'ACT #7', date: 'May 27, 2026', max: 50 },
-            { title: 'ACT #8', date: 'Jun 10, 2026', max: 50 }
-        ],
-        'perf. task': [
-            { title: 'Scoring 1', date: 'Mar 20, 2026', max: 50 },
-            { title: 'Scoring 2', date: 'Apr 10, 2026', max: 60 },
-            { title: 'Scoring 3', date: 'May 01, 2026', max: 75 },
-            { title: 'Scoring 4', date: 'May 22, 2026', max: 80 },
-            { title: 'Scoring 5', date: 'Jun 12, 2026', max: 90 },
-            { title: 'Scoring 6', date: 'Jul 03, 2026', max: 100 },
-            { title: 'Scoring 7', date: 'Jul 24, 2026', max: 85 },
-            { title: 'Scoring 8', date: 'Aug 14, 2026', max: 95 }
-        ],
-        'qa': [
-            { title: 'Quarterly Exam', date: 'Mar 30, 2026', max: 100 }
-        ]
+        1: {
+            'assignment': [
+                { title: 'Assignment #1: Course Overview', date: 'Mar 10, 2026', max: 100 },
+                { title: 'Assignment #2: Basic Logic', date: 'Mar 15, 2026', max: 100 },
+                { title: 'Assignment #3: Speech Context', date: 'Mar 22, 2026', max: 100 },
+                { title: 'Assignment #4: Principles of Writing', date: 'Apr 02, 2026', max: 100 },
+                { title: 'Assignment #5: Self-Assessment', date: 'Apr 09, 2026', max: 100 }
+            ],
+            'quiz': [
+                { title: 'Quiz 1: Elements and Models', date: 'Mar 12, 2026', max: 100 },
+                { title: 'Quiz 2: Communication Models', date: 'Mar 26, 2026', max: 100 }
+            ],
+            'activity': [
+                { title: 'Activity #1: Introduction to Introduction', date: 'Mar 08, 2026', max: 100 },
+                { title: 'Activity #2: Advanced concepts in Introduction', date: 'Mar 18, 2026', max: 100 }
+            ],
+            'perf. task': [
+                { title: 'PT 1: Communication Project', date: 'Mar 20, 2026', max: 100 }
+            ],
+            'qa': [
+                { title: 'Quarterly Assessment', date: 'Mar 30, 2026', max: 100 }
+            ]
+        },
+        2: {
+            'assignment': [
+                { title: 'Assignment #1: Q2 Launch', date: 'Jun 10, 2026', max: 100 },
+                { title: 'Assignment #2: Midterm Research', date: 'Jun 15, 2026', max: 100 },
+                { title: 'Assignment #3: Applied Concepts', date: 'Jun 22, 2026', max: 100 }
+            ],
+            'quiz': [
+                { title: 'Quiz 1: Q2 Fundamentals', date: 'Jun 12, 2026', max: 100 },
+                { title: 'Quiz 2: Applied Logic', date: 'Jun 26, 2026', max: 100 }
+            ],
+            'activity': [
+                { title: 'Activity #1: Group Discussion', date: 'Jun 08, 2026', max: 100 },
+                { title: 'Activity #2: Field Work', date: 'Jun 18, 2026', max: 100 }
+            ],
+            'perf. task': [
+                { title: 'PT 1: Midterm Project', date: 'Jun 20, 2026', max: 100 }
+            ],
+            'qa': [
+                { title: '2nd Quarterly Exam', date: 'Jun 30, 2026', max: 100 }
+            ]
+        },
+        3: {
+            'assignment': [
+                { title: 'Assignment #1: Advanced Study', date: 'Sep 10, 2026', max: 100 },
+                { title: 'Assignment #2: Case Analysis', date: 'Sep 15, 2026', max: 100 }
+            ],
+            'quiz': [
+                { title: 'Quiz 1: Advanced Topics', date: 'Sep 12, 2026', max: 100 },
+                { title: 'Quiz 2: Specialized Concepts', date: 'Sep 26, 2026', max: 100 }
+            ],
+            'activity': [
+                { title: 'Activity #1: Workshop', date: 'Sep 08, 2026', max: 100 },
+                { title: 'Activity #2: Simulation', date: 'Sep 18, 2026', max: 100 }
+            ],
+            'perf. task': [
+                { title: 'PT 1: Specialized Project', date: 'Sep 20, 2026', max: 100 }
+            ],
+            'qa': [
+                { title: '3rd Quarterly Exam', date: 'Sep 30, 2026', max: 100 }
+            ]
+        },
+        4: {
+            'assignment': [
+                { title: 'Assignment #1: Final Review', date: 'Dec 10, 2026', max: 100 },
+                { title: 'Assignment #2: Portfolio Prep', date: 'Dec 15, 2026', max: 100 }
+            ],
+            'quiz': [
+                { title: 'Quiz 1: Final Assessment', date: 'Dec 12, 2026', max: 100 },
+                { title: 'Quiz 2: Year-end Review', date: 'Dec 26, 2026', max: 100 }
+            ],
+            'activity': [
+                { title: 'Activity #1: Reflection', date: 'Dec 08, 2026', max: 100 },
+                { title: 'Activity #2: Exhibition', date: 'Dec 18, 2026', max: 100 }
+            ],
+            'perf. task': [
+                { title: 'PT 1: Graduation Project', date: 'Dec 20, 2026', max: 100 }
+            ],
+            'qa': [
+                { title: 'Final Quarterly Exam', date: 'Dec 30, 2026', max: 100 }
+            ]
+        }
     };
 
     function getCategoryDetails(category) {
-        return gradebookCategoryDetails[category] || [];
+        // Dynamic connection: If a subject is selected in Gradebook, generate columns from topic data
+        const subjectKey = gradebookState.selectedSubject;
+        if (subjectKey) {
+            const all = getAllSubjectsRaw();
+            // Search by id first, then fall back to name match
+            const sub = all.find(s => s.id === subjectKey) || all.find(s => s.name === subjectKey);
+            if (sub) {
+                const dynamic = getAssessmentsForSubject(sub.id, category);
+                if (dynamic && dynamic.length > 0) return dynamic;
+            }
+        }
+        return (gradebookCategoryDetails[gradebookState.currentQuarter] || {})[category] || [];
     }
+
+
+
 
     function isGradebookDateEditable(category) {
         return category === 'qa';
@@ -6200,23 +9243,25 @@ document.addEventListener('DOMContentLoaded', () => {
         gradebookCategoryDetails[category][itemIndex].date = toDisplayDateValue(value);
     };
 
-    function renderQuarterlyOverview() {
-        const body = document.getElementById('gradebook-body');
-        const avgEl = document.getElementById('gradebook-avg');
-        const passingEl = document.getElementById('gradebook-passing');
-        const spreadsheet = document.getElementById('gradebook-spreadsheet');
-        const tableHead = spreadsheet.querySelector('thead');
+    function renderQuarterlyOverview(isOuter = false) {
+        const prefix = isOuter ? 'gradebook-outer-' : 'gradebook-';
+        const body = document.getElementById(`${prefix}body`);
+        const avgEl = document.getElementById(`${prefix}avg`);
+        const passingEl = document.getElementById(`${prefix}passing`);
+        const spreadsheet = document.getElementById(`${prefix}spreadsheet`);
+        const tableHead = spreadsheet?.querySelector('thead');
+        if (!body || !tableHead) return;
 
         const nameTh = `
-            <th class="w-48 px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-left border-r border-gray-50 bg-gray-100 sticky left-0 z-20">
-                Student Name
+            <th class="w-48 px-6 py-4 text-[10px] font-black text-black uppercase tracking-widest text-left border-r border-gray-50 bg-white sticky left-0 z-40">
+                Students
             </th>`;
 
         // Quarterly Categories (WW, PT, QA)
         const categories = [
-            { id: 'ww-sub', key: 'ww', label: 'Written Works', color: 'text-blue-600' },
-            { id: 'pt', key: 'pt', label: 'PETA', color: 'text-green-600' },
-            { id: 'qa', key: 'qa', label: 'Quarterly Assessment', color: 'text-purple-600' }
+            { id: 'ww-sub', key: 'ww', label: 'Written Works' },
+            { id: 'pt', key: 'pt', label: 'Performance Task' },
+            { id: 'qa', key: 'qa', label: 'Quarterly Assessment' }
         ];
 
         let headerHtml = nameTh;
@@ -6224,171 +9269,71 @@ document.addEventListener('DOMContentLoaded', () => {
             const weightValue = Number(gradebookState.weights?.[cat.key]);
             const weightLabel = Number.isFinite(weightValue) ? weightValue : 0;
             headerHtml += `
-                <th onclick="setGradebookView('${cat.id}')" 
-                    class="w-40 px-2 py-4 text-[9px] font-black text-gray-400 uppercase tracking-widest text-center bg-gray-100 border-r border-gray-50 cursor-pointer hover:bg-gray-200 transition-colors group">
+                <th onclick="window.setGradebookView('${cat.id}')" 
+                    class="w-40 px-2 py-4 text-[10px] font-black text-black uppercase tracking-widest text-center bg-gray-100 border-r border-gray-50 cursor-pointer hover:bg-gray-200 transition-colors group">
                     <div class="flex flex-col items-center gap-1.5">
-                        <span class="group-hover:text-icc transition-colors">${cat.label}</span>
+                        <span class="group-hover:text-[#FFD000] transition-colors">${cat.label}</span>
                         <span
-                            class="gradebook-weight ${cat.color} normal-case text-[10px] font-black tracking-tight cursor-pointer hover:underline"
+                            class="gradebook-weight text-black normal-case text-[12px] font-black tracking-tight cursor-pointer hover:underline"
                             role="button"
                             tabindex="0"
                             data-weight-key="${cat.key}"
                             onclick="event.stopPropagation();"
                         >${weightLabel}%</span>
-                        <i class="fa-solid fa-chevron-right text-[7px] text-gray-300 group-hover:text-icc"></i>
+                        <i class="fa-solid fa-chevron-right text-[7px] text-gray-300 group-hover:text-[#FFD000]"></i>
                     </div>
                 </th>`;
         });
 
         headerHtml += `
-            <th class="w-24 px-4 py-4 text-[10px] font-black text-icc uppercase tracking-widest text-center bg-icc/5 border-r border-icc/10">Initial</th>
-            <th class="w-24 px-4 py-4 text-[10px] font-black text-icc uppercase tracking-widest text-center bg-icc/10">Quarterly</th>
+            <th class="w-24 px-4 py-4 text-[10px] font-black text-[#FFD000] uppercase tracking-widest text-center bg-[#FFD000]/5 border-r border-[#FFD000]/10">Initial</th>
+            <th class="w-24 px-4 py-4 text-[10px] font-black text-[#FFD000] uppercase tracking-widest text-center bg-[#FFD000]/10">Quarterly</th>
         `;
+
         tableHead.innerHTML = `<tr class="border-b border-gray-200">${headerHtml}</tr>`;
-
-        const clampToInt = (value) => {
-            const cleaned = String(value ?? '').replace(/[^\d]/g, '');
-            if (!cleaned) return null;
-            const parsed = Math.floor(Number(cleaned));
-            if (!Number.isFinite(parsed)) return null;
-            return Math.min(100, Math.max(0, parsed));
-        };
-
-        const applyWeightUpdate = (key, nextValue) => {
-            const weights = { ...(gradebookState.weights || { ww: 25, pt: 50, qa: 25 }) };
-            const current = Number(weights[key]);
-            const next = clampToInt(nextValue);
-            if (next === null) return false;
-
-            const otherKeys = ['ww', 'pt', 'qa'].filter(k => k !== key);
-            const finalValue = Math.min(100, Math.max(0, next));
-            weights[key] = finalValue;
-
-            // Keep TOTAL <= 100 by reducing other weights automatically.
-            let total = ['ww', 'pt', 'qa'].reduce((sum, k) => sum + (Number(weights[k]) || 0), 0);
-            if (total > 100) {
-                let overflow = total - 100;
-                // Reduce other keys first (largest-first) so the edited value stays as requested.
-                const reducers = otherKeys
-                    .map(k => ({ k, v: Number(weights[k]) || 0 }))
-                    .sort((a, b) => b.v - a.v);
-
-                for (const item of reducers) {
-                    if (overflow <= 0) break;
-                    const take = Math.min(item.v, overflow);
-                    weights[item.k] = item.v - take;
-                    overflow -= take;
-                }
-            }
-
-            if (!Number.isFinite(current) || finalValue !== current) {
-                gradebookState.weights = weights;
-                saveGradebookWeights(weights);
-                renderGradebookSpreadsheet();
-            }
-            return true;
-        };
+        initGradebookInteractions(isOuter);
 
         const weightsEls = tableHead.querySelectorAll('.gradebook-weight[data-weight-key]');
         weightsEls.forEach(el => {
-            const key = el.dataset.weightKey;
-            if (!key) return;
-
-            const startEdit = () => {
-                el.setAttribute('contenteditable', 'true');
-                el.classList.add('underline');
-                el.textContent = String(Number(gradebookState.weights?.[key] ?? 0));
-                el.focus();
-                document.getSelection()?.selectAllChildren(el);
-            };
-
-            const finishEdit = (commit = true) => {
-                el.removeAttribute('contenteditable');
-                el.classList.remove('underline');
-                const committed = commit ? applyWeightUpdate(key, el.textContent) : false;
-                const shown = Number(gradebookState.weights?.[key] ?? 0);
-                el.textContent = `${shown}%`;
-                return committed;
-            };
-
-            const sanitizeLive = () => {
-                // Enforce: digits only, max 100 while typing/pasting
-                const rawDigits = String(el.textContent ?? '').replace(/[^\d]/g, '').slice(0, 3);
-                const next = rawDigits ? Math.floor(Number(rawDigits)) : 0;
-                const clamped = Math.min(100, Math.max(0, Number.isFinite(next) ? next : 0));
-
-                const desired = String(clamped);
-                if (el.textContent !== desired) {
-                    el.textContent = desired;
-                    const range = document.createRange();
-                    range.selectNodeContents(el);
-                    range.collapse(false);
-                    const sel = window.getSelection();
-                    sel?.removeAllRanges();
-                    sel?.addRange(range);
-                }
-            };
-
             el.addEventListener('click', (event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                startEdit();
-            });
-
-            el.addEventListener('input', () => {
-                if (el.isContentEditable) sanitizeLive();
-            });
-
-            el.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    finishEdit(true);
-                } else if (event.key === 'Escape') {
-                    event.preventDefault();
-                    finishEdit(false);
-                } else {
-                    // Only allow digits + control keys
-                    const allowedKeys = new Set(['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Tab']);
-                    if (allowedKeys.has(event.key)) return;
-                    if (!/^\d$/.test(event.key)) {
-                        event.preventDefault();
-                    }
+                if (typeof window.openGradebookWeightPicker === 'function') {
+                    window.openGradebookWeightPicker(event.currentTarget);
                 }
             });
-
-            el.addEventListener('blur', () => finishEdit(true));
         });
 
         // Render Rows for Quarterly Mode
-        body.innerHTML = gradebookStudents.map((student, index) => {
+        body.innerHTML = getGradebookStudents().map((student, index) => {
             const wwPct = calculateWrittenWorksComponent(student.id);
             const ptPct = calculatePTPercentage(student.id);
             const qaPct = calculateQAPercentage(student.id);
             const initialGrade = calculateQuarterlyInitialGrade(student.id);
 
             return `
-                <tr class="bg-gray-50/30 hover:bg-gray-50/60 transition-colors group">
-                    <td class="px-4 py-2 border-r border-gray-50 bg-gray-50 sticky left-0 z-10 group-hover:bg-gray-100 transition-colors">
-                        <p class="text-[12px] font-bold text-gray-800">${student.name}</p>
+                <tr class="bg-gray-50/30 transition-colors group">
+                    <td class="px-4 py-2 border-r border-gray-50 bg-white sticky left-0 z-10 transition-colors cursor-pointer hover:bg-gray-100" onclick="event.stopPropagation(); highlightGradebookRow(this.closest('tr'), ${isOuter}); if(typeof window.selectTopicStudent === 'function') window.selectTopicStudent('${student.name.replace(/'/g, "\\'")}');">
+                        <p class="text-[12px] font-bold text-black whitespace-nowrap overflow-hidden text-ellipsis w-[160px]">${student.name}</p>
                         <p class="text-[8px] text-gray-400 font-medium uppercase tracking-widest">ID: ${student.id}</p>
                     </td>
-                    <td class="px-2 py-2 text-center border-r border-gray-50 text-xs font-black ${wwPct ? 'text-blue-600' : 'text-gray-300'}">${wwPct ? wwPct + '%' : '—'}</td>
-                    <td class="px-2 py-2 text-center border-r border-gray-50 text-xs font-black ${ptPct ? 'text-green-600' : 'text-gray-300'}">${ptPct ? ptPct + '%' : '—'}</td>
-                    <td class="px-2 py-2 text-center border-r border-gray-50 text-xs font-black ${qaPct ? 'text-purple-600' : 'text-gray-300'}">${qaPct ? qaPct + '%' : '—'}</td>
+                    <td class="px-2 py-2 text-center border-r border-gray-50 text-xs font-black cursor-pointer hover:bg-gray-100 transition-all ${wwPct ? 'text-blue-600' : 'text-black'}">${wwPct ? wwPct + '%' : '<span class="gradebook-dash">-</span>'}</td>
+                    <td class="px-2 py-2 text-center border-r border-gray-50 text-xs font-black cursor-pointer hover:bg-gray-100 transition-all ${ptPct ? 'text-green-600' : 'text-black'}">${ptPct ? ptPct + '%' : '<span class="gradebook-dash">-</span>'}</td>
+                    <td class="px-2 py-2 text-center border-r border-gray-50 text-xs font-black cursor-pointer hover:bg-gray-100 transition-all ${qaPct ? 'text-purple-600' : 'text-black'}">${qaPct ? qaPct + '%' : '<span class="gradebook-dash">-</span>'}</td>
                     
-                    <td class="px-4 py-2 text-center bg-icc/5 border-r border-icc/10 text-xs font-black text-icc">${formatInitialGrade(initialGrade)}</td>
-                    <td class="px-4 py-2 text-center bg-icc/10 text-xs font-black text-icc">${formatFinalGrade(initialGrade)}</td>
+                    <td class="px-4 py-2 text-center bg-icc/5 border-r border-icc/10 text-xs font-black text-[#15803d] tracking-widest cursor-pointer hover:bg-green-50 transition-all">${initialGrade !== null ? formatInitialGrade(initialGrade) : '<span class="gradebook-dash">-</span>'}</td>
+                    <td class="px-4 py-2 text-center bg-icc/10 text-xs font-black text-[#15803d] tracking-widest cursor-pointer hover:bg-green-100 transition-all">${initialGrade !== null ? formatFinalGrade(initialGrade) : '<span class="gradebook-dash">-</span>'}</td>
                 </tr>
             `;
         }).join('');
 
-        const quarterlyScores = gradebookStudents.map(student => calculateQuarterlyInitialGrade(student.id)).filter(value => value !== null);
+        const quarterlyScores = getGradebookStudents().map(student => calculateQuarterlyInitialGrade(student.id)).filter(value => value !== null);
         if (avgEl) avgEl.textContent = quarterlyScores.length
             ? `${(quarterlyScores.reduce((sum, value) => sum + value, 0) / quarterlyScores.length).toFixed(1)}%`
-            : '—';
+            : '-';
         if (passingEl) passingEl.textContent = quarterlyScores.length
             ? `${Math.round((quarterlyScores.filter(value => value >= 75).length / quarterlyScores.length) * 100)}%`
-            : '—';
+            : '-';
     }
 
     function calculateWWTotalScore(studentId) {
@@ -6397,7 +9342,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let hasAnyScore = false;
 
         cats.forEach(cat => {
-            const scores = gradebookScores[studentId]?.[cat];
+            const scores = gradebookScores[gradebookState.currentQuarter]?.[studentId]?.[cat];
             if (scores) {
                 const details = getCategoryDetails(cat);
                 details.forEach((item, index) => {
@@ -6451,11 +9396,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function formatInitialGrade(value) {
-        return value === null ? '—' : `${value.toFixed(1)}%`;
+        return value === null ? '-' : `${value.toFixed(1)}%`;
     }
 
     function formatFinalGrade(value) {
-        return value === null ? '—' : `${Math.round(value)}%`;
+        return value === null ? '-' : `${Math.round(value)}%`;
     }
 
     function calculateQuarterlyInitialGrade(studentId) {
@@ -6470,38 +9415,35 @@ document.addEventListener('DOMContentLoaded', () => {
         ]);
     }
 
-    function renderWWSubCategories() {
-        document.getElementById('gradebook-drag-toolbar')?.classList.add('hidden');
-        const body = document.getElementById('gradebook-body');
-        const spreadsheet = document.getElementById('gradebook-spreadsheet');
-        const tableHead = spreadsheet.querySelector('thead');
-
-        const nameTh = `
-            <th class="w-48 px-4 py-2 text-[9px] font-black text-gray-400 uppercase tracking-widest text-left border-r border-gray-50 bg-gray-100 sticky left-0 z-20 min-w-[200px]">
-                <div class="flex items-center gap-2">
-                    <button onclick="setGradebookView('overview')" class="bg-gray-50 w-6 h-6 flex items-center justify-center border border-gray-200 rounded hover:border-icc hover:text-icc transition-all">
-                        <i class="fa-solid fa-arrow-left text-[9px]"></i>
-                    </button>
-                    <div>
-                        <p class="text-icc font-black text-[10px]">WRITTEN WORKS</p>
-                        <p class="text-[8px] text-gray-400 mt-0.5">${getGradebookPeriodLabel()}</p>
-                    </div>
-                </div>
-            </th>`;
+    function renderWWSubCategories(isOuter = false) {
+        const prefix = isOuter ? 'gradebook-outer-' : 'gradebook-';
+        const body = document.getElementById(`${prefix}body`);
+        const spreadsheet = document.getElementById(`${prefix}spreadsheet`);
+        const tableHead = spreadsheet?.querySelector('thead');
+        if (!body || !tableHead) return;
 
         const subCats = [
-            { id: 'assignment', label: 'Assignment', icon: 'fa-book-open', color: 'text-blue-500' },
+            { id: 'assignment', label: 'Assignment', icon: 'fa-file-pen', color: 'text-blue-500' },
             { id: 'quiz', label: 'Quiz', icon: 'fa-vial', color: 'text-orange-500' },
             { id: 'activity', label: 'Activity', icon: 'fa-puzzle-piece', color: 'text-indigo-500' }
         ];
 
-        let headerHtml = nameTh;
+        let headerHtml = `
+            <th class="w-48 px-6 py-4 text-[10px] font-black text-black uppercase tracking-widest text-left border-r border-gray-50 bg-white sticky left-0 z-20">
+                <div class="flex items-center gap-2">
+                    <button onclick="window.setGradebookView('overview')" class="w-8 h-8 rounded-full bg-[#15803d] flex items-center justify-center text-white hover:bg-[#116631] transition-colors">
+                        <i class="fa-solid fa-chevron-left text-[11px]"></i>
+                    </button>
+                    <span>Students</span>
+                </div>
+            </th>`;
+
         subCats.forEach(cat => {
             const details = getCategoryDetails(cat.id);
             const includedItemIndexes = new Set();
 
-            gradebookStudents.forEach(student => {
-                const scores = gradebookScores[student.id]?.[cat.id];
+            getGradebookStudents().forEach(student => {
+                const scores = gradebookScores[gradebookState.currentQuarter]?.[student.id]?.[cat.id];
                 if (!scores) return;
                 details.forEach((item, index) => {
                     const value = scores[index];
@@ -6517,15 +9459,11 @@ document.addEventListener('DOMContentLoaded', () => {
             );
 
             headerHtml += `
-                <th onclick="setGradebookView('${cat.id}')" 
-                    class="w-40 px-2 py-2 text-[8px] font-black text-gray-400 uppercase tracking-widest text-center bg-gray-100 border-r border-gray-50 cursor-pointer hover:bg-gray-200 transition-colors group">
-                    <div class="flex flex-col items-center gap-1">
-                        <div class="w-5 h-5 rounded bg-gray-50 flex items-center justify-center ${cat.color} group-hover:bg-white transition-all shadow-sm border border-gray-100">
-                            <i class="fa-solid ${cat.icon} text-[9px]"></i>
-                        </div>
-                        <span class="group-hover:text-icc transition-colors">${cat.label}</span>
-                        <span class="normal-case text-[9px] font-extrabold tracking-normal text-gray-500">Total Perfect:${includedItemIndexes.size ? ` ${totalPerfectScore}` : ''}</span>
-                        <i class="fa-solid fa-chevron-right text-[6px] text-gray-300 group-hover:text-icc"></i>
+                <th onclick="window.setGradebookView('${cat.id}')" 
+                    class="w-40 px-2 py-4 text-[10px] font-black text-black uppercase tracking-widest text-center bg-gray-100 border-r border-gray-50 cursor-pointer hover:bg-gray-200 transition-colors group">
+                    <div class="flex flex-col items-center gap-1.5">
+                        <span class="group-hover:text-[#FFD000] transition-colors">${cat.label}</span>
+                        <span class="normal-case text-[10px] font-extrabold tracking-normal text-gray-400">Max Score:${includedItemIndexes.size ? ` ${totalPerfectScore}` : ''}</span>
                     </div>
                 </th>`;
         });
@@ -6535,6 +9473,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         tableHead.innerHTML = `<tr class="border-b border-gray-200">${headerHtml}</tr>`;
+        initGradebookInteractions(isOuter);
 
         // Render Rows
         body.innerHTML = gradebookStudents.map((student, index) => {
@@ -6544,41 +9483,43 @@ document.addEventListener('DOMContentLoaded', () => {
             const percentageScore = calculateWWPercentageScore(student.id);
 
             return `
-                 <tr class="bg-gray-50/30 hover:bg-gray-50/60 transition-colors group">
-                     <td class="px-4 py-2 border-r border-gray-50 bg-gray-50 sticky left-0 z-10 group-hover:bg-gray-100 transition-colors">
-                         <p class="text-[12px] font-bold text-gray-800">${student.name}</p>
+                 <tr class="bg-gray-50/30 transition-colors group">
+                     <td class="px-4 py-2 border-r border-gray-50 bg-white sticky left-0 z-10 transition-colors cursor-pointer hover:bg-gray-100" onclick="event.stopPropagation(); highlightGradebookRow(this.closest('tr'), ${isOuter}); if(typeof window.selectTopicStudent === 'function') window.selectTopicStudent('${student.name.replace(/'/g, "\\'")}');">
+                         <p class="text-[12px] font-bold text-black whitespace-nowrap overflow-hidden text-ellipsis w-[160px]">${student.name}</p>
                          <p class="text-[8px] text-gray-400 font-medium uppercase tracking-widest">ID: ${student.id}</p>
                      </td>
-                    <td class="px-2 py-2 text-center border-r border-gray-50 text-xs font-black ${asgTotal !== null ? 'text-blue-600' : 'text-gray-300'}">${asgTotal !== null ? asgTotal : '—'}</td>
-                    <td class="px-2 py-2 text-center border-r border-gray-50 text-xs font-black ${quizTotal !== null ? 'text-orange-600' : 'text-gray-300'}">${quizTotal !== null ? quizTotal : '—'}</td>
-                    <td class="px-2 py-2 text-center border-r border-gray-50 text-xs font-black ${actTotal !== null ? 'text-indigo-600' : 'text-gray-300'}">${actTotal !== null ? actTotal : '—'}</td>
-                    <td class="px-4 py-2 text-center bg-icc/5 border-r border-icc/10 text-xs font-black text-icc">${percentageScore !== null ? percentageScore + '%' : '—'}</td>
+                    <td class="px-2 py-2 text-center border-r border-gray-50 text-xs font-black cursor-pointer hover:bg-gray-100 transition-all ${asgTotal !== null ? 'text-blue-600' : 'text-black'}">${asgTotal !== null ? asgTotal : '<span class="gradebook-dash">-</span>'}</td>
+                    <td class="px-2 py-2 text-center border-r border-gray-50 text-xs font-black cursor-pointer hover:bg-gray-100 transition-all ${quizTotal !== null ? 'text-orange-600' : 'text-black'}">${quizTotal !== null ? quizTotal : '<span class="gradebook-dash">-</span>'}</td>
+                    <td class="px-2 py-2 text-center border-r border-gray-50 text-xs font-black cursor-pointer hover:bg-gray-100 transition-all ${actTotal !== null ? 'text-indigo-600' : 'text-black'}">${actTotal !== null ? actTotal : '<span class="gradebook-dash">-</span>'}</td>
+                    <td class="px-4 py-2 text-center bg-icc/5 border-r border-icc/10 text-xs font-black cursor-pointer hover:bg-green-50 transition-all ${percentageScore !== null ? 'text-icc' : 'text-black'}">${percentageScore !== null ? percentageScore + '%' : '<span class="gradebook-dash">-</span>'}</td>
                  </tr>
             `;
         }).join('');
     }
 
-    function renderGradebookDetailView(category) {
-        document.getElementById('gradebook-drag-toolbar')?.classList.remove('hidden');
-        const body = document.getElementById('gradebook-body');
-        const spreadsheet = document.getElementById('gradebook-spreadsheet');
-        const tableHead = spreadsheet.querySelector('thead');
-        const detailCategory = category === 'pt' ? 'perf. task' : category;
+    function renderGradebookDetailView(category, isOuter = false) {
+        const prefix = isOuter ? 'gradebook-outer-' : 'gradebook-';
+        if (!isOuter) document.getElementById('gradebook-drag-toolbar')?.classList.remove('hidden');
+        
+        const body = document.getElementById(`${prefix}body`);
+        const spreadsheet = document.getElementById(`${prefix}spreadsheet`);
+        const tableHead = spreadsheet?.querySelector('thead');
+        if (!body || !tableHead) return;
 
+        const detailCategory = category === 'pt' ? 'perf. task' : category;
         const items = getCategoryDetails(detailCategory);
 
         const isWWSub = ['assignment', 'quiz', 'activity'].includes(detailCategory);
         const backView = isWWSub ? 'ww-sub' : 'overview';
 
         const nameHeaderCell = `
-            <th class="w-48 px-4 py-2 text-[9px] font-black text-gray-400 uppercase tracking-widest text-left border-r border-gray-50 bg-gray-100 sticky left-0 z-20 min-w-[200px]">
-                <div class="flex items-center gap-2">
-                    <button onclick="setGradebookView('${backView}')" class="bg-gray-50 w-6 h-6 flex items-center justify-center border border-gray-200 rounded hover:border-icc hover:text-icc transition-all">
-                        <i class="fa-solid fa-arrow-left text-[9px]"></i>
+            <th class="w-48 px-4 py-2 text-[10px] font-black text-black uppercase tracking-widest text-left border-r border-gray-50 bg-white sticky left-0 z-40 min-w-[200px]">
+                <div class="flex items-center gap-5">
+                    <button onclick="window.setGradebookView('${backView}')" class="bg-[#15803d] w-8 h-8 flex items-center justify-center rounded-full text-white hover:bg-[#116631] transition-all shadow-sm">
+                        <i class="fa-solid fa-chevron-left text-[11px]"></i>
                     </button>
                     <div>
-                        <p class="text-icc font-black text-[10px]">${detailCategory.toUpperCase()}</p>
-                        <p class="text-[8px] text-gray-400 mt-0.5">${getGradebookPeriodLabel()}</p>
+                        <p class="text-black font-black text-[10px]">Students</p>
                     </div>
                 </div>
             </th>
@@ -6586,62 +9527,83 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let headerHtml = `<tr class="border-b border-gray-200">${nameHeaderCell}`;
 
-        items.forEach(item => {
+        items.forEach((item, idx) => {
             headerHtml += `
-                <th class="w-32 min-w-[140px] px-2 py-2 text-[8px] font-black text-gray-400 uppercase tracking-widest text-center bg-white border-r border-gray-50">
-                    <div class="flex flex-col items-center gap-1">
+                <th class="w-[140px] min-w-[140px] max-w-[140px] px-2 py-2 text-[8px] font-black text-gray-400 uppercase tracking-widest text-center bg-white border-r border-gray-50">
+                    <div class="flex flex-col items-center gap-1 w-full">
                         ${isGradebookDateEditable(detailCategory)
                     ? `<input type="date"
                                       value="${toInputDateValue(item.date)}"
+                                      onkeydown="if(event.key === 'Enter') this.blur();"
                                       onchange="updateGradebookDate('${detailCategory}', ${items.indexOf(item)}, this.value)"
-                                      class="w-full max-w-[122px] bg-transparent border-none text-[9px] font-black text-icc tracking-widest text-center focus:ring-1 focus:ring-icc/20 rounded outline-none">`
-                    : `<span class="text-[9px] font-black text-icc uppercase tracking-widest">${item.date}</span>`}
-                        <span class="text-gray-800 text-[10px] font-bold">${item.title}</span>
-                        <span class="text-[8px] opacity-50">/${item.max}</span>
+                                      class="w-full max-w-[122px] bg-transparent border-none text-[9px] font-black text-[#FFD000] tracking-widest text-center focus:ring-1 focus:ring-[#FFD000]/20 rounded outline-none">`
+                    : `<span class="text-[9px] font-black text-[#FFD000] uppercase tracking-widest">${item.date}</span>`}
+                        <span class="text-black text-[10px] font-bold cursor-pointer hover:text-[#FFD000] whitespace-normal break-words w-full" 
+                              onclick="event.stopPropagation(); window.navigateToAssessmentFromGradebook('${detailCategory}', ${idx})">
+                            ${item.title}
+                        </span>
+                        <span class="text-[8px] text-black font-bold mt-1">/${item.max}</span>
                     </div>
                 </th>`;
         });
 
+        // Add 10 empty placeholder columns for "Excel" feel
+        for (let i = 0; i < 10; i++) {
+            headerHtml += `<th class="w-[140px] min-w-[140px] max-w-[140px] bg-white border-r border-gray-50 gb-empty-cell"></th>`;
+        }
+
         headerHtml += `</tr>`;
         tableHead.innerHTML = headerHtml;
+        initGradebookInteractions(isOuter);
 
         // Render Rows
-        body.innerHTML = gradebookStudents.map((student, index) => `
-            <tr class="bg-gray-50/30 hover:bg-gray-50/60 transition-colors group">
-                <td class="px-4 py-2 border-r border-gray-50 bg-gray-50 sticky left-0 z-10 group-hover:bg-gray-100 transition-colors">
-                    <p class="text-[12px] font-bold text-gray-800">${student.name}</p>
+        body.innerHTML = getGradebookStudents().map((student, index) => `
+            <tr class="bg-gray-50/30 transition-colors group">
+                <td class="px-4 py-2 border-r border-gray-50 bg-white sticky left-0 z-10 transition-colors cursor-pointer hover:bg-gray-100" onclick="event.stopPropagation(); highlightGradebookRow(this.closest('tr'), ${isOuter}); if(typeof window.selectTopicStudent === 'function') window.selectTopicStudent('${student.name.replace(/'/g, "\\'")}');">
+                    <p class="text-[12px] font-bold text-black whitespace-nowrap overflow-hidden text-ellipsis w-[160px]">${student.name}</p>
                     <p class="text-[8px] text-gray-400 font-medium uppercase tracking-widest">ID: ${student.id}</p>
                 </td>
-                ${items.map((item, index) => {
-            const savedScore = gradebookScores[student.id]?.[detailCategory]?.[index] || '';
+        ${items.map((item, idx) => {
+            const subjectId = gradebookState.selectedSubject;
+            const currentQ = gradebookState.currentQuarter;
+            const savedScore = gradebookScores[subjectId]?.[currentQ]?.[student.id]?.[detailCategory]?.[idx] || '-';
+            const savedStatus = gradebookStatuses[subjectId]?.[currentQ]?.[student.id]?.[detailCategory]?.[idx] || '';
+
+            let statusClass = '';
+            if (savedStatus === 'missing') statusClass = 'gradebook-status-missing';
+            else if (savedStatus === 'incomplete') statusClass = 'gradebook-status-incomplete';
+            else if (savedStatus === 'absent') statusClass = 'gradebook-status-absent';
+            else if (savedStatus === 'excuse') statusClass = 'gradebook-status-excuse';
+
             return `
-                        <td class="min-w-[140px] px-2 py-2 text-center border-r border-gray-50 transition-all duration-300"
+                        <td class="w-[140px] min-w-[140px] max-w-[140px] px-2 py-2 text-center border-r border-gray-50 transition-all duration-300 group ${statusClass}"
                             ondragover="handleGradebookDragOver(event)"
                             ondragleave="handleGradebookDragLeave(event)"
                             ondrop="handleGradebookDrop(event)">
-                            <div class="flex flex-col items-center gap-1 pointer-events-none">
-                                <input type="number" placeholder="—" 
+                            <div class="flex flex-col items-center gap-1 pointer-events-none w-full">
+                                <input type="number" placeholder="-" 
                                        value="${savedScore}"
                                        min="0"
                                        max="${item.max}"
-                                       onmousedown="event.stopPropagation()"
-                                       onclick="event.stopPropagation()"
-                                       onpointerdown="event.stopPropagation()"
-                                       oninput="enforceStudentScoreInput(this, '${detailCategory}', ${index})"
-                                       onchange="updateStudentScore('${student.id}', '${detailCategory}', ${index}, this.value)"
-                                       class="w-16 py-0.5 bg-transparent border-none text-[11px] font-bold text-center focus:ring-1 focus:ring-icc/30 outline-none rounded transition-all hover:bg-gray-100 pointer-events-auto">
+                                       onfocus="anchorGradebookColumn(this);"
+                                       onblur="/* Selection remains */"
+                                       onkeydown="if(event.key === 'Enter') { clearGradebookHighlights(${isOuter}, true); this.blur(); }"
+                                       oninput="enforceStudentScoreInput(this, '${detailCategory}', ${idx}); window.updateStudentScore('${student.id}', '${detailCategory}', ${idx}, this.value, '${student.name.replace(/'/g, "\\'")}')"
+                                       onchange=""
+                                       class="w-16 py-0.5 bg-transparent border-none text-[11px] font-bold text-center outline-none rounded transition-all hover:bg-gray-100 pointer-events-auto">
                                 
-                                <div class="status-group flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto">
-                                    <button onclick="toggleStudentStatus(this, 'missing')" title="Missing" class="status-btn w-4 h-4 rounded-full border border-gray-200 flex items-center justify-center text-[7px] text-gray-300 hover:border-red-400 transition-all">
+
+                                <div class="status-group flex items-center justify-center gap-1 opacity-0 focus-within:opacity-100 transition-opacity pointer-events-auto">
+                                    <button onclick="event.stopPropagation(); toggleStudentStatus(this, 'missing', '${student.id}', '${detailCategory}', ${idx})" title="Missing" class="status-btn w-6 h-6 rounded-full border border-transparent bg-gray-200 flex items-center justify-center text-[10px] text-black transition-all ${savedStatus === 'missing' ? 'active-status' : ''}">
                                         <i class="fa-solid fa-circle-xmark"></i>
                                     </button>
-                                    <button onclick="toggleStudentStatus(this, 'incomplete')" title="Incomplete" class="status-btn w-4 h-4 rounded-full border border-gray-200 flex items-center justify-center text-[7px] text-gray-300 hover:border-amber-400 transition-all">
+                                    <button onclick="event.stopPropagation(); toggleStudentStatus(this, 'incomplete', '${student.id}', '${detailCategory}', ${idx})" title="Incomplete" class="status-btn w-6 h-6 rounded-full border border-transparent bg-gray-200 flex items-center justify-center text-[10px] text-black transition-all ${savedStatus === 'incomplete' ? 'active-status' : ''}">
                                         <i class="fa-solid fa-circle-exclamation"></i>
                                     </button>
-                                    <button onclick="toggleStudentStatus(this, 'absent')" title="Absent" class="status-btn w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center text-[7px] text-gray-400 hover:border-black transition-all">
+                                    <button onclick="event.stopPropagation(); toggleStudentStatus(this, 'absent', '${student.id}', '${detailCategory}', ${idx})" title="Absent" class="status-btn w-6 h-6 rounded-full border border-transparent bg-gray-200 flex items-center justify-center text-[10px] text-black transition-all ${savedStatus === 'absent' ? 'active-status' : ''}">
                                         <i class="fa-solid fa-user-slash"></i>
                                     </button>
-                                    <button onclick="toggleStudentStatus(this, 'excuse')" title="Excuse" class="status-btn w-4 h-4 rounded-full border border-gray-200 flex items-center justify-center text-[7px] text-gray-300 hover:border-blue-400 transition-all">
+                                    <button onclick="event.stopPropagation(); toggleStudentStatus(this, 'excuse', '${student.id}', '${detailCategory}', ${idx})" title="Excuse" class="status-btn w-6 h-6 rounded-full border border-transparent bg-gray-200 flex items-center justify-center text-[10px] text-black transition-all ${savedStatus === 'excuse' ? 'active-status' : ''}">
                                         <i class="fa-solid fa-file-signature"></i>
                                     </button>
                                 </div>
@@ -6649,78 +9611,148 @@ document.addEventListener('DOMContentLoaded', () => {
                         </td>
                     `;
         }).join('')}
+                ${Array(10).fill('<td class="min-w-[140px] border-r border-gray-50 gb-empty-cell"></td>').join('')}
             </tr>
         `).join('');
     }
 
-    window.updateStudentScore = (studentId, category, itemIndex, value) => {
-        if (!gradebookScores[studentId]) gradebookScores[studentId] = {};
-        if (!gradebookScores[studentId][category]) gradebookScores[studentId][category] = {};
-        const itemMax = getCategoryDetails(category)?.[itemIndex]?.max;
-        const numericValue = value === '' ? '' : Number(value);
-        const normalizedValue = value === ''
-            ? ''
-            : Math.min(itemMax ?? numericValue, Math.max(0, numericValue));
-        gradebookScores[studentId][category][itemIndex] = normalizedValue;
+    window.syncWorkstationScore = (studentId, category, itemIndex, value, studentName) => {
+        const wsValue = document.getElementById('workstation-score-value');
+        const wsStatus = document.getElementById('workstation-graded-status');
+        if (!wsValue) return;
 
-        // Visual feedback
-        const input = event.target;
-        if (input && value !== '') input.value = normalizedValue;
-        const td = input.closest('td');
-
-        // Clear any status bg if manual score entered
-        if (td) {
-            const statusColors = ['bg-red-100', 'bg-amber-100', 'bg-gray-200', 'bg-blue-100'];
-            statusColors.forEach(c => td.classList.remove(c));
-
-            // Also reset status buttons
-            const statusGroup = td.querySelector('.status-group');
-            if (statusGroup) {
-                statusGroup.querySelectorAll('.status-btn').forEach(b => {
-                    b.classList.remove('text-red-700', 'bg-red-100', 'border-red-300',
-                        'text-amber-700', 'bg-amber-100', 'border-amber-300',
-                        'text-black', 'bg-gray-200', 'border-black',
-                        'text-blue-700', 'bg-blue-100', 'border-blue-300');
-                    b.classList.add('text-gray-300', 'bg-transparent', 'border-gray-200');
-                });
+        // Auto-Follow Focus: Switch workstation focus to the student being graded
+        const currentStudentName = currentTopicState.selectedStudent || '';
+        if (studentName && currentStudentName !== studentName) {
+            currentTopicState.selectedStudent = studentName;
+            const btn = document.getElementById('topic-student-picker-btn');
+            if (btn) {
+                const span = btn.querySelector('span');
+                if (span) span.textContent = studentName;
             }
         }
 
-        input.classList.add('bg-green-50');
-        setTimeout(() => input.classList.remove('bg-green-50'), 500);
+        // Context Matching: Ensure we are in the correct tab and assessment
+        const workstationCategory = { 'assignments': 'assignment', 'quiz': 'quiz', 'activity': 'activity', 'performance': 'perf. task' }[currentTopicState.activeTab];
+        if (workstationCategory !== category) return;
+
+        const workstationGlobalIdx = (Number(currentTopicState.topicIdx) * 2) + Number(window._tcAssessmentDetailIdx);
+        if (Number(itemIndex) !== workstationGlobalIdx) return;
+
+        // Visual Update
+        const normalizedValue = value === '' ? '0' : value;
+        if (wsValue.tagName === 'INPUT') {
+            wsValue.value = normalizedValue;
+        } else {
+            wsValue.textContent = normalizedValue;
+        }
+
+        const subjectId = currentTopicState.subjectId;
+        const currentQ = gradebookState.currentQuarter;
+        const savedStatus = gradebookStatuses[subjectId]?.[currentQ]?.[studentId]?.[category]?.[itemIndex];
+        
+        if (savedStatus && savedStatus !== '') {
+            if (wsStatus) wsStatus.textContent = savedStatus.charAt(0).toUpperCase() + savedStatus.slice(1);
+        } else {
+            if (wsStatus) wsStatus.textContent = value !== '' ? 'Graded' : 'Not Graded';
+        }
+
+        // Subtly highlight the change
+        wsValue.classList.add('text-yellow-500');
+        setTimeout(() => wsValue.classList.remove('text-yellow-500'), 800);
+
+        // Refresh Progress Panel if it exists
+        const rail = document.getElementById('topic-contents-rail');
+        if (rail) {
+            const subjectData = getTopicData(currentTopicState.subjectId);
+            if (subjectData) {
+                const railContainer = rail.querySelector('.teacher-topic-progress-card')?.parentElement;
+                if (railContainer) {
+                    railContainer.innerHTML = _buildProgressRail(subjectData);
+                }
+            }
+        }
     };
 
-    window.toggleStudentStatus = (btn, type) => {
-        const colors = {
-            missing: { text: 'text-red-700', bg: 'bg-red-100', border: 'border-red-300' },
-            incomplete: { text: 'text-amber-700', bg: 'bg-amber-100', border: 'border-amber-300' },
-            absent: { text: 'text-black', bg: 'bg-gray-200', border: 'border-black' },
-            excuse: { text: 'text-blue-700', bg: 'bg-blue-100', border: 'border-blue-300' }
-        };
+    window.updateStudentScoreFromWorkstation = (value) => {
+        const { subjectId, topicIdx, selectedStudent, activeTab } = currentTopicState;
+        if (!subjectId || !selectedStudent) return;
 
-        const td = btn.closest('td');
-        const isActive = btn.classList.contains(colors[type].text);
+        const section = currentTopicState.selectedSection;
+        const students = (typeof studentsBySection !== 'undefined' ? studentsBySection[section] : []) || [];
+        const student = students.find(s => s.name === selectedStudent);
+        if (!student) return;
 
-        // Reset all in group
-        const group = btn.closest('.status-group');
-        group.querySelectorAll('.status-btn').forEach(b => {
-            Object.values(colors).forEach(c => {
-                b.classList.remove(c.text, c.bg, c.border);
+        const categoryMap = { 'assignments': 'assignment', 'quiz': 'quiz', 'activity': 'activity', 'performance': 'perf. task' };
+        const category = categoryMap[activeTab];
+        if (!category) return;
+
+        const itemIndex = (Number(topicIdx) * 2) + Number(window._tcAssessmentDetailIdx);
+
+        // Standardize the update through the main handler
+        window.updateStudentScore(student.id, category, itemIndex, value, student.name);
+        
+        // Visual feedback for the panel score
+        const wsValue = document.getElementById('workstation-score-value');
+        if (wsValue) {
+            wsValue.classList.add('text-green-600');
+            setTimeout(() => wsValue.classList.remove('text-green-600'), 500);
+        }
+    };
+
+    window.updateStudentScore = (studentId, category, itemIndex, value, studentName) => {
+        // Resolve subjectId: Always use the ID even if a name was passed
+        let subjectId = gradebookState.selectedSubject || currentTopicState.subjectId;
+        if (typeof getAllSubjectsRaw === 'function') {
+            const all = getAllSubjectsRaw();
+            const found = all.find(s => s.name === subjectId || s.id === subjectId);
+            if (found) subjectId = found.id;
+        }
+
+        const currentQ = gradebookState.currentQuarter;
+
+        // Initialize nested structure
+        if (!gradebookScores[subjectId]) gradebookScores[subjectId] = {};
+        if (!gradebookScores[subjectId][currentQ]) gradebookScores[subjectId][currentQ] = {};
+        if (!gradebookScores[subjectId][currentQ][studentId]) gradebookScores[subjectId][currentQ][studentId] = {};
+        if (!gradebookScores[subjectId][currentQ][studentId][category]) gradebookScores[subjectId][currentQ][studentId][category] = {};
+
+        const itemMax = getCategoryDetails(category)?.[itemIndex]?.max || 100;
+        const numericValue = value === '' ? '' : Number(value);
+        const normalizedValue = value === ''
+            ? ''
+            : Math.min(itemMax, Math.max(0, numericValue));
+        
+        gradebookScores[subjectId][currentQ][studentId][category][itemIndex] = normalizedValue;
+        saveGradebookData(); // SAVE AUTOMATICALLY TO LOCALSTORAGE
+
+        // Sync with Workstation Panel
+        window.syncWorkstationScore(studentId, category, itemIndex, normalizedValue, studentName);
+
+        // Sync with Gradebook Spreadsheet (if visible)
+        const prefix = gradebookState.isOuter ? 'gradebook-outer-' : 'gradebook-';
+        const table = document.getElementById(prefix + 'spreadsheet');
+        if (table) {
+            // Find the row for this student and the column for this index
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(tr => {
+                const nameCell = tr.querySelector('td:first-child p:first-child');
+                if (nameCell && nameCell.textContent.trim() === studentName) {
+                    const inputs = tr.querySelectorAll('input[type="number"]');
+                    // Find the input corresponding to the category being edited
+                    // Note: This logic assumes only one category is shown in detail view
+                    if (inputs[itemIndex]) {
+                        inputs[itemIndex].value = normalizedValue;
+                        inputs[itemIndex].classList.add('bg-green-50');
+                        setTimeout(() => inputs[itemIndex].classList.remove('bg-green-50'), 500);
+                    }
+                }
             });
-            b.classList.add('text-gray-300', 'bg-transparent', 'border-gray-200');
-        });
-
-        // Clear td bg
-        if (td) {
-            Object.values(colors).forEach(c => td.classList.remove(c.bg));
-        }
-
-        if (!isActive) {
-            btn.classList.remove('text-gray-200', 'bg-transparent', 'border-gray-100');
-            btn.classList.add(colors[type].text, colors[type].bg, colors[type].border);
-            if (td) td.classList.add(colors[type].bg);
         }
     };
+
+
+
 
     window.enforceStudentScoreInput = (input, category, itemIndex) => {
         if (!input) return;
@@ -6766,6 +9798,73 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Gradebook data prepared for export to .xlsx format.');
     };
 
+    window.toggleStudentStatus = (btn, type, studentId, category, itemIndex) => {
+        const td = btn.closest('td');
+        if (!td) return;
+
+        const currentQ = gradebookState.currentQuarter;
+        if (!gradebookStatuses[currentQ]) gradebookStatuses[currentQ] = {};
+        if (!gradebookStatuses[currentQ][studentId]) gradebookStatuses[currentQ][studentId] = {};
+        if (!gradebookStatuses[currentQ][studentId][category]) gradebookStatuses[currentQ][studentId][category] = {};
+
+        const table = btn.closest('table');
+        const isOuter = table && table.id.includes('outer');
+
+        // Clear highlights
+        if (typeof window.clearGradebookHighlights === 'function') {
+            window.clearGradebookHighlights(isOuter, true);
+        }
+        
+        const isActive = btn.classList.contains('active-status');
+
+        // 1. Reset all buttons in this cell
+        const statusGroup = td.querySelector('.status-group');
+        td.querySelectorAll('.status-btn').forEach(b => {
+            b.classList.remove('active-status');
+            b.classList.add('text-black');
+        });
+
+        // 2. Reset cell UI
+        td.classList.remove('gradebook-status-missing', 'gradebook-status-incomplete', 'gradebook-status-absent', 'gradebook-status-excuse');
+
+        // 3. Save and Activate
+        // 3. Save and Activate
+        const subjectId = gradebookState.selectedSubject;
+        if (!gradebookStatuses[subjectId]) gradebookStatuses[subjectId] = {};
+        if (!gradebookStatuses[subjectId][currentQ]) gradebookStatuses[subjectId][currentQ] = {};
+        if (!gradebookStatuses[subjectId][currentQ][studentId]) gradebookStatuses[subjectId][currentQ][studentId] = {};
+        if (!gradebookStatuses[subjectId][currentQ][studentId][category]) gradebookStatuses[subjectId][currentQ][studentId][category] = {};
+
+        if (!isActive) {
+            gradebookStatuses[subjectId][currentQ][studentId][category][itemIndex] = type;
+            btn.classList.add('active-status');
+            btn.classList.remove('text-black');
+            
+            if (type === 'missing') {
+                td.classList.add('gradebook-status-missing');
+            } else if (type === 'incomplete') {
+                td.classList.add('gradebook-status-incomplete');
+            } else if (type === 'absent') {
+                td.classList.add('gradebook-status-absent');
+            } else if (type === 'excuse') {
+                td.classList.add('gradebook-status-excuse');
+            }
+        } else {
+            // Deactivate
+            gradebookStatuses[subjectId][currentQ][studentId][category][itemIndex] = '';
+        }
+
+        saveGradebookData();
+
+        // Sync with Workstation
+        const currentScore = gradebookScores[subjectId]?.[currentQ]?.[studentId]?.[category]?.[itemIndex] || '';
+        window.syncWorkstationScore(studentId, category, itemIndex, currentScore, '');
+
+        // Hide icons again by blurring and removing forced opacity
+        if (statusGroup) statusGroup.classList.remove('!opacity-100');
+        btn.blur();
+        document.activeElement?.blur();
+    };
     function parseTime(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
     function formatTime12(t) { const [h, m] = t.split(':').map(Number); return `${h % 12 || 12}:${m.toString().padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`; }
 
@@ -6834,7 +9933,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize layout
     updateLayout();
 
-    // ─── SIGMA AI ──────────────────────────────────────────────
+    // â”€â”€â”€ SIGMA AI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const WELCOME_MSG = `Hello, <strong>Teacher Maria!</strong> I'm <span class="font-black">SIGMA</span>, your system AI. What do you need today?`;
 
     let isDragging = false;
@@ -6921,7 +10020,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (validFiles.length) {
             const uploadLines = validFiles
-                .map(file => `• ${escapeSigmaAiText(file.name)} (${getSigmaAiFileKindLabel(file, isPhotoUpload)} • ${formatSigmaAiFileSize(file.size)})`)
+                .map(file => `&bull; ${escapeSigmaAiText(file.name)} (${getSigmaAiFileKindLabel(file, isPhotoUpload)} &bull; ${formatSigmaAiFileSize(file.size)})`)
                 .join('\n');
             addAiMessage(`${sourceLabel}\n${uploadLines}`, true);
 
@@ -6936,7 +10035,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (invalidFiles.length) {
             const failedLines = invalidFiles
-                .map(file => `• ${escapeSigmaAiText(file.name)}`)
+                .map(file => `&bull; ${escapeSigmaAiText(file.name)}`)
                 .join('\n');
             addAiMessage(
                 `Upload failed. Supported ${isPhotoUpload ? 'images' : 'documents'} only.\n${failedLines}`,
@@ -6946,7 +10045,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (oversizedFiles.length) {
             const failedLines = oversizedFiles
-                .map(file => `• ${escapeSigmaAiText(file.name)} (${formatSigmaAiFileSize(file.size)})`)
+                .map(file => `&bull; ${escapeSigmaAiText(file.name)} (${formatSigmaAiFileSize(file.size)})`)
                 .join('\n');
             addAiMessage(
                 `Upload failed. Each ${isPhotoUpload ? 'image' : 'document'} must be ${isPhotoUpload ? '10 MB' : '20 MB'} or smaller.\n${failedLines}`,
@@ -7168,7 +10267,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sigmaAiInput.value = '';
         setSigmaAiWaiting(true);
         setTimeout(() => {
-            addAiMessage('Faculty wireframe mode — Gemini AI integration in progress.', false);
+            addAiMessage('Faculty wireframe mode &mdash; Gemini AI integration in progress.', false);
             setSigmaAiWaiting(false);
         }, 600);
     }
@@ -7196,41 +10295,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // if (panelWasOpen) openAiPanel();
 
-    // --- Card Drag & Drop Implementation ---
-    function initCardDraggable() {
-        const grid = document.getElementById('classrooms-grid');
-        if (!grid) return;
-
-        let draggedItem = null;
-
-        grid.addEventListener('dragstart', (e) => {
-            const target = e.target.closest('.classroom-card');
-            if (target) {
-                draggedItem = target;
-                draggedItem.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'move';
-                // Optional: set drag image if needed
-            }
-        });
-
-        grid.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            const target = e.target.closest('.classroom-card');
-            if (target && target !== draggedItem) {
-                const rect = target.getBoundingClientRect();
-                const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-                grid.insertBefore(draggedItem, next ? target.nextSibling : target);
-            }
-        });
-
-        grid.addEventListener('dragend', () => {
-            if (draggedItem) {
-                draggedItem.classList.remove('dragging');
-                draggedItem = null;
-            }
-        });
-    }
-
     // --- Card Drag & Drop (SortableJS) ---
     function initCardSortable(forceRebind = false) {
         const grid = document.getElementById('classrooms-grid');
@@ -7244,30 +10308,80 @@ document.addEventListener('DOMContentLoaded', () => {
 
         classroomSortable = new Sortable(grid, {
             animation: 150,
+            draggable: '.classroom-card',
+            dataIdAttr: 'data-id',
             ghostClass: 'sortable-ghost',
-            dragClass: 'sortable-drag',
+            dragClass: 'sortable-drag-original',   // on the original card in-grid
+            chosenClass: 'sortable-chosen',
             forceFallback: true,
-            fallbackClass: 'sortable-drag',
+            fallbackClass: 'sortable-drag-clone',  // on the floating body clone ONLY
             fallbackOnBody: true,
-            swapThreshold: 0.65,
-            invertSwap: true,
+            fallbackTolerance: 4,
+            swapThreshold: 0.28,
+            invertedSwapThreshold: 0.75,
+            invertSwap: false,
+            direction: () => window.innerWidth < 1024 ? 'vertical' : 'horizontal',
             scroll: true,
             bubbleScroll: true,
             scrollSensitivity: 100,
             scrollSpeed: 20,
+            onChoose: (evt) => {
+                // Snapshot size BEFORE sortable-chosen styles can shift layout.
+                const rect = evt.item.getBoundingClientRect();
+                evt.item.dataset.dragWidth = `${Math.round(rect.width)}`;
+                // Cap height: grid cells can be taller than card content.
+                // A bloated clone + mt-auto creates a huge gap — cap to 300px.
+                evt.item.dataset.dragHeight = `${Math.min(Math.round(rect.height), 300)}`;
+            },
             onStart: (evt) => {
                 document.body.style.cursor = 'grabbing';
-                // Lock the width to exactly what it was before picking it up
-                const item = evt.item;
-                const dragEl = document.querySelector('.sortable-drag');
-                if (dragEl) {
-                    dragEl.style.width = item.offsetWidth + 'px';
-                }
+                document.body.classList.add('classroom-card-sorting');
+
+                requestAnimationFrame(() => {
+                    // Only the body clone gets sortable-drag-clone — unambiguous.
+                    const dragEl = document.querySelector('body > .sortable-drag-clone');
+                    if (!dragEl) return;
+
+                    const width = parseInt(evt.item.dataset.dragWidth, 10)
+                        || Math.round(evt.item.getBoundingClientRect().width)
+                        || 280;
+                    const height = parseInt(evt.item.dataset.dragHeight, 10)
+                        || Math.round(evt.item.getBoundingClientRect().height)
+                        || 280;
+
+                    // ONLY override size + appearance.
+                    // DO NOT touch position / transform / top / left — SortableJS
+                    // uses those to track the cursor; overriding them breaks dragging.
+                    // DO NOT override background — clone inherits card's real background
+                    // (colored banner) via its own CSS classes.
+                    dragEl.style.width = `${width}px`;
+                    dragEl.style.height = `${height}px`;
+                    dragEl.style.minWidth = `${width}px`;
+                    dragEl.style.minHeight = `${height}px`;
+                    dragEl.style.maxWidth = `${width}px`;
+                    dragEl.style.maxHeight = `${height}px`;
+                    dragEl.style.boxSizing = 'border-box';
+                    dragEl.style.opacity = '1';
+                    dragEl.style.zIndex = '99999';
+                    dragEl.style.borderRadius = '24px';
+                    dragEl.style.overflow = 'hidden';
+                    dragEl.style.display = 'flex';
+                    dragEl.style.flexDirection = 'column';
+                    dragEl.style.boxShadow = '0 24px 64px rgba(0,0,0,0.28)';
+                    dragEl.style.pointerEvents = 'none';
+                    dragEl.style.cursor = 'grabbing';
+                    dragEl.style.transition = 'none';
+                });
             },
             onEnd: () => {
                 document.body.style.cursor = '';
+                document.body.classList.remove('classroom-card-sorting');
                 const order = classroomSortable.toArray();
                 localStorage.setItem('teacher_classroom_order', JSON.stringify(order));
+            },
+            onCancel: () => {
+                document.body.style.cursor = '';
+                document.body.classList.remove('classroom-card-sorting');
             }
         });
     }
@@ -7276,7 +10390,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Assessments Tab Logic ---
     function formatAssessmentDate(date) {
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        if (!date) return '-';
+        const d = (date instanceof Date) ? date : new Date(date);
+        if (isNaN(d.getTime())) return date;
+        const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        return `${dateStr}<br><span class="text-[9px] md:text-[10px] text-gray-500 font-medium">${timeStr}</span>`;
     }
 
     function getEquivalentGrade(score) {
@@ -7331,50 +10450,49 @@ document.addEventListener('DOMContentLoaded', () => {
         ].filter(Boolean);
 
         allSubjects.forEach((subject, sIdx) => {
-            // Generate 3-5 assessments per subject
-            const count = 3 + (sIdx % 3);
-            for (let i = 0; i < count; i++) {
-                const startDate = new Date(baseDate);
-                startDate.setDate(baseDate.getDate() - (i * 5 + (sIdx * 2) + 2));
+            const categories = ['assignment', 'quiz', 'activity', 'perf. task'];
 
-                const dueDate = new Date(startDate);
-                dueDate.setDate(startDate.getDate() + 7);
+            categories.forEach(cat => {
+                const assessments = getAssessmentsForSubject(subject.id, cat);
+                assessments.forEach((ass, aIdx) => {
+                    const startDate = new Date(baseDate);
+                    startDate.setDate(baseDate.getDate() - (aIdx * 5 + (sIdx * 2) + 2));
+                    const dueDate = new Date(startDate);
+                    dueDate.setDate(startDate.getDate() + 7);
 
-                const submissions = 20 + (i * 2) + (sIdx % 5);
-                const graded = i === 0 ? submissions : Math.floor(submissions * 0.8);
-                const rawScore = 75 + (sIdx % 15) + (i % 10);
+                    let status = 'not-started';
+                    if (aIdx % 4 === 0) status = 'graded';
+                    else if (aIdx % 4 === 1) status = 'submitted';
+                    else if (aIdx % 4 === 2) status = 'waiting';
 
-                let status = 'pending';
-                if (dueDate < baseDate) {
-                    status = graded === submissions ? 'completed' : 'overdue';
-                }
-                const submittedOn = status === 'pending'
-                    ? null
-                    : new Date(startDate.getTime() + 2 * 24 * 60 * 60 * 1000);
-                const gradedOn = status === 'completed'
-                    ? new Date(startDate.getTime() + 4 * 24 * 60 * 60 * 1000)
-                    : null;
-                const avgScore = status === 'pending' ? 0 : rawScore;
+                    const score = status === 'graded' ? 85 + (aIdx % 15) : 0;
 
-                rows.push({
-                    subjectId: subject.id,
-                    subject: subject.label,
-                    activity: `${['Quiz', 'Assignment', 'Activity', 'Project'][i % 4]} #${i + 1}: ${['Fundamentals', 'Advanced Concepts', 'Practical Application', 'Analysis', 'Evaluation'][i % 5]}`,
-                    startDate,
-                    dueDate,
-                    submittedOn,
-                    gradedOn,
-                    submissions,
-                    graded,
-                    score: avgScore,
-                    equivalent: avgScore > 0 ? getEquivalentGrade(avgScore) : '-',
-                    status
+                    const tabMap = { 'assignment': 'assignments', 'quiz': 'quiz', 'activity': 'activity', 'perf. task': 'performance' };
+                    
+                    rows.push({
+                        subjectId: subject.id,
+                        subject: subject.label,
+                        activity: ass.title,
+                        category: cat,
+                        tab: tabMap[cat] || 'activity',
+                        topicIdx: ass.topicIdx,
+                        itemIdx: ass.itemIdx,
+                        status: status,
+                        score: score,
+                        max: ass.max,
+                        startDate: startDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+                        dueDate: dueDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+                        submittedOn: status !== 'not-started' ? new Date(startDate.getTime() + 86400000).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : null,
+                        gradedOn: status === 'graded' ? new Date(startDate.getTime() + 259200000).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : null
+                    });
                 });
-            }
+            });
         });
 
-        return rows.sort((a, b) => a.dueDate - b.dueDate);
+        return rows;
     }
+
+
 
     function renderAssessmentsPage() {
         const layout = document.getElementById('assessments-layout');
@@ -7382,138 +10500,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const rows = buildAssessmentRows();
-            const pendingCount = rows.filter(row => row.status === 'pending').length;
-            const completedCount = rows.filter(row => row.status === 'completed').length;
-            const overdueCount = rows.filter(row => row.status === 'overdue').length;
             const subjects = [...new Set(rows.map(row => row.subject))].sort((a, b) => a.localeCompare(b));
 
-            const concernItems = [];
-            const overdueRows = rows.filter(row => row.status === 'overdue').slice(0, 3);
-            const pendingRows = rows.filter(row => row.status === 'pending').slice(0, 2);
-
-            if (overdueCount > 0) {
-                concernItems.push(`There are ${overdueCount} assessments with pending submissions that are past the deadline.`);
-            }
-            overdueRows.forEach(row => {
-                concernItems.push(`Grade pending submissions for ${row.activity} in ${row.subject}.`);
-            });
-            if (pendingCount > 0) {
-                concernItems.push(`You have ${pendingCount} upcoming assessments scheduled for this month.`);
-            }
-
-            if (!concernItems.length) {
-                concernItems.push('All current assessments are up to date. No immediate grading actions required.');
-            }
-
             const statusBadge = status => {
-                if (status === 'completed') return '<span class="px-2.5 py-1 bg-green-100 text-green-700 text-[9px] font-bold uppercase rounded-lg">Completed</span>';
-                if (status === 'overdue') return '<span class="px-2.5 py-1 bg-red-100 text-red-600 text-[9px] font-bold uppercase rounded-lg">Overdue</span>';
-                return '<span class="px-2.5 py-1 bg-amber-100 text-amber-700 text-[9px] font-bold uppercase rounded-lg">Pending</span>';
+                if (status === 'graded') return '<span class="text-green-600 font-bold text-[11px]">Graded</span>';
+                if (status === 'submitted') return '<span class="text-green-600 font-bold text-[11px]">Submitted</span>';
+                if (status === 'waiting') return '<span class="text-amber-500 font-bold text-[11px]">Waiting</span>';
+                if (status === 'overdue') return '<span class="text-red-600 font-bold text-[11px]">Overdue</span>';
+                return '<span class="text-black font-bold text-[11px]">-</span>';
             };
 
-            const renderAssessmentRow = row => `
-            <tr class="hover:bg-gray-50/50 transition-colors" data-subject="${row.subject}">
-                <td class="px-3 py-4 text-sm font-bold text-gray-800">${row.activity}</td>
-                <td class="px-3 py-4 text-sm text-gray-600 font-bold">${row.subject}</td>
-                <td class="px-3 py-4 text-sm text-gray-500">${formatAssessmentDate(row.startDate)}</td>
-                <td class="px-3 py-4 text-sm ${row.status === 'overdue' ? 'text-red-500 font-bold' : 'text-gray-500'}">${formatAssessmentDate(row.dueDate)}</td>
-                <td class="px-3 py-4 text-sm text-gray-500">${row.submittedOn ? formatAssessmentDate(row.submittedOn) : '-'}</td>
-                <td class="px-3 py-4 text-sm text-gray-500">${row.gradedOn ? formatAssessmentDate(row.gradedOn) : '-'}</td>
-                <td class="px-3 py-4 text-sm font-bold ${row.score >= 90 ? 'text-green-600' : row.score >= 80 ? 'text-icc' : row.score >= 75 ? 'text-amber-600' : row.score > 0 ? 'text-red-500' : 'text-gray-400'}">${row.score > 0 ? `${row.score}%` : '-'}</td>
-                <td class="px-3 py-4 text-sm font-bold text-gray-700">${row.equivalent}</td>
-                <td class="px-5 py-4">${statusBadge(row.status)}</td>
-            </tr>
-        `;
-
             layout.innerHTML = `
-            <div class="max-w-[1024px] mx-auto bg-white rounded-2xl flex flex-col gap-6 p-0 overflow-hidden">
-
-                <div class="w-full border-b border-gray-100">
-                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden h-full flex flex-col">
-                        <div class="px-5 py-4 bg-white border-b border-gray-100 flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-icc-yellow flex items-center justify-center flex-shrink-0">
-                                <i class="fa-solid fa-bolt text-black text-base"></i>
-                            </div>
-                            <p class="text-sm font-black uppercase tracking-widest text-gray-900">SIGMA</p>
-                        </div>
-                        <div class="p-5 space-y-3 overflow-y-auto">
-                            ${concernItems.map(item => `
-                                <div class="flex items-start gap-3">
-                                    <i class="fa-solid fa-angle-right text-icc mt-1 text-xs"></i>
-                                    <p class="text-sm text-gray-700 leading-relaxed font-medium">${item}</p>
+                <div class="teacher-topic-page-shell">
+                    <div class="teacher-topic-page-grid">
+                        <!-- LEFT: Assessment Panel -->
+                        <div class="teacher-topic-main-shell" style="display: flex; flex-direction: column;">
+                            <div class="teacher-topic-header border-b border-black flex flex-col md:flex-row items-center justify-between gap-4 p-4 md:px-10 md:py-6">
+                                <div class="w-full md:w-auto flex items-center gap-4">
+                                    <select id="assessments-subject-filter" class="px-4 py-2.5 rounded-xl border border-black bg-white text-xs md:text-sm font-semibold text-gray-700 focus:outline-none focus:border-black w-full md:w-[320px]">
+                                        <option value="all">Subjects and Sections</option>
+                                        ${(typeof getTeacherSectionCards === 'function' ? getTeacherSectionCards() : []).map(card => `<option value="${card.name}">${card.name} - ${card.sectionName}</option>`).join('')}
+                                    </select>
                                 </div>
-                            `).join('')}
+
+                            </div>
+
+                            <div class="overflow-x-auto w-full scrollbar-hide" style="-webkit-overflow-scrolling: touch;">
+                                <table class="w-full text-left border-separate border-spacing-0 min-w-[650px] md:min-w-0">
+                                    <thead>
+                                        <tr class="bg-white">
+                                            <th class="sticky left-0 bg-white z-30 w-[140px] md:w-[22%] px-2 md:px-5 py-3 md:py-4 text-[8px] md:text-[10px] font-bold text-black uppercase tracking-widest whitespace-normal leading-tight shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] border-b border-gray-100">Assessment</th>
+                                            <th class="px-1 md:px-5 py-3 md:py-4 text-[8px] md:text-[10px] font-bold text-black uppercase tracking-widest text-center whitespace-normal leading-tight border-b border-gray-100">Start</th>
+                                            <th class="px-1 md:px-5 py-3 md:py-4 text-[8px] md:text-[10px] font-bold text-black uppercase tracking-widest text-center whitespace-normal leading-tight border-b border-gray-100">Due</th>
+                                            <th class="px-1 md:px-5 py-3 md:py-4 text-[8px] md:text-[10px] font-bold text-black uppercase tracking-widest text-center whitespace-normal leading-tight border-b border-gray-100">Submitted</th>
+                                            <th class="px-1 md:px-5 py-3 md:py-4 text-[8px] md:text-[10px] font-bold text-black uppercase tracking-widest text-center whitespace-normal leading-tight border-b border-gray-100">Graded</th>
+                                            <th class="px-1 md:px-3 py-3 md:py-4 text-[8px] md:text-[10px] font-bold text-black uppercase tracking-widest text-center whitespace-normal leading-tight border-b border-gray-100">Score</th>
+                                            <th class="px-2 md:px-5 py-3 md:py-4 text-[8px] md:text-[10px] font-bold text-black uppercase tracking-widest text-left whitespace-normal leading-tight border-b border-gray-100">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="assessments-body"></tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="p-4 border-t border-gray-100 flex items-center justify-center gap-2 mt-auto">
+                                <button id="assessments-prev-page" type="button" class="w-8 h-8 rounded-full border border-transparent bg-[#116631] text-white hover:bg-green-800 transition-all shadow-sm flex items-center justify-center"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+                                <div id="assessments-page-numbers" class="flex items-center gap-1 justify-center px-2"></div>
+                                <button id="assessments-next-page" type="button" class="w-8 h-8 rounded-full border border-transparent bg-[#116631] text-white hover:bg-green-800 transition-all shadow-sm flex items-center justify-center"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+                            </div>
+
+                        </div>
+
+                        <!-- RIGHT: SIGMA and TODO Panels -->
+                        <div id="assessments-right-rail" class="flex flex-col gap-4" style="grid-area: rail;">
+                            <div id="assessments-sigma-panel" class="transition-all duration-300"></div>
+                            <div id="assessments-todo-panel" class="transition-all duration-300"></div>
                         </div>
                     </div>
                 </div>
-
-                <div class="flex-1 min-w-0 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-                    <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/40">
-                        <div class="flex items-end justify-between gap-4">
-                            <div>
-                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Assessment Overview</p>
-                                <div class="flex flex-wrap gap-3 mt-3">
-                                    <div class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 border border-amber-100">
-                                        <i class="fa-solid fa-hourglass-half text-amber-500 text-sm"></i>
-                                        <span class="text-[10px] font-black text-amber-700 uppercase tracking-widest">Pending</span>
-                                        <span class="text-sm font-black text-gray-800">${pendingCount}</span>
-                                    </div>
-                                    <div class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-green-50 border border-green-100">
-                                        <i class="fa-solid fa-check-double text-green-500 text-sm"></i>
-                                        <span class="text-[10px] font-black text-green-700 uppercase tracking-widest">Completed</span>
-                                        <span class="text-sm font-black text-gray-800">${completedCount}</span>
-                                    </div>
-                                    <div class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-red-50 border border-red-100">
-                                        <i class="fa-solid fa-circle-exclamation text-red-500 text-sm"></i>
-                                        <span class="text-[10px] font-black text-red-700 uppercase tracking-widest">Overdue</span>
-                                        <span class="text-sm font-black text-gray-800">${overdueCount}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <select id="assessments-subject-filter" class="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 focus:outline-none focus:border-icc min-w-[220px]">
-                                <option value="all">All Subjects</option>
-                                ${subjects.map(subject => `<option value="${subject}">${subject}</option>`).join('')}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="overflow-auto flex-1">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-gray-50/60">
-                                    <th class="px-3 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Activity</th>
-                                    <th class="px-3 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Subject</th>
-                                    <th class="px-3 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Start</th>
-                                    <th class="px-3 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Due</th>
-                                    <th class="px-3 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Submitted On</th>
-                                    <th class="px-3 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Graded On</th>
-                                    <th class="px-3 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Score %</th>
-                                    <th class="px-3 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Equivalent Grade</th>
-                                    <th class="px-3 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="assessments-body" class="divide-y divide-gray-50"></tbody>
-                        </table>
-                    </div>
-                    <div class="px-5 py-4 border-t border-gray-100 bg-white flex items-center justify-between gap-4 flex-wrap">
-                        <p id="assessments-pagination-info" class="text-xs font-bold text-gray-500 uppercase tracking-widest">Showing 0 of 0</p>
-                        <div class="flex items-center gap-2">
-                            <button id="assessments-prev-page" type="button" class="px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-black text-gray-700 hover:bg-gray-50 transition-all">Previous</button>
-                            <span id="assessments-page-indicator" class="text-xs font-black text-gray-500 uppercase tracking-widest">Page 1 of 1</span>
-                            <button id="assessments-next-page" type="button" class="px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-black text-gray-700 hover:bg-gray-50 transition-all">Next</button>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
             `;
 
             const body = layout.querySelector('#assessments-body');
             const filter = layout.querySelector('#assessments-subject-filter');
-            const info = layout.querySelector('#assessments-pagination-info');
             const indicator = layout.querySelector('#assessments-page-indicator');
             const prevBtn = layout.querySelector('#assessments-prev-page');
             const nextBtn = layout.querySelector('#assessments-next-page');
-            const pageSize = 10;
+            const sigmaPanel = layout.querySelector('#assessments-sigma-panel');
+            const todoPanel = layout.querySelector('#assessments-todo-panel');
+            const pageSize = 7;
             let currentPage = 1;
 
             function getFilteredRows() {
@@ -7523,28 +10576,197 @@ document.addEventListener('DOMContentLoaded', () => {
                     : rows.filter(row => row.subject === selectedSubject);
             }
 
+            function updateSidebarPanels(fRows) {
+                if (!sigmaPanel || !todoPanel) return;
+
+                const concernItems = [];
+                const overdueRows = fRows.filter(row => row.status === 'overdue').slice(0, 3);
+                const pendingRows = fRows.filter(row => row.status === 'pending').slice(0, 2);
+
+                if (overdueRows.length > 0) {
+                    concernItems.push(`There are ${overdueRows.length} assessments with pending submissions that are past the deadline.`);
+                    overdueRows.forEach(row => {
+                        concernItems.push(`Grade pending submissions for ${row.activity} in ${row.subject}.`);
+                    });
+                }
+                if (pendingRows.length > 0) {
+                    concernItems.push(`You have ${pendingRows.length} upcoming assessments scheduled for this month.`);
+                }
+                if (!concernItems.length) {
+                    concernItems.push('All current assessments are up to date. No immediate grading actions required.');
+                }
+
+                const sigmaLimited = concernItems.slice(0, 3);
+                let assignmentCount = 0;
+                let quizCount = 0;
+                let performanceTaskCount = 0;
+                let activityCount = 0;
+
+                fRows.forEach(row => {
+                    if (row.status !== 'waiting') return;
+                    const lowerActivity = row.activity.toLowerCase();
+                    if (lowerActivity.includes('assignment')) {
+                        assignmentCount++;
+                    } else if (lowerActivity.includes('quiz')) {
+                        quizCount++;
+                    } else if (lowerActivity.includes('performance') || lowerActivity.includes('task')) {
+                        performanceTaskCount++;
+                    } else {
+                        activityCount++;
+                    }
+                });
+
+                const sigmaDate = new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+
+                sigmaPanel.innerHTML = `
+                    <div class="bg-white border border-gray-100 rounded-[22px] standard-panel-shadow flex flex-col overflow-hidden relative select-none">
+                        <div class="px-5 py-4 flex items-center border-b border-gray-50">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-bolt text-[#FFD000] text-[12px]"></i>
+                                <h4 class="text-[11px] font-black text-black tracking-widest uppercase">SIGMA</h4>
+                            </div>
+                            <span class="ml-auto text-[10px] text-slate-400 font-normal">${sigmaDate}</span>
+                        </div>
+                        <div class="p-5">
+                            <div class="space-y-4">
+                                ${sigmaLimited.map(item => `
+                                    <div class="flex items-start gap-3">
+                                        <i class="fa-solid fa-angle-right text-icc mt-1 text-[10px]"></i>
+                                        <p class="text-[11px] text-gray-700 leading-relaxed font-semibold">${item}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                todoPanel.innerHTML = `
+                    <div class="bg-white border border-gray-100 rounded-[22px] standard-panel-shadow flex flex-col overflow-hidden relative select-none">
+                        <div class="px-5 py-4 flex items-center border-b border-gray-50">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-black text-[12px]"></i>
+                                <h4 class="text-[11px] font-black text-black tracking-widest uppercase">TO DO</h4>
+                            </div>
+                            <span class="ml-auto text-[10px] text-slate-400 font-normal">${sigmaDate}</span>
+                        </div>
+                        <div class="p-5">
+                            <div class="space-y-3">
+                                ${assignmentCount > 0 ? `
+                                    <div class="flex items-center gap-3">
+                                        <i class="fa-solid fa-clipboard-list text-icc text-[10px]"></i>
+                                        <p class="text-[11px] text-gray-700 font-semibold">${assignmentCount} ${assignmentCount === 1 ? 'Assignment' : 'Assignments'} due</p>
+                                    </div>
+                                ` : ''}
+                                ${quizCount > 0 ? `
+                                    <div class="flex items-center gap-3">
+                                        <i class="fa-solid fa-clipboard-question text-icc text-[10px]"></i>
+                                        <p class="text-[11px] text-gray-700 font-semibold">${quizCount} ${quizCount === 1 ? 'Quiz' : 'Quizzes'} due</p>
+                                    </div>
+                                ` : ''}
+                                ${performanceTaskCount > 0 ? `
+                                    <div class="flex items-center gap-3">
+                                        <i class="fa-solid fa-clipboard-user text-icc text-[10px]"></i>
+                                        <p class="text-[11px] text-gray-700 font-semibold">${performanceTaskCount} ${performanceTaskCount === 1 ? 'Performance task' : 'Performance tasks'} due</p>
+                                    </div>
+                                ` : ''}
+                                ${activityCount > 0 ? `
+                                    <div class="flex items-center gap-3">
+                                        <i class="fa-solid fa-clipboard text-icc text-[10px]"></i>
+                                        <p class="text-[11px] text-gray-700 font-semibold">${activityCount} ${activityCount === 1 ? 'Activity' : 'Activities'} due</p>
+                                    </div>
+                                ` : ''}
+                                ${assignmentCount === 0 && quizCount === 0 && performanceTaskCount === 0 && activityCount === 0 ? `
+                                    <div class="flex flex-col items-center justify-center py-4">
+                                        <i class="fa-solid fa-circle-check text-green-500 text-3xl"></i>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
             function renderAssessmentPageRows() {
-                const filteredRows = getFilteredRows();
-                const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+                const fRows = getFilteredRows();
+                updateSidebarPanels(fRows);
+
+                const totalPages = Math.max(1, Math.ceil(fRows.length / pageSize));
                 currentPage = Math.min(currentPage, totalPages);
                 const startIndex = (currentPage - 1) * pageSize;
-                const visibleRows = filteredRows.slice(startIndex, startIndex + pageSize);
+                const vRows = fRows.slice(startIndex, startIndex + pageSize);
 
-                body.innerHTML = visibleRows.length
-                    ? visibleRows.map(renderAssessmentRow).join('')
-                    : '<tr><td colspan="9" class="px-5 py-10 text-center text-sm font-bold text-gray-400 uppercase tracking-widest">No assessments found for this filter.</td></tr>';
+                let html = '';
+                for (let i = 0; i < pageSize; i++) {
+                    const row = vRows[i];
+                    if (row) {
+                        html += `
+                        <tr class="hover:bg-gray-50/50 transition-colors ${i % 2 === 1 ? 'bg-gray-50' : 'bg-white'}">
+                            <td class="sticky left-0 bg-white z-20 px-2 md:px-5 py-3 text-[10px] md:text-sm font-bold text-black whitespace-normal leading-tight shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] border-b border-gray-100">
+                                <button type="button" class="text-left text-icc hover:text-icc-dark hover:underline transition-colors" onclick="event.stopPropagation(); window.openTopicContent('${row.subjectId}', ${row.topicIdx}, '${row.tab}', ${row.itemIdx})">${row.activity}</button>
+                            </td>
+                            <td class="px-1 md:px-5 py-3 text-[9px] md:text-sm text-black text-center whitespace-normal leading-tight border-b border-gray-100">${row.startDate ? formatAssessmentDate(row.startDate) : '-'}</td>
+                            <td class="px-1 md:px-5 py-3 text-[9px] md:text-sm text-black text-center whitespace-normal leading-tight border-b border-gray-100">${row.dueDate ? formatAssessmentDate(row.dueDate) : '-'}</td>
+                            <td class="px-1 md:px-5 py-3 text-[9px] md:text-sm text-black text-center whitespace-normal leading-tight border-b border-gray-100">${row.submittedOn ? formatAssessmentDate(row.submittedOn) : '-'}</td>
+                            <td class="px-1 md:px-5 py-3 text-[9px] md:text-sm text-black text-center whitespace-normal leading-tight border-b border-gray-100">${row.gradedOn ? formatAssessmentDate(row.gradedOn) : '-'}</td>
+                            <td class="px-1 md:px-3 py-3 text-[9px] md:text-sm font-bold text-center whitespace-normal leading-tight text-black border-b border-gray-100">${row.score > 0 ? row.score : '-'}</td>
+                            <td class="px-2 md:px-5 py-3 text-[9px] md:text-sm text-left whitespace-normal leading-tight border-b border-gray-100">${statusBadge(row.status)}</td>
+                        </tr>
+`;
+                    } else {
+                        html += `<tr class="${i % 2 === 1 ? 'bg-gray-50' : 'bg-white'} h-[56px]"><td colspan="7"></td></tr>`;
+                    }
+                }
+                body.innerHTML = html;
 
-                info.textContent = filteredRows.length
-                    ? `Showing ${startIndex + 1}-${Math.min(startIndex + pageSize, filteredRows.length)} of ${filteredRows.length}`
-                    : 'Showing 0 of 0';
-                indicator.textContent = `Page ${currentPage} of ${totalPages}`;
+                const pageNumbersContainer = layout.querySelector('#assessments-page-numbers');
+                if (pageNumbersContainer) {
+                    let startPage = Math.max(1, currentPage - 2);
+                    let endPage = Math.min(totalPages, startPage + 4);
+                    if (endPage - startPage < 4) {
+                        startPage = Math.max(1, endPage - 4);
+                    }
+                    
+                    let pageHtml = '';
+                    for (let p = startPage; p <= endPage; p++) {
+                        const isActive = p === currentPage;
+                        const btnClass = isActive 
+                            ? 'w-8 h-8 rounded-full flex items-center justify-center text-[10px] md:text-xs font-bold bg-[#116631] text-white shadow-sm' 
+                            : 'w-8 h-8 rounded-full flex items-center justify-center text-[10px] md:text-xs font-bold text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors cursor-pointer';
+                        
+                        pageHtml += `<button type="button" class="assessment-page-btn ${btnClass}" data-page="${p}">${p}</button>`;
+                    }
+                    pageNumbersContainer.innerHTML = pageHtml;
+
+                    pageNumbersContainer.querySelectorAll('.assessment-page-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const newPage = parseInt(e.currentTarget.dataset.page, 10);
+                            if (newPage !== currentPage) {
+                                currentPage = newPage;
+                                renderAssessmentPageRows();
+                            }
+                        });
+                    });
+                }
                 prevBtn.disabled = currentPage === 1;
                 nextBtn.disabled = currentPage === totalPages;
+                prevBtn.classList.toggle('opacity-40', prevBtn.disabled);
+                nextBtn.classList.toggle('opacity-40', nextBtn.disabled);
+                
+                // Reset scroll to top on page change
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
 
             filter?.addEventListener('change', () => {
                 currentPage = 1;
-                renderAssessmentPageRows();
+                if (body) body.style.opacity = '0.5';
+                if (sigmaPanel) sigmaPanel.style.opacity = '0.5';
+                if (todoPanel) todoPanel.style.opacity = '0.5';
+                setTimeout(() => {
+                    renderAssessmentPageRows();
+                    if (body) body.style.opacity = '1';
+                    if (sigmaPanel) sigmaPanel.style.opacity = '1';
+                    if (todoPanel) todoPanel.style.opacity = '1';
+                }, 100);
             });
 
             prevBtn?.addEventListener('click', () => {
@@ -7564,13 +10786,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             renderAssessmentPageRows();
         } catch (error) {
-            console.error('Failed to render assessments page:', error);
+            console.error('Failed to render teacher assessments page:', error);
         }
     }
 
     // showMyProfile is now defined above to ensure it has access to hideHeaderOverlays and switchTab
 
-    // ─── User Profile Logic (Synchronized with Student) ──────────
+    // â”€â”€â”€ User Profile Logic (Synchronized with Student) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const USER_STORAGE_KEY = 'sigma-admin-users';
     const USER_AVATAR_STORAGE_KEY = 'sigma_user_avatar_base64';
 
@@ -8015,51 +11237,19 @@ document.addEventListener('DOMContentLoaded', () => {
     window.populateUserProfilePage();
     initCardSortable();
 
-    // ─── ANNOUNCEMENT SYSTEM ──────────────────────────────────
-    let activeHomeAnnouncementTab = 'all';
-    const ANNOUNCEMENT_STORAGE_KEY = 'sigma-admin-announcements-v1';
+    // â”€â”€â”€ ANNOUNCEMENT SYSTEM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     function formatAnnouncementDate(dateValue) {
+        if (!dateValue) return '';
         const date = new Date(dateValue);
-        if (Number.isNaN(date.getTime())) return 'Just now';
+        if (isNaN(date.getTime())) return dateValue;
 
-        const now = new Date();
-        const diffMs = now - date;
-        const diffSecs = Math.max(0, Math.floor(diffMs / 1000));
-        const diffMins = Math.floor(diffSecs / 60);
-        const diffHrs = Math.floor(diffMins / 60);
-
-        if (diffSecs < 60) {
-            return diffSecs <= 1 ? '1sec' : `${diffSecs}secs`;
-        }
-        if (diffMins < 60) {
-            return diffMins === 1 ? '1min' : `${diffMins}mins`;
-        }
-        if (diffHrs < 24) {
-            return diffHrs === 1 ? '1hr' : `${diffHrs}hrs`;
-        }
-
-        const yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        const isYesterday = date.getDate() === yesterday.getDate() &&
-            date.getMonth() === yesterday.getMonth() &&
-            date.getFullYear() === yesterday.getFullYear();
-
-        const timeString = date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase();
-
-        if (isYesterday) {
-            return `Yesterday at ${timeString}`;
-        }
-
-        const daysDiff = Math.floor(diffHrs / 24);
-        if (daysDiff < 7) {
-            const dayName = date.toLocaleString('en-US', { weekday: 'long' });
-            return `${dayName} at ${timeString}`;
-        }
-
-        const monthDay = date.toLocaleString('en-US', { month: 'long', day: 'numeric' });
-        return `${monthDay} at ${timeString}`;
+        return date.toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+        });
     }
 
     function loadInstitutionalAnnouncements() {
@@ -8175,31 +11365,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         feed.innerHTML = filtered.map(post => {
-            const isClassroom = post.isClassroomPost === true;
-            const roleLabel = post.isAdmin ? 'Administrator' : 'Teacher';
-            const roleClass = post.isAdmin ? 'text-slate-500' : 'text-emerald-600';
+            const isClassroom = !!post.classroomKey;
+            const [gradeSection, subjectName] = (post.classroomKey || '').split('::');
+            const isTeacher = !post.isAdmin;
+            const roleLabel = isTeacher ? 'Teacher' : 'Administrator';
+            const roleClass = isTeacher ? 'text-slate-400' : 'text-slate-400';
 
             const fullBody = post.body || '';
             const hasImage = post.imageUrl && post.imageUrl.trim() !== '';
-            const hasText = (post.title && post.title.trim() !== '') || (post.body && post.body.trim() !== '');
+            const hasText = (post.title && post.title.trim() !== '') || (fullBody.trim() !== '');
 
-            // Layout logic
+            // Card configuration based on content
             let cardHeight = "h-[260px]";
             let isImageOnly = false;
             let isImageWithText = false;
-
             if (isClassroom) {
-                // Classroom posts expand to fit their content
                 cardHeight = 'h-auto';
-            } else if (hasImage && hasText) {
-                cardHeight = "h-[520px]";
-                isImageWithText = true;
-            } else if (hasImage && !hasText) {
-                cardHeight = "h-[420px]";
-                isImageOnly = true;
+            } else {
+                const isMobile = window.innerWidth < 1024;
+                if (!isMobile) {
+                    if (hasImage && hasText) {
+                        cardHeight = "h-auto";
+                        isImageWithText = true;
+                    } else if (hasImage && !hasText) {
+                        cardHeight = "h-auto";
+                        isImageOnly = true;
+                    } else {
+                        cardHeight = "h-auto";
+                    }
+                } else {
+                    cardHeight = "h-auto";
+                    if (hasImage && hasText) isImageWithText = true;
+                    else if (hasImage && !hasText) isImageOnly = true;
+                }
             }
 
-            const textLimit = isImageWithText ? 90 : 180;
+            const isMobile = window.innerWidth < 1024;
+            const textLimit = isMobile ? (isImageWithText ? 25 : 80) : (isImageWithText ? 30 : 100);
             const isLong = !isClassroom && fullBody.length > textLimit;
             const truncatedBody = isLong ? fullBody.substring(0, textLimit) + '...' : fullBody;
 
@@ -8208,11 +11410,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- Classroom post card (special design) ---
             if (isClassroom) {
-                const [gradeSection, subjectName] = (post.classroomKey || '').split('::');
                 return `
                     <article id="${post.id}"
-                             class="bg-white border border-slate-200 rounded-[22px] relative w-full overflow-hidden transition-all duration-500 group">
-                        <div class="p-6 flex flex-col min-w-0">
+                             class="bg-white border border-slate-200 rounded-[22px] relative w-full overflow-hidden group standard-panel-shadow">
+                        <div class="p-8 flex flex-col min-w-0">
                             <!-- Header: avatar + name + date -->
                             <div class="flex items-start justify-between mb-3">
                                 <div class="flex items-center gap-3">
@@ -8220,21 +11421,21 @@ document.addEventListener('DOMContentLoaded', () => {
                                         <i class="fa-solid fa-user text-xs text-black"></i>
                                     </div>
                                     <div class="flex flex-col">
-                                        <span class="text-[13px] font-black text-slate-900 leading-none mb-0.5">${escapeHtml(post.author || 'Teacher')}</span>
-                                        <span class="text-[10px] font-bold text-slate-400">Teacher</span>
+                                        <span class="text-[12px] font-black text-slate-900 leading-none mb-1">${escapeHtml(post.author || 'Teacher')}</span>
+                                        <span class="text-[9px] font-bold ${roleClass}">${roleLabel}</span>
                                     </div>
                                 </div>
                                 <span class="text-[10px] font-medium text-slate-400 tracking-tight mt-0.5">${formatAnnouncementDate(post.createdAt)}</span>
                             </div>
 
                             <!-- Subject title + grade/section subtitle -->
-                            <div class="mb-3 pl-[3.25rem]">
-                                <h3 class="text-[17px] font-black text-slate-900 leading-tight">${escapeHtml(subjectName || post.title || 'Classroom Post')}</h3>
+                            <div class="mb-3 pl-[3.25rem] space-y-1">
+                                <h3 class="text-[20px] lg:text-[22px] font-bold text-slate-900 leading-tight">${escapeHtml(subjectName || post.title || 'Classroom Post')}</h3>
                                 ${gradeSection ? `<p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">${escapeHtml(gradeSection)}</p>` : ''}
                             </div>
 
                             <!-- Post body -->
-                            <div class="pl-[3.25rem] text-[15px] text-slate-700 leading-relaxed">
+                            <div class="pl-[3.25rem] text-[15px] lg:text-[16px] text-black leading-relaxed font-normal">
                                 ${formattedFull}
                             </div>
                         </div>
@@ -8259,8 +11460,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return `
                 <article id="${post.id}" 
                          data-original-height="${cardHeight}"
-                         class="bg-white border border-slate-200 rounded-[22px] relative w-full ${cardHeight} overflow-hidden transition-all duration-500 group">
-                    <div class="p-6 pb-[60px] flex flex-col min-w-0">
+                         class="bg-white border border-slate-200 rounded-[22px] relative w-full ${cardHeight} overflow-hidden group standard-panel-shadow">
+                    <div class="p-8 pb-6 flex flex-col min-w-0">
                         <div class="flex items-start justify-between mb-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
@@ -8277,10 +11478,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
 
                         ${hasText ? `
-                            <div class="space-y-1">
-                                <h3 class="text-[22px] font-bold text-slate-900 leading-tight ${isImageWithText ? 'line-clamp-2' : 'line-clamp-1'} text-left">${escapeHtml(post.title)}</h3>
+                            <div class="space-y-1 pl-[3.25rem] relative z-20 ${hasImage ? 'pb-6' : ''}">
+                                <h3 class="text-[20px] lg:text-[22px] font-bold text-slate-900 leading-tight ${isImageWithText ? 'line-clamp-2' : 'line-clamp-1'} text-left">${escapeHtml(subjectName || post.title)}</h3>
+                                ${gradeSection ? `<p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">${escapeHtml(gradeSection)}</p>` : ''}
                                 <div class="relative">
-                                    <p class="announcement-body text-[16px] text-black leading-relaxed font-normal text-left" 
+                                    <p class="announcement-body text-[15px] lg:text-[16px] text-black leading-relaxed font-normal text-left" 
                                        data-full="${formattedFull}" 
                                        data-truncated="${formattedTruncated}">
                                         ${formattedTruncated}
@@ -8292,16 +11494,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
 
                     ${hasImage ? `
-                        <div class="absolute bottom-[52px] left-0 right-0 h-[300px] overflow-hidden border-t border-slate-50 bg-black">
+                        <div class="announcement-image-container relative w-full overflow-hidden border-t border-slate-100 bg-white">
                             <img src="${post.imageUrl}" 
                                  onclick="enlargeAnnouncementImage('${post.imageUrl}')" 
-                                 class="w-full h-full object-contain cursor-pointer" 
+                                 class="w-full h-auto max-h-[420px] object-contain cursor-pointer" 
                                  alt="Announcement Image">
                         </div>
                     ` : ''}
 
-                    <!-- Absolute Fixed Footer & Actions -->
-                    <div class="absolute bottom-0 left-0 right-0 h-[52px] px-6 border-t border-slate-100 bg-white flex items-center justify-end z-10">
+                    <div class="h-[52px] px-6 border-t border-slate-100 bg-white flex items-center justify-end z-10">
                         ${!post.isAdmin ? `
                             <button onclick="togglePostMenu('${post.id}')" class="w-9 h-9 rounded-full flex items-center justify-center text-black hover:bg-slate-100 transition-all">
                                 <i class="fa-solid fa-ellipsis text-lg"></i>
@@ -8329,16 +11530,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const p = art.querySelector('.announcement-body');
         const btn = art.querySelector('.see-more-btn');
         if (!p || !btn) return;
-
         const isExpanded = art.classList.contains('h-auto');
         if (!isExpanded) {
             p.innerHTML = p.dataset.full + ` <span onclick="toggleAnnouncement('${id}')" class="see-more-btn cursor-pointer font-bold text-slate-900 hover:underline ml-1">See less</span>`;
-            art.classList.remove(art.dataset.originalHeight);
+            if (art.dataset.originalHeight) {
+                art.classList.remove(art.dataset.originalHeight);
+            }
             art.classList.add('h-auto');
         } else {
             p.innerHTML = p.dataset.truncated + ` <span onclick="toggleAnnouncement('${id}')" class="see-more-btn cursor-pointer font-bold text-slate-900 hover:underline ml-1">See more</span>`;
             art.classList.remove('h-auto');
-            art.classList.add(art.dataset.originalHeight);
+            if (art.dataset.originalHeight) {
+                art.classList.add(art.dataset.originalHeight);
+            }
         }
     };
 
@@ -8518,10 +11722,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderTeacherAnnouncements();
 
-    // --- Subject Rail Initialization ---
-    if (typeof initHomeSubjectRail === 'function') {
-        initHomeSubjectRail();
-    }
+    renderTeacherHomeDashboardPanels();
 
     // Pre-render assessments once so the tab never shows an empty pane.
     if (typeof renderAssessmentsPage === 'function') {
@@ -8529,7 +11730,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sectionFeatureInit.assessments = true;
     }
 
-    // ── Force-close ALL panels on every load / refresh ──────────────
+    // â”€â”€ Force-close ALL panels on every load / refresh â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     window.hideHeaderOverlays();
 
     // Ensure all header dropdown menus and panels are hidden
@@ -8537,172 +11738,77 @@ document.addEventListener('DOMContentLoaded', () => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     });
-});
 
-/**
- * Subject Rail Logic - Re-implemented for Parity
- * Manages the dynamic subject list in the Teacher Portal home view.
- */
+    // Expose functions to window for event handlers defined in HTML or other scripts
+    window.switchTab = switchTab;
+    window.showStudentList = showStudentList;
+    window.closeAnnouncementPad = closeAnnouncementPad;
 
-function renderHomeSubjectRail() {
-    const enrolledContainer = document.getElementById('home-enrolled-subject-list');
-    const completedContainer = document.getElementById('home-completed-subject-list');
-    const completedBlock = document.getElementById('home-completed-subject-block');
-
-    if (!enrolledContainer) return;
-
-    const subjectsData = window.subjectsData || { core: [], academic: [], techpro: [], completed: [] };
-    const searchTerm = (document.getElementById('home-subject-search-input')?.value || '').toLowerCase();
-    const hideCompleted = document.getElementById('home-subject-hide-completed-toggle')?.checked ?? false;
-    const activeFilter = document.querySelector('input[name="home-subject-filter"]:checked')?.value || 'all';
-
-    // Flatten active subjects with type information
-    let allActive = [];
-    if (activeFilter === 'all' || activeFilter === 'core')
-        allActive = [...allActive, ...subjectsData.core.map(s => ({ ...s, type: 'core' }))];
-    if (activeFilter === 'all' || activeFilter === 'applied')
-        allActive = [...allActive, ...subjectsData.academic.map(s => ({ ...s, type: 'applied' }))];
-    if (activeFilter === 'all' || activeFilter === 'specialized')
-        allActive = [...allActive, ...subjectsData.techpro.map(s => ({ ...s, type: 'specialized' }))];
-
-    const filteredActive = allActive
-        .filter(s => s.name.toLowerCase().includes(searchTerm))
-        .sort((a, b) => a.name.localeCompare(b.name));
-
-    const filteredCompleted = (subjectsData.completed || [])
-        .filter(s => s.name.toLowerCase().includes(searchTerm))
-        .sort((a, b) => a.name.localeCompare(b.name));
-
-    // Helper to render items in the simplified dot format
-    const renderItems = (items, isCompleted = false) => {
-        if (items.length === 0) {
-            return `<div class="py-10 text-center text-slate-400 text-[11px] font-medium italic opacity-60">No subjects found</div>`;
+    window.returnToSections = function () {
+        currentClassroomKey = '';
+        currentClassroomMeta = null;
+        currentClassroomSectionName = '';
+        if (typeof window.switchTab === 'function') {
+            window.switchTab('nav-classes');
         }
-        return items.map(subj => {
-            // Determine dot color based on type
-            let dotColor = '#94a3b8'; // fallback
-            if (subj.type === 'core') dotColor = '#15803d';
-            if (subj.type === 'applied') dotColor = '#FFD000';
-            if (subj.type === 'specialized' || subj.type === 'immersion') dotColor = '#78350f';
-
-            return `
-                <div class="home-subject-rail-item ${isCompleted ? 'home-subject-rail-item--completed' : ''}" 
-                        data-program-key="${subj.programKey || 'core-subjects'}" 
-                        data-subject-id="${subj.id}"
-                        onclick="window.openSubjectsProgramFocus('${subj.programKey || 'core-subjects'}')"
-                        style="display: flex; align-items: center; gap: 0.85rem; padding: 0.65rem 0.5rem; cursor: pointer; border-radius: 0.5rem;">
-                    <div class="home-subject-rail-item__dot" style="background-color: ${dotColor}; width: 11px; height: 11px; min-width: 11px; min-height: 11px; border-radius: 50%; flex-shrink: 0; display: block; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);"></div>
-                    <div class="home-subject-rail-item__info" style="flex: 1; min-width: 0;">
-                        <div class="home-subject-rail-item__name" style="font-weight: 800; color: #000000; font-size: 1.05rem;">${subj.name}</div>
-                    </div>
-                </div>
-            `;
-        }).join('');
     };
 
-    enrolledContainer.innerHTML = renderItems(filteredActive);
+    window.returnToRoomFromTopic = function (subjectId) {
+        const section = currentTopicState.selectedSection;
+        const subject = getTopicSubject(subjectId);
+        if (section && subject) {
+            window.showStudentList(section, subject.name || subject.text || subject.title, 'room', true);
+        } else if (currentClassroomKey) {
+            const [className, subjectName] = currentClassroomKey.split('::');
+            window.showStudentList(className, subjectName, 'room', true);
+        } else {
+            if (typeof window.switchTab === 'function') window.switchTab('nav-classes');
+        }
+    };
 
-    if (completedContainer) {
-        completedContainer.innerHTML = renderItems(filteredCompleted, true);
-    }
+    // Finally initialize navigation history
+    setupNavigationHistory();
 
-    if (completedBlock) {
-        // Only hide if the toggle is on OR if there are no subjects and no search query
-        completedBlock.classList.toggle('hidden', hideCompleted || (filteredCompleted.length === 0 && !searchTerm));
-    }
 
-    // Attach click listeners
-    document.querySelectorAll('.home-subject-rail-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            const programKey = item.dataset.programKey;
-            if (programKey && typeof window.openSubjectsProgramFocus === 'function') {
-                window.openSubjectsProgramFocus(programKey);
-            }
-        });
-    });
-}
-
-function initHomeSubjectRail() {
-    const searchToggle = document.getElementById('home-subject-search-toggle');
-    const searchBox = document.getElementById('home-subject-search-box');
-    const searchInput = document.getElementById('home-subject-search-input');
-    const settingsToggle = document.getElementById('home-subject-settings-toggle');
-    const settingsMenu = document.getElementById('home-subject-settings-menu');
-    const hideCompletedToggle = document.getElementById('home-subject-hide-completed-toggle');
-    const filterRadios = document.querySelectorAll('input[name="home-subject-filter"]');
-
-    if (searchToggle && searchBox) {
-        searchToggle.addEventListener('click', () => {
-            searchBox.classList.toggle('hidden');
-            if (!searchBox.classList.contains('hidden')) {
-                searchInput?.focus();
-            }
-        });
-    }
-
-    if (searchInput) {
-        searchInput.addEventListener('input', () => renderHomeSubjectRail());
-    }
-
-    if (settingsToggle && settingsMenu) {
-        settingsToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            settingsMenu.classList.toggle('hidden');
-        });
-        document.addEventListener('click', () => settingsMenu.classList.add('hidden'));
-        settingsMenu.addEventListener('click', (e) => e.stopPropagation());
-    }
-
-    if (hideCompletedToggle) {
-        hideCompletedToggle.addEventListener('change', () => renderHomeSubjectRail());
-    }
-
-    filterRadios.forEach(radio => {
-        radio.addEventListener('change', () => renderHomeSubjectRail());
-    });
-
-    renderHomeSubjectRail();
-}
-
-window.renderHomeSubjectRail = renderHomeSubjectRail;
-
-/**
- * Navigation Bridge: Switches to the Subjects tab and focuses on a specific program.
- * Used by the Subject Rail cards on the Dashboard.
- *
- * NOTE: This must NOT shadow the real `openInlineProgramFocus()` (sliding panels).
- */
-function openSubjectsProgramFocus(programKey) {
-    window.__pendingSubjectsProgramKey = programKey;
-    // 1. Switch to the Subjects tab
-    if (typeof window.switchTab === 'function') {
-        window.switchTab('nav-subjects');
-    }
-
-    // 2. Reset the explorer and trigger the specific program selection
-    // Using a slight delay to ensure the DOM is ready after the tab switch
-    setTimeout(() => {
-        if (typeof window.resetSubjectsInlineExplorer === 'function') {
-            window.resetSubjectsInlineExplorer();
+    /**
+     * Navigation Bridge: Switches to the Subjects tab and focuses on a specific program.
+     * Used by subject cards and section links.
+     *
+     * NOTE: This must NOT shadow the real `openInlineProgramFocus()` (sliding panels).
+     */
+    function openSubjectsProgramFocus(programKey) {
+        window.__pendingSubjectsProgramKey = programKey;
+        // 1. Switch to the Subjects tab
+        if (typeof window.switchTab === 'function') {
+            window.switchTab('nav-subjects');
         }
 
-        if (typeof window.openInlineProgramFocus === 'function') {
+        // 2. Reset the explorer and trigger the specific program selection
+        // Using a slight delay to ensure the DOM is ready after the tab switch
+        setTimeout(() => {
+            if (typeof window.resetSubjectsInlineExplorer === 'function') {
+                window.resetSubjectsInlineExplorer();
+            }
+
+            if (typeof window.openInlineProgramFocus === 'function') {
+                window.__pendingSubjectsProgramKey = null;
+                window.openInlineProgramFocus(programKey);
+                return;
+            }
+
+            // Fallback: simulate click if the sliding function isn't available yet
+            const row = document.querySelector('.subject-paths-row');
+            const panel = row?.querySelector(`.subject-path-panel[data-program-key="${programKey}"]`);
+            panel?.click();
             window.__pendingSubjectsProgramKey = null;
-            window.openInlineProgramFocus(programKey);
-            return;
-        }
+        }, 50);
+    }
 
-        // Fallback: simulate click if the sliding function isn't available yet
-        const row = document.querySelector('.subject-paths-row');
-        const panel = row?.querySelector(`.subject-path-panel[data-program-key="${programKey}"]`);
-        panel?.click();
-        window.__pendingSubjectsProgramKey = null;
-    }, 50);
-}
 
-window.openSubjectsProgramFocus = openSubjectsProgramFocus;
+    window.openSubjectsProgramFocus = openSubjectsProgramFocus;
 
-document.addEventListener('DOMContentLoaded', () => {
+    // --- Mobile App Bar & Sigma Sheet Logic ---
+
     const mobileAppBar = document.getElementById('mobile-bottom-appbar');
     const profileBtn = document.getElementById('mobile-appbar-profile');
     const calendarBtn = document.getElementById('mobile-appbar-calendar');
@@ -8814,6 +11920,11 @@ document.addEventListener('DOMContentLoaded', () => {
         hydrateSigmaCards();
         sigmaSheet.classList.add('open');
         sigmaBackdrop.classList.add('open');
+
+        // Auto-reset scroll position
+        const cardsContainer = document.getElementById('mobile-sigma-cards');
+        if (cardsContainer) cardsContainer.scrollTop = 0;
+
         updateMobileAppBarActiveState();
     };
 
@@ -8847,7 +11958,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('sigmaAiNotch')?.classList.remove('open');
         window.__pushMobileOverlayHistory?.(id);
 
-        document.getElementById(id)?.classList.add('open');
+        const panelEl = document.getElementById(id);
+        if (panelEl) {
+            panelEl.classList.add('open');
+            // Auto-reset scroll position
+            panelEl.scrollTop = 0;
+            const scrollContainers = panelEl.querySelectorAll('.mobile-pull-up-content, .overflow-y-auto, .overflow-y-scroll');
+            scrollContainers.forEach(container => container.scrollTop = 0);
+        }
         document.getElementById('mobile-sigma-sheet-backdrop')?.classList.add('open');
 
         updateMobileAppBarActiveState();
@@ -8984,11 +12102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const sectionId = visibleSection.id;
 
         if (sectionId === 'section-dashboard') {
-            const dashSearchInput = document.getElementById('home-subject-search-input');
-            if (dashSearchInput) {
-                dashSearchInput.value = query;
-                renderHomeSubjectRail();
-            }
+            renderTeacherHomeDashboardPanels();
         }
     };
 
@@ -9026,7 +12140,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (searchBar) searchBar.value = '';
     });
 
-    // Close mobile search if clicking outside
+    // Re-render announcements ONLY when switching between mobile and desktop layouts
     document.addEventListener('mousedown', (e) => {
         if (window.innerWidth < 1024) {
             const header = document.getElementById('teacher-header');
@@ -9036,4 +12150,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-});
+
+    // Re-render announcements ONLY when switching between mobile and desktop layouts
+    let lastWidth = window.innerWidth;
+    window.addEventListener('resize', () => {
+        const currentWidth = window.innerWidth;
+        const wasMobile = lastWidth < 1024;
+        const isMobile = currentWidth < 1024;
+
+        if (wasMobile !== isMobile) {
+            if (typeof renderTeacherAnnouncements === 'function') {
+                renderTeacherAnnouncements();
+            }
+        }
+        lastWidth = currentWidth;
+    });
+}
+

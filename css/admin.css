@@ -1,7 +1,36 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-body {
+/* Global Typography: Inter for text, preserve Font Awesome for icons */
+body,
+button,
+input,
+select,
+textarea,
+div,
+p,
+span,
+a,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+td,
+th {
     font-family: 'Inter', sans-serif !important;
+}
+
+/* Ensure icons use Font Awesome */
+.fa-solid,
+.fa-regular,
+.fa-light,
+.fa-thin,
+.fa-duotone,
+.fa-brands,
+.fa,
+i {
+    font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
 }
 
 .hidden {
@@ -30,16 +59,18 @@ input::-webkit-calendar-picker-indicator:hover {
 
 
 /* Table Striping & Hovers */
-.dynamic-section thead {
+.admin-table-striped thead {
     background-color: #f8fafc !important;
+    border-bottom: 2px solid #e2e8f0 !important;
 }
 
-.dynamic-section tbody tr:nth-child(even) {
-    background-color: #f1f5f9;
+/* Zebra striping enabled for better data visibility */
+.admin-table-striped tbody tr:nth-child(even) {
+    background-color: #f8fafc;
 }
 
-.dynamic-section tbody tr:hover {
-    background-color: #e2e8f0 !important;
+.admin-table-striped tbody tr:hover {
+    background-color: #f1f5f9 !important;
 }
 
 /* Force Inter for School Year Table, but exclude icons */
@@ -65,10 +96,15 @@ input::-webkit-calendar-picker-indicator:hover {
     --admin-header-height: 60px;
     --admin-total-top-offset: calc(var(--admin-top-nav-height) + var(--admin-header-height));
     --shell-offset: var(--admin-total-top-offset);
+    --panel-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
 }
 
 body.sidebar-collapsed {
     --admin-sidebar-width: var(--admin-sidebar-collapsed-width);
+}
+
+.standard-panel-shadow {
+    box-shadow: var(--panel-shadow) !important;
 }
 
 /* Aggressive Reset for Search Bar Focus */
@@ -81,8 +117,9 @@ body.sidebar-collapsed {
     outline: none !important;
     box-shadow: none !important;
     -webkit-appearance: none !important;
+    appearance: none !important;
     -webkit-box-shadow: none !important;
-    ring: 0 !important;
+    box-shadow: none !important;
 }
 
 #admin-header .absolute.left-1\/2 {
@@ -258,7 +295,7 @@ body.section-edit-mode {
     width: 100% !important;
     background: #ffffff;
     border-bottom: 2px solid #15803d;
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+    box-shadow: var(--panel-shadow) !important;
     z-index: 100 !important;
 }
 
@@ -1257,13 +1294,13 @@ button.bg-slate-900:hover {
     border: 1px solid #e2e8f0;
     border-radius: 1.5rem;
     padding: 1.5rem;
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.03);
+    box-shadow: var(--panel-shadow);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .announcement-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
 }
 
 .announcement-card__top {
@@ -1432,4 +1469,13 @@ button.bg-slate-900:hover {
     font-size: 14px;
     width: 16px;
     text-align: center;
+}
+/* Manage Search Fields Checkboxes */
+input[type='checkbox']:checked ~ i.fa-check {
+    opacity: 1 !important;
+}
+
+input[type='checkbox']:checked {
+    background-color: #15803d !important;
+    border-color: #15803d !important;
 }
